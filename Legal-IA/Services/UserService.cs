@@ -8,44 +8,36 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     User service implementation using repository pattern
 /// </summary>
-public class UserService : IUserService
+public class UserService(IUserRepository userRepository, ICacheService cacheService) : IUserService
 {
     private readonly string _cacheKeyPrefix = "user:";
-    private readonly ICacheService _cacheService;
-    private readonly IUserRepository _userRepository;
-
-    public UserService(IUserRepository userRepository, ICacheService cacheService)
-    {
-        _userRepository = userRepository;
-        _cacheService = cacheService;
-    }
 
     public async Task<UserResponse?> GetUserByIdAsync(Guid id)
     {
         var cacheKey = $"{_cacheKeyPrefix}{id}";
-        var cachedUser = await _cacheService.GetAsync<UserResponse>(cacheKey);
+        var cachedUser = await cacheService.GetAsync<UserResponse>(cacheKey);
 
         if (cachedUser != null)
             return cachedUser;
 
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await userRepository.GetByIdAsync(id);
         if (user == null) return null;
 
         var userResponse = MapToUserResponse(user);
-        await _cacheService.SetAsync(cacheKey, userResponse);
+        await cacheService.SetAsync(cacheKey, userResponse);
 
         return userResponse;
     }
 
     public async Task<UserResponse?> GetUserByEmailAsync(string email)
     {
-        var user = await _userRepository.GetByEmailAsync(email);
+        var user = await userRepository.GetByEmailAsync(email);
         return user != null ? MapToUserResponse(user) : null;
     }
 
     public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
     {
-        var users = await _userRepository.GetActiveUsersAsync();
+        var users = await userRepository.GetActiveUsersAsync();
         return users.Select(MapToUserResponse);
     }
 
@@ -68,18 +60,18 @@ public class UserService : IUserService
             UpdatedAt = DateTime.UtcNow
         };
 
-        var createdUser = await _userRepository.AddAsync(user);
+        var createdUser = await userRepository.AddAsync(user);
         var userResponse = MapToUserResponse(createdUser);
 
         var cacheKey = $"{_cacheKeyPrefix}{createdUser.Id}";
-        await _cacheService.SetAsync(cacheKey, userResponse);
+        await cacheService.SetAsync(cacheKey, userResponse);
 
         return userResponse;
     }
 
     public async Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request)
     {
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await userRepository.GetByIdAsync(id);
         if (user == null) return null;
 
         // Update fields
@@ -96,39 +88,39 @@ public class UserService : IUserService
 
         user.UpdatedAt = DateTime.UtcNow;
 
-        var updatedUser = await _userRepository.UpdateAsync(user);
+        var updatedUser = await userRepository.UpdateAsync(user);
 
         // Invalidate cache
         var cacheKey = $"{_cacheKeyPrefix}{id}";
-        await _cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveAsync(cacheKey);
 
         return MapToUserResponse(updatedUser);
     }
 
     public async Task<bool> DeleteUserAsync(Guid id)
     {
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await userRepository.GetByIdAsync(id);
         if (user == null) return false;
 
         user.IsActive = false;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user);
+        await userRepository.UpdateAsync(user);
 
         // Invalidate cache
         var cacheKey = $"{_cacheKeyPrefix}{id}";
-        await _cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveAsync(cacheKey);
 
         return true;
     }
 
     public async Task<bool> UserExistsByEmailAsync(string email)
     {
-        return await _userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
+        return await userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
     }
 
     public async Task<bool> UserExistsByDNIAsync(string dni)
     {
-        return await _userRepository.ExistsAsync(u => u.DNI == dni && u.IsActive);
+        return await userRepository.ExistsAsync(u => u.DNI == dni && u.IsActive);
     }
 
     private static UserResponse MapToUserResponse(User user)

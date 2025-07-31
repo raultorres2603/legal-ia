@@ -162,14 +162,38 @@ public class DocumentService(IDocumentRepository documentRepository, ICacheServi
 
     public async Task<IEnumerable<DocumentResponse>> GetTemplatesAsync()
     {
-        var templates = await documentRepository.GetTemplatesAsync();
-        return templates.Select(MapToDocumentResponse);
+        var documents = await documentRepository.GetTemplatesAsync();
+        return documents.Select(MapToDocumentResponse);
     }
 
     public async Task<IEnumerable<DocumentResponse>> SearchDocumentsAsync(string searchTerm, Guid? userId = null)
     {
         var documents = await documentRepository.SearchAsync(searchTerm, userId);
         return documents.Select(MapToDocumentResponse);
+    }
+
+    public async Task<DocumentResponse?> UpdateDocumentFileInfoAsync(Guid id, string filePath, string fileName, string fileFormat, long fileSize)
+    {
+        var document = await documentRepository.GetByIdAsync(id);
+        if (document == null) return null;
+
+        // Update file information
+        document.FilePath = filePath;
+        document.FileName = fileName;
+        document.FileFormat = fileFormat;
+        document.FileSize = fileSize;
+        document.UpdatedAt = DateTime.UtcNow;
+        document.GeneratedAt = DateTime.UtcNow;
+
+        var updatedDocument = await documentRepository.UpdateAsync(document);
+
+        // Invalidate caches
+        var cacheKey = $"{_cacheKeyPrefix}{id}";
+        var userCacheKey = $"{_userDocumentsCachePrefix}{document.UserId}";
+        await cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveAsync(userCacheKey);
+
+        return MapToDocumentResponse(updatedDocument);
     }
 
     private static DocumentResponse MapToDocumentResponse(Document document)

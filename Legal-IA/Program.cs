@@ -64,10 +64,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IAIDocumentGenerationService, AIDocumentGenerationService>();
 
 // Register validators
 builder.Services.AddTransient<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
 builder.Services.AddTransient<IValidator<CreateDocumentRequest>, CreateDocumentRequestValidator>();
+builder.Services.AddTransient<IValidator<GenerateDocumentRequest>, GenerateDocumentRequestValidator>();
+builder.Services.AddTransient<IValidator<RegenerateDocumentRequest>, RegenerateDocumentRequestValidator>();
 
 // Configure logging
 builder.Services.AddLogging();

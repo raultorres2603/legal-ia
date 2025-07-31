@@ -8,17 +8,10 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     File storage service implementation using Azure Blob Storage (Azurite)
 /// </summary>
-public class FileStorageService : IFileStorageService
+public class FileStorageService(BlobServiceClient blobServiceClient, ILogger<FileStorageService> logger)
+    : IFileStorageService
 {
     private const string ContainerName = "documents";
-    private readonly BlobServiceClient _blobServiceClient;
-    private readonly ILogger<FileStorageService> _logger;
-
-    public FileStorageService(BlobServiceClient blobServiceClient, ILogger<FileStorageService> logger)
-    {
-        _blobServiceClient = blobServiceClient;
-        _logger = logger;
-    }
 
     public async Task<string> SaveDocumentAsync(string content, string fileName, string contentType)
     {
@@ -31,13 +24,13 @@ public class FileStorageService : IFileStorageService
             await blobClient.UploadAsync(stream, true);
 
             var filePath = $"{ContainerName}/{fileName}";
-            _logger.LogInformation("Document saved successfully: {FilePath}", filePath);
+            logger.LogInformation("Document saved successfully: {FilePath}", filePath);
 
             return filePath;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving document {FileName}", fileName);
+            logger.LogError(ex, "Error saving document {FileName}", fileName);
             throw;
         }
     }
@@ -55,7 +48,7 @@ public class FileStorageService : IFileStorageService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving document {FilePath}", filePath);
+            logger.LogError(ex, "Error retrieving document {FilePath}", filePath);
             throw;
         }
     }
@@ -73,7 +66,7 @@ public class FileStorageService : IFileStorageService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting document {FilePath}", filePath);
+            logger.LogError(ex, "Error deleting document {FilePath}", filePath);
             return false;
         }
     }
@@ -87,9 +80,87 @@ public class FileStorageService : IFileStorageService
         return blobClient.Uri.ToString();
     }
 
+    /// <summary>
+    ///     Save binary document (like PDF) to blob storage
+    /// </summary>
+    public async Task<string> SaveDocumentBytesAsync(byte[] content, string fileName, string contentType)
+    {
+        try
+        {
+            var containerClient = await GetContainerClientAsync();
+            var blobClient = containerClient.GetBlobClient(fileName);
+
+            using var stream = new MemoryStream(content);
+            await blobClient.UploadAsync(stream, true);
+
+            // Set content type for proper handling
+            await blobClient.SetHttpHeadersAsync(new Azure.Storage.Blobs.Models.BlobHttpHeaders
+            {
+                ContentType = contentType
+            });
+
+            var filePath = $"{ContainerName}/{fileName}";
+            logger.LogInformation("Binary document saved successfully: {FilePath}, Size: {Size} bytes",
+                filePath, content.Length);
+
+            return filePath;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error saving binary document {FileName}", fileName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    ///     Get binary document (like PDF) from blob storage
+    /// </summary>
+    public async Task<byte[]> GetDocumentBytesAsync(string filePath)
+    {
+        try
+        {
+            var containerClient = await GetContainerClientAsync();
+            var fileName = Path.GetFileName(filePath);
+            var blobClient = containerClient.GetBlobClient(fileName);
+
+            var response = await blobClient.DownloadContentAsync();
+            return response.Value.Content.ToArray();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving binary document {FilePath}", filePath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    ///     Get document metadata from blob storage
+    /// </summary>
+    public async Task<(long Size, string ContentType, DateTime LastModified)> GetDocumentMetadataAsync(string filePath)
+    {
+        try
+        {
+            var containerClient = await GetContainerClientAsync();
+            var fileName = Path.GetFileName(filePath);
+            var blobClient = containerClient.GetBlobClient(fileName);
+
+            var properties = await blobClient.GetPropertiesAsync();
+            return (
+                properties.Value.ContentLength,
+                properties.Value.ContentType ?? "application/octet-stream",
+                properties.Value.LastModified.DateTime
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving document metadata {FilePath}", filePath);
+            throw;
+        }
+    }
+
     private async Task<BlobContainerClient> GetContainerClientAsync()
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(ContainerName);
+        var containerClient = blobServiceClient.GetBlobContainerClient(ContainerName);
         await containerClient.CreateIfNotExistsAsync();
         return containerClient;
     }

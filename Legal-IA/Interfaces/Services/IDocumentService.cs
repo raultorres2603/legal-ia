@@ -18,4 +18,7 @@ public interface IDocumentService
     Task<DocumentResponse?> UpdateDocumentStatusAsync(Guid id, DocumentStatus status);
     Task<IEnumerable<DocumentResponse>> GetTemplatesAsync();
     Task<IEnumerable<DocumentResponse>> SearchDocumentsAsync(string searchTerm, Guid? userId = null);
+    
+    // New method for AI document generation workflow
+    Task<DocumentResponse?> UpdateDocumentFileInfoAsync(Guid id, string filePath, string fileName, string fileFormat, long fileSize);
 }
