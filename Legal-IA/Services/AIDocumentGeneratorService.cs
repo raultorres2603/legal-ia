@@ -8,26 +8,19 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     AI Document Generator service implementation
 /// </summary>
-public class AIDocumentGeneratorService : IAIDocumentGeneratorService
+public class AiDocumentGeneratorService(ILogger<AiDocumentGeneratorService> logger) : IAIDocumentGeneratorService
 {
-    private readonly ILogger<AIDocumentGeneratorService> _logger;
-
-    public AIDocumentGeneratorService(ILogger<AIDocumentGeneratorService> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task<string> GenerateDocumentContentAsync(DocumentResponse document,
         Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Generating content for document {DocumentId} of type {DocumentType}",
+        logger.LogInformation("Generating content for document {DocumentId} of type {DocumentType}",
             document.Id, document.Type);
 
         // TODO: Replace with actual AI Agent integration
         // For now, we'll generate template-based content
         var content = await GenerateContentBasedOnType(document, parameters);
 
-        _logger.LogInformation("Content generated successfully for document {DocumentId}", document.Id);
+        logger.LogInformation("Content generated successfully for document {DocumentId}", document.Id);
         return content;
     }
 

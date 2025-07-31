@@ -63,7 +63,7 @@ builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IAIDocumentGeneratorService, AIDocumentGeneratorService>();
+builder.Services.AddScoped<IAIDocumentGeneratorService, AiDocumentGeneratorService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 // Register validators
