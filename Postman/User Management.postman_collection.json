@@ -1,0 +1,141 @@
+{
+	"info": {
+		"_postman_id": "user-management-collection",
+		"name": "User Management - Legal-IA",
+		"description": "Collection for testing user management functionality for Spanish autonomous workers",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Users",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/users",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "users"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User by ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{userId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "users", "{{userId}}"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create New User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"firstName\": \"Juan\",\n  \"lastName\": \"García Martín\",\n  \"email\": \"juan.garcia@example.com\",\n  \"dni\": \"12345678Z\",\n  \"cif\": \"B12345678\",\n  \"businessName\": \"Consultoría García S.L.\",\n  \"address\": \"Calle Mayor, 123\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"912345678\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "users"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"firstName\": \"Juan Carlos\",\n  \"lastName\": \"García Martín\",\n  \"email\": \"juan.carlos.garcia@example.com\",\n  \"businessName\": \"Consultoría García Avanzada S.L.\",\n  \"address\": \"Calle Mayor, 125\",\n  \"phone\": \"912345679\",\n  \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{userId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "users", "{{userId}}"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete User",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{userId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "users", "{{userId}}"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Multiple Test Users",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"firstName\": \"María\",\n  \"lastName\": \"Rodríguez López\",\n  \"email\": \"maria.rodriguez@example.com\",\n  \"dni\": \"87654321A\",\n  \"cif\": \"B87654321\",\n  \"businessName\": \"Asesoría Rodríguez S.L.\",\n  \"address\": \"Avenida de la Constitución, 45\",\n  \"postalCode\": \"41001\",\n  \"city\": \"Sevilla\",\n  \"province\": \"Sevilla\",\n  \"phone\": \"954123456\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "users"]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:7071"
+		},
+		{
+			"key": "userId",
+			"value": "550e8400-e29b-41d4-a716-446655440000"
+		}
+	]
+}
+

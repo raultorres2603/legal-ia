@@ -1,0 +1,243 @@
+{
+	"info": {
+		"_postman_id": "spanish-documents-collection",
+		"name": "Spanish Bureaucratic Documents - Legal-IA",
+		"description": "Collection for testing Spanish autonomous workers' bureaucratic document creation and management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "VAT Documents",
+			"item": [
+				{
+					"name": "Create VAT Return (Modelo 303)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Declaración IVA - 1T 2025\",\n  \"type\": 3,\n  \"description\": \"Declaración trimestral del IVA - Primer trimestre 2025\",\n  \"content\": \"\",\n  \"tags\": \"iva, declaracion, trimestral, modelo-303\",\n  \"amount\": 2100.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate VAT Return Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"cif\": \"B12345678\",\n    \"businessName\": \"Consultoría García S.L.\",\n    \"taxableBase\": \"10000.00\",\n    \"outputVAT\": \"2100.00\",\n    \"inputVAT\": \"420.00\",\n    \"result\": \"1680.00\",\n    \"amountToPay\": \"1680.00\",\n    \"amountToCompensate\": \"0.00\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}", "generate"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "IRPF Documents",
+			"item": [
+				{
+					"name": "Create IRPF Return (Modelo 100)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Declaración IRPF 2024\",\n  \"type\": 4,\n  \"description\": \"Declaración anual del Impuesto sobre la Renta de las Personas Físicas\",\n  \"content\": \"\",\n  \"tags\": \"irpf, declaracion, anual, modelo-100, autonomo\",\n  \"amount\": 35000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": null,\n  \"year\": 2024,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate IRPF Return Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"dni\": \"12345678Z\",\n    \"fullName\": \"Juan García Martín\",\n    \"birthDate\": \"01/01/1980\",\n    \"iaeCode\": \"861.1\",\n    \"activityDescription\": \"Actividades jurídicas\",\n    \"grossIncome\": \"45000.00\",\n    \"deductibleExpenses\": \"10000.00\",\n    \"workRetentions\": \"5000.00\",\n    \"fractionalPayments\": \"3000.00\",\n    \"integralQuota\": \"7000.00\",\n    \"liquidQuota\": \"6500.00\",\n    \"declarationResult\": \"-1500.00\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}", "generate"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Social Security Documents",
+			"item": [
+				{
+					"name": "Create Social Security Form",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Liquidación Seguridad Social - 1T 2025\",\n  \"type\": 6,\n  \"description\": \"Liquidación de cuotas del Régimen Especial de Trabajadores Autónomos\",\n  \"content\": \"\",\n  \"tags\": \"seguridad-social, autonomo, cuotas, trimestral\",\n  \"amount\": 338.41,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Social Security Form Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"socialSecurityNumber\": \"123456789012\",\n    \"fullName\": \"Juan García Martín\",\n    \"dni\": \"12345678Z\",\n    \"minimumBase\": \"1166.70\",\n    \"chosenBase\": \"1166.70\",\n    \"commonContingencies\": \"325.57\",\n    \"cessationOfActivity\": \"11.67\",\n    \"professionalTraining\": \"1.17\",\n    \"totalAmount\": \"338.41\",\n    \"paymentMethod\": \"Domiciliación bancaria\",\n    \"dueDate\": \"2025-02-28\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}", "generate"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Business Documents",
+			"item": [
+				{
+					"name": "Create Expense Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Informe de Gastos - 1T 2025\",\n  \"type\": 7,\n  \"description\": \"Informe detallado de gastos deducibles del primer trimestre\",\n  \"content\": \"\",\n  \"tags\": \"gastos, deducibles, trimestral, autonomo\",\n  \"amount\": 2500.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Service Contract",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Contrato de Prestación de Servicios\",\n  \"type\": 8,\n  \"description\": \"Contrato para servicios de consultoría jurídica\",\n  \"content\": \"\",\n  \"tags\": \"contrato, servicios, consultoria, juridico\",\n  \"amount\": 5000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": null,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Receipt",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Recibo de Pago\",\n  \"type\": 9,\n  \"description\": \"Recibo por servicios prestados\",\n  \"content\": \"\",\n  \"tags\": \"recibo, pago, servicios\",\n  \"amount\": 750.00,\n  \"currency\": \"EUR\",\n  \"quarter\": null,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:7071"
+		},
+		{
+			"key": "userId",
+			"value": "550e8400-e29b-41d4-a716-446655440000"
+		},
+		{
+			"key": "documentId",
+			"value": "550e8400-e29b-41d4-a716-446655440001"
+		}
+	]
+}
+

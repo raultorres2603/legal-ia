@@ -1,0 +1,258 @@
+{
+	"info": {
+		"_postman_id": "workflow-testing-collection",
+		"name": "Workflow Testing - Legal-IA",
+		"description": "Collection for testing complete workflows and orchestrator functions in the Legal-IA system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Complete User Lifecycle",
+			"item": [
+				{
+					"name": "1. Create User (Orchestrator)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 202) {",
+									"    const response = pm.response.json();",
+									"    pm.globals.set('orchestrationId', response.instanceId);",
+									"    console.log('Orchestration started with ID:', response.instanceId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Carlos\",\n  \"lastName\": \"Fernández Ruiz\",\n  \"email\": \"carlos.fernandez@autonomo.com\",\n  \"dni\": \"11223344B\",\n  \"cif\": \"B11223344\",\n  \"businessName\": \"Servicios Fernández S.L.\",\n  \"address\": \"Plaza de España, 10\",\n  \"postalCode\": \"46001\",\n  \"city\": \"Valencia\",\n  \"province\": \"Valencia\",\n  \"phone\": \"963456789\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Check Orchestration Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/runtime/webhooks/durabletask/instances/{{orchestrationId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["runtime", "webhooks", "durabletask", "instances", "{{orchestrationId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Update User (Orchestrator)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"businessName\": \"Servicios Fernández Avanzados S.L.\",\n  \"address\": \"Plaza de España, 12\",\n  \"phone\": \"963456790\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{userId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Complete Document Lifecycle",
+			"item": [
+				{
+					"name": "1. Create Document (Orchestrator)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 202) {",
+									"    const response = pm.response.json();",
+									"    pm.globals.set('docOrchestrationId', response.instanceId);",
+									"    console.log('Document orchestration started with ID:', response.instanceId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Factura Workflow Test\",\n  \"type\": 1,\n  \"description\": \"Factura creada para testing del workflow completo\",\n  \"content\": \"\",\n  \"tags\": \"factura, workflow, testing\",\n  \"amount\": 2000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Generate Document Content (Orchestrator)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"businessName\": \"Servicios Fernández S.L.\",\n    \"cif\": \"B11223344\",\n    \"address\": \"Plaza de España, 10, 46001 Valencia\",\n    \"phone\": \"963456789\",\n    \"email\": \"carlos.fernandez@autonomo.com\",\n    \"clientName\": \"Cliente Ejemplo S.A.\",\n    \"clientAddress\": \"Calle Ejemplo, 1, 28001 Madrid\",\n    \"clientTaxId\": \"A12345678\",\n    \"quantity\": \"1\",\n    \"paymentMethod\": \"Transferencia bancaria\",\n    \"dueDate\": \"2025-03-31\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}", "generate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Update Document Status (Orchestrator)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": 4,\n  \"description\": \"Documento enviado al cliente para revisión\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Error Handling Tests",
+			"item": [
+				{
+					"name": "Create User with Invalid DNI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Invalid\",\n  \"email\": \"test@invalid.com\",\n  \"dni\": \"invalid-dni\",\n  \"cif\": \"invalid-cif\",\n  \"businessName\": \"Test Business\",\n  \"address\": \"Test Address\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Document for Non-Existent User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"00000000-0000-0000-0000-000000000000\",\n  \"title\": \"Test Document\",\n  \"type\": 1,\n  \"description\": \"Test document for non-existent user\",\n  \"content\": \"\",\n  \"tags\": \"test, error\",\n  \"amount\": 100.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-Existent Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/00000000-0000-0000-0000-000000000000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "00000000-0000-0000-0000-000000000000"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:7071"
+		},
+		{
+			"key": "userId",
+			"value": "550e8400-e29b-41d4-a716-446655440000"
+		},
+		{
+			"key": "documentId",
+			"value": "550e8400-e29b-41d4-a716-446655440001"
+		},
+		{
+			"key": "orchestrationId",
+			"value": ""
+		},
+		{
+			"key": "docOrchestrationId",
+			"value": ""
+		}
+	]
+}
+

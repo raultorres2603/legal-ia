@@ -1,0 +1,428 @@
+{
+	"info": {
+		"_postman_id": "validation-testing-collection",
+		"name": "Validation & Edge Cases - Legal-IA",
+		"description": "Collection for testing validation rules, edge cases, and error scenarios in the Legal-IA system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "User Validation Tests",
+			"item": [
+				{
+					"name": "Missing Required Fields",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"\",\n  \"lastName\": \"\",\n  \"email\": \"\",\n  \"dni\": \"\",\n  \"cif\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Email Format",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"invalid-email-format\",\n  \"dni\": \"12345678Z\",\n  \"cif\": \"B12345678\",\n  \"businessName\": \"Test Business\",\n  \"address\": \"Test Address\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid DNI Format",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"dni\": \"123456789\",\n  \"cif\": \"B12345678\",\n  \"businessName\": \"Test Business\",\n  \"address\": \"Test Address\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid CIF Format",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"dni\": \"12345678Z\",\n  \"cif\": \"123456789\",\n  \"businessName\": \"Test Business\",\n  \"address\": \"Test Address\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Postal Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"dni\": \"12345678Z\",\n  \"cif\": \"B12345678\",\n  \"businessName\": \"Test Business\",\n  \"address\": \"Test Address\",\n  \"postalCode\": \"123\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Duplicate Email Test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"User\",\n  \"email\": \"juan.garcia@example.com\",\n  \"dni\": \"99887766C\",\n  \"cif\": \"B99887766\",\n  \"businessName\": \"Duplicate Business\",\n  \"address\": \"Duplicate Address\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Document Validation Tests",
+			"item": [
+				{
+					"name": "Missing Document Title",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"\",\n  \"type\": 1,\n  \"description\": \"Document without title\",\n  \"amount\": 100.00,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Document Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Test Document\",\n  \"type\": 999,\n  \"description\": \"Document with invalid type\",\n  \"amount\": 100.00,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Quarter Value",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Test Document\",\n  \"type\": 3,\n  \"description\": \"Document with invalid quarter\",\n  \"amount\": 100.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 5,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Year Value",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Test Document\",\n  \"type\": 3,\n  \"description\": \"Document with invalid year\",\n  \"amount\": 100.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2010\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Negative Amount",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Test Document\",\n  \"type\": 1,\n  \"description\": \"Document with negative amount\",\n  \"amount\": -100.00,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Edge Cases & Limits",
+			"item": [
+				{
+					"name": "Very Long User Name",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"ThisIsAVeryLongFirstNameThatExceedsTheNormalLengthLimitForFirstNamesInMostDatabaseSystems\",\n  \"lastName\": \"ThisIsAVeryLongLastNameThatExceedsTheNormalLengthLimitForLastNamesInMostDatabaseSystems\",\n  \"email\": \"very.long.name@example.com\",\n  \"dni\": \"12345678Z\",\n  \"cif\": \"B12345678\",\n  \"businessName\": \"Test Business\",\n  \"address\": \"Test Address\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"911111111\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Maximum Amount Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Maximum Amount Test\",\n  \"type\": 1,\n  \"description\": \"Document with maximum amount\",\n  \"amount\": 999999999.99,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Special Characters in Title",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Título con Ñ, á, é, í, ó, ú y €€€ símbolos especiales\",\n  \"type\": 1,\n  \"description\": \"Descripción con caracteres españoles: ñ, ç, ü\",\n  \"amount\": 100.00,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Empty Search Query",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents?search=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search with Special Characters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents?search=ñáéíóú€",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"],
+							"query": [
+								{
+									"key": "search",
+									"value": "ñáéíóú€"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Performance Tests",
+			"item": [
+				{
+					"name": "Concurrent User Creation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Performance\",\n  \"lastName\": \"Test{{$randomInt}}\",\n  \"email\": \"performance.test{{$randomInt}}@example.com\",\n  \"dni\": \"{{$randomInt}}Z\",\n  \"cif\": \"B{{$randomInt}}\",\n  \"businessName\": \"Performance Test Business {{$randomInt}}\",\n  \"address\": \"Test Address {{$randomInt}}\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"91{{$randomInt}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Large Document Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents?search=test",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"],
+							"query": [
+								{
+									"key": "search",
+									"value": "test"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:7071"
+		},
+		{
+			"key": "userId",
+			"value": "550e8400-e29b-41d4-a716-446655440000"
+		}
+	]
+}
+
