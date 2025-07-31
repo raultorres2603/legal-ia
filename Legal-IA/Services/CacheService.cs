@@ -7,19 +7,13 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     Cache service implementation using Redis
 /// </summary>
-public class CacheService : ICacheService
+public class CacheService(IDistributedCache cache) : ICacheService
 {
-    private readonly IDistributedCache _cache;
     private readonly TimeSpan _defaultExpiry = TimeSpan.FromMinutes(30);
-
-    public CacheService(IDistributedCache cache)
-    {
-        _cache = cache;
-    }
 
     public async Task<T?> GetAsync<T>(string key) where T : class
     {
-        var cachedValue = await _cache.GetStringAsync(key);
+        var cachedValue = await cache.GetStringAsync(key);
         return string.IsNullOrEmpty(cachedValue)
             ? null
             : JsonConvert.DeserializeObject<T>(cachedValue);
@@ -32,12 +26,12 @@ public class CacheService : ICacheService
         {
             AbsoluteExpirationRelativeToNow = expiry ?? _defaultExpiry
         };
-        await _cache.SetStringAsync(key, serializedValue, options);
+        await cache.SetStringAsync(key, serializedValue, options);
     }
 
     public async Task RemoveAsync(string key)
     {
-        await _cache.RemoveAsync(key);
+        await cache.RemoveAsync(key);
     }
 
     public async Task RemoveByPatternAsync(string pattern)
