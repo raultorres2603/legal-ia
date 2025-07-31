@@ -14,7 +14,6 @@ namespace Legal_IA.Functions.Activities;
 public class DocumentActivities(
     ILogger<DocumentActivities> logger,
     IDocumentService documentService,
-    IAIDocumentGeneratorService aiDocumentGenerator,
     IFileStorageService fileStorageService)
 {
     [Function("ValidateDocumentActivity")]
@@ -72,11 +71,36 @@ public class DocumentActivities(
         var document = JsonConvert.DeserializeObject<DocumentResponse>(input.Document.ToString());
         var parameters = JsonConvert.DeserializeObject<Dictionary<string, object>>(input.Parameters.ToString());
 
-        logger.LogInformation($"Generating content for document {document!.Id} of type {document.Type}");
+        logger.LogInformation($"Generating content for document {document.Id} of type {document.Type}");
 
-        var generatedContent = await aiDocumentGenerator.GenerateDocumentContentAsync(document, parameters!);
+        // Simple template-based content generation without AI
+        var generatedContent = GenerateSimpleDocumentContent(document, parameters!);
 
-        return generatedContent;
+        return await Task.FromResult(generatedContent);
+    }
+
+    private static string GenerateSimpleDocumentContent(DocumentResponse document, Dictionary<string, object> parameters)
+    {
+        return $@"
+DOCUMENT: {document.Title}
+
+Document ID: {document.Id}
+Type: {document.Type}
+Created: {document.CreatedAt:dd/MM/yyyy}
+Status: {document.Status}
+
+Description:
+{document.Description}
+
+Amount: {document.Amount:F2} {document.Currency}
+Quarter: {document.Quarter}
+Year: {document.Year}
+
+Parameters:
+{string.Join("\n", parameters.Select(p => $"- {p.Key}: {p.Value}"))}
+
+Generated on: {DateTime.Now:dd/MM/yyyy HH:mm:ss}
+";
     }
 
     [Function("SaveGeneratedDocumentActivity")]

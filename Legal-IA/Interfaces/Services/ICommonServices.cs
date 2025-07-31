@@ -24,13 +24,6 @@ public interface INotificationService
     Task SendDocumentStatusChangeNotificationAsync(DocumentResponse document, string previousStatus);
 }
 
-/// <summary>
-///     Service interface for AI document generation
-/// </summary>
-public interface IAIDocumentGeneratorService
-{
-    Task<string> GenerateDocumentContentAsync(DocumentResponse document, Dictionary<string, object> parameters);
-}
 
 /// <summary>
 ///     Service interface for file storage operations
