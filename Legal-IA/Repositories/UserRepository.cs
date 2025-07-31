@@ -1,12 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Legal_IA.Data;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Repositories;
 
 /// <summary>
-/// User repository implementation with specific user operations
+///     User repository implementation with specific user operations
 /// </summary>
 public class UserRepository : Repository<User>, IUserRepository
 {

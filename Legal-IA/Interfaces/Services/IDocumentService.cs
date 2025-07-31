@@ -4,7 +4,7 @@ using Legal_IA.Models;
 namespace Legal_IA.Interfaces.Services;
 
 /// <summary>
-/// Service interface for managing document operations
+///     Service interface for managing document operations
 /// </summary>
 public interface IDocumentService
 {

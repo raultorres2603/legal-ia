@@ -1,12 +1,12 @@
-using Microsoft.Extensions.Logging;
 using Legal_IA.DTOs;
-using Legal_IA.Models;
 using Legal_IA.Interfaces.Services;
+using Legal_IA.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Services;
 
 /// <summary>
-/// AI Document Generator service implementation
+///     AI Document Generator service implementation
 /// </summary>
 public class AIDocumentGeneratorService : IAIDocumentGeneratorService
 {
@@ -17,20 +17,22 @@ public class AIDocumentGeneratorService : IAIDocumentGeneratorService
         _logger = logger;
     }
 
-    public async Task<string> GenerateDocumentContentAsync(DocumentResponse document, Dictionary<string, object> parameters)
+    public async Task<string> GenerateDocumentContentAsync(DocumentResponse document,
+        Dictionary<string, object> parameters)
     {
-        _logger.LogInformation("Generating content for document {DocumentId} of type {DocumentType}", 
+        _logger.LogInformation("Generating content for document {DocumentId} of type {DocumentType}",
             document.Id, document.Type);
 
         // TODO: Replace with actual AI Agent integration
         // For now, we'll generate template-based content
         var content = await GenerateContentBasedOnType(document, parameters);
-        
+
         _logger.LogInformation("Content generated successfully for document {DocumentId}", document.Id);
         return content;
     }
 
-    private async Task<string> GenerateContentBasedOnType(DocumentResponse document, Dictionary<string, object> parameters)
+    private async Task<string> GenerateContentBasedOnType(DocumentResponse document,
+        Dictionary<string, object> parameters)
     {
         // Simulate async AI processing
         await Task.Delay(100);
@@ -47,7 +49,8 @@ public class AIDocumentGeneratorService : IAIDocumentGeneratorService
             DocumentType.TaxForm => GenerateTaxFormContent(document, parameters),
             DocumentType.BusinessPlan => GenerateBusinessPlanContent(document, parameters),
             DocumentType.LegalDocument => GenerateLegalDocumentContent(document, parameters),
-            _ => $"Generated content for {document.Type} document: {document.Title}\n\nDescription: {document.Description}"
+            _ =>
+                $"Generated content for {document.Type} document: {document.Title}\n\nDescription: {document.Description}"
         };
     }
 
@@ -74,9 +77,9 @@ NIF/CIF: {GetParameterValue(parameters, "clientTaxId", "12345678Z")}
 DESGLOSE:
 Descripción: {document.Description}
 Cantidad: {GetParameterValue(parameters, "quantity", "1")}
-Precio unitario: {(document.Amount ?? 0):F2} {document.Currency}
+Precio unitario: {document.Amount ?? 0:F2} {document.Currency}
 
-Subtotal: {(document.Amount ?? 0):F2} {document.Currency}
+Subtotal: {document.Amount ?? 0:F2} {document.Currency}
 IVA (21%): {(document.Amount ?? 0) * 0.21m:F2} {document.Currency}
 TOTAL: {(document.Amount ?? 0) * 1.21m:F2} {document.Currency}
 
@@ -133,7 +136,7 @@ Descripción: {GetParameterValue(parameters, "activityDescription", "Actividades
 RENDIMIENTOS DEL TRABAJO Y ACTIVIDADES ECONÓMICAS:
 Ingresos íntegros: {GetParameterValue(parameters, "grossIncome", "0,00")} €
 Gastos deducibles: {GetParameterValue(parameters, "deductibleExpenses", "0,00")} €
-Rendimiento neto: {(decimal.Parse(GetParameterValue(parameters, "grossIncome", "0")) - decimal.Parse(GetParameterValue(parameters, "deductibleExpenses", "0"))):F2} €
+Rendimiento neto: {decimal.Parse(GetParameterValue(parameters, "grossIncome", "0")) - decimal.Parse(GetParameterValue(parameters, "deductibleExpenses", "0")):F2} €
 
 RETENCIONES Y PAGOS A CUENTA:
 Retenciones del trabajo: {GetParameterValue(parameters, "workRetentions", "0,00")} €

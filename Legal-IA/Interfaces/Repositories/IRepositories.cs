@@ -1,10 +1,10 @@
-using Legal_IA.Models;
 using System.Linq.Expressions;
+using Legal_IA.Models;
 
 namespace Legal_IA.Interfaces.Repositories;
 
 /// <summary>
-/// Generic repository interface for common database operations
+///     Generic repository interface for common database operations
 /// </summary>
 public interface IRepository<T> where T : class
 {
@@ -21,7 +21,7 @@ public interface IRepository<T> where T : class
 }
 
 /// <summary>
-/// User-specific repository interface
+///     User-specific repository interface
 /// </summary>
 public interface IUserRepository : IRepository<User>
 {
@@ -32,7 +32,7 @@ public interface IUserRepository : IRepository<User>
 }
 
 /// <summary>
-/// Document-specific repository interface
+///     Document-specific repository interface
 /// </summary>
 public interface IDocumentRepository : IRepository<Document>
 {

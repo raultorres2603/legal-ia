@@ -1,12 +1,12 @@
-using Microsoft.EntityFrameworkCore;
 using Legal_IA.Data;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Repositories;
 
 /// <summary>
-/// Document repository implementation with specific document operations
+///     Document repository implementation with specific document operations
 /// </summary>
 public class DocumentRepository : Repository<Document>, IDocumentRepository
 {
@@ -54,9 +54,9 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
         if (userId.HasValue)
             query = query.Where(d => d.UserId == userId.Value);
 
-        query = query.Where(d => 
-            d.Title.Contains(searchTerm) || 
-            d.Description.Contains(searchTerm) || 
+        query = query.Where(d =>
+            d.Title.Contains(searchTerm) ||
+            d.Description.Contains(searchTerm) ||
             d.Tags.Contains(searchTerm));
 
         return await query

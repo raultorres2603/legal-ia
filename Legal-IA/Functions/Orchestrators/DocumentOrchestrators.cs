@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace Legal_IA.Functions.Orchestrators;
 
 /// <summary>
-/// Document-related orchestrator functions
+///     Document-related orchestrator functions
 /// </summary>
 public class DocumentOrchestrators
 {
@@ -37,10 +37,7 @@ public class DocumentOrchestrators
             var document = await context.CallActivityAsync<DocumentResponse>("CreateDocumentActivity", createRequest);
 
             // Initialize document content if it's a template
-            if (createRequest.IsTemplate)
-            {
-                await context.CallActivityAsync("InitializeTemplateActivity", document.Id);
-            }
+            if (createRequest.IsTemplate) await context.CallActivityAsync("InitializeTemplateActivity", document.Id);
 
             return document;
         }
@@ -69,11 +66,9 @@ public class DocumentOrchestrators
                 new { DocumentId = documentId, UpdateRequest = updateRequest });
 
             if (document != null && updateRequest.Status.HasValue)
-            {
                 // Handle status change notifications
                 await context.CallActivityAsync("HandleDocumentStatusChangeActivity",
                     new { Document = document, NewStatus = updateRequest.Status.Value });
-            }
 
             return document;
         }
@@ -93,41 +88,41 @@ public class DocumentOrchestrators
         try
         {
             // Get document details
-            var document = await context.CallActivityAsync<DocumentResponse?>("GetDocumentActivity", generationRequest.DocumentId);
+            var document =
+                await context.CallActivityAsync<DocumentResponse?>("GetDocumentActivity", generationRequest.DocumentId);
             if (document == null)
                 throw new ArgumentException($"Document {generationRequest.DocumentId} not found");
 
             // Update status to InProgress
             await context.CallActivityAsync("UpdateDocumentStatusActivity",
-                new { DocumentId = generationRequest.DocumentId, Status = DocumentStatus.InProgress });
+                new { generationRequest.DocumentId, Status = DocumentStatus.InProgress });
 
             // Call AI Agent to generate document content
             var generatedContent = await context.CallActivityAsync<string>("GenerateDocumentContentActivity",
-                new { Document = document, Parameters = generationRequest.Parameters });
+                new { Document = document, generationRequest.Parameters });
 
             // Save generated file
             var filePath = await context.CallActivityAsync<string>("SaveGeneratedDocumentActivity",
-                new { DocumentId = generationRequest.DocumentId, Content = generatedContent });
+                new { generationRequest.DocumentId, Content = generatedContent });
 
             // Update document with file information and status
             var updatedDocument = await context.CallActivityAsync<DocumentResponse?>("FinalizeDocumentActivity",
-                new { DocumentId = generationRequest.DocumentId, FilePath = filePath, Status = DocumentStatus.Generated });
+                new { generationRequest.DocumentId, FilePath = filePath, Status = DocumentStatus.Generated });
 
             // Send completion notification
             if (updatedDocument != null)
-            {
                 await context.CallActivityAsync("SendDocumentGenerationNotificationActivity", updatedDocument);
-            }
 
             return updatedDocument;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in document generation orchestration for document {DocumentId}", generationRequest.DocumentId);
+            _logger.LogError(ex, "Error in document generation orchestration for document {DocumentId}",
+                generationRequest.DocumentId);
 
             // Update status to failed on error
             await context.CallActivityAsync("UpdateDocumentStatusActivity",
-                new { DocumentId = generationRequest.DocumentId, Status = DocumentStatus.Draft });
+                new { generationRequest.DocumentId, Status = DocumentStatus.Draft });
 
             throw;
         }

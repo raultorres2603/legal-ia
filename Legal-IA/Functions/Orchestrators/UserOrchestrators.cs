@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace Legal_IA.Functions.Orchestrators;
 
 /// <summary>
-/// User-related orchestrator functions
+///     User-related orchestrator functions
 /// </summary>
 public class UserOrchestrators(ILogger<UserOrchestrators> logger)
 {
@@ -55,10 +55,8 @@ public class UserOrchestrators(ILogger<UserOrchestrators> logger)
                 new { UserId = userId, UpdateRequest = updateRequest });
 
             if (user != null)
-            {
                 // Send update notification
                 await context.CallActivityAsync("SendUserUpdateNotificationActivity", user);
-            }
 
             return user;
         }

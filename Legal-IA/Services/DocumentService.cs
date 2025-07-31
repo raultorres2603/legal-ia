@@ -1,18 +1,18 @@
 using Legal_IA.DTOs;
-using Legal_IA.Interfaces.Services;
 using Legal_IA.Interfaces.Repositories;
+using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
 
 namespace Legal_IA.Services;
 
 /// <summary>
-/// Document service implementation using repository pattern
+///     Document service implementation using repository pattern
 /// </summary>
 public class DocumentService : IDocumentService
 {
-    private readonly IDocumentRepository _documentRepository;
-    private readonly ICacheService _cacheService;
     private readonly string _cacheKeyPrefix = "document:";
+    private readonly ICacheService _cacheService;
+    private readonly IDocumentRepository _documentRepository;
     private readonly string _userDocumentsCachePrefix = "user_docs:";
 
     public DocumentService(IDocumentRepository documentRepository, ICacheService cacheService)
@@ -25,7 +25,7 @@ public class DocumentService : IDocumentService
     {
         var cacheKey = $"{_cacheKeyPrefix}{id}";
         var cachedDocument = await _cacheService.GetAsync<DocumentResponse>(cacheKey);
-        
+
         if (cachedDocument != null)
             return cachedDocument;
 
@@ -42,13 +42,13 @@ public class DocumentService : IDocumentService
     {
         var cacheKey = $"{_userDocumentsCachePrefix}{userId}";
         var cachedDocuments = await _cacheService.GetAsync<IEnumerable<DocumentResponse>>(cacheKey);
-        
+
         if (cachedDocuments != null)
             return cachedDocuments;
 
         var documents = await _documentRepository.GetByUserIdAsync(userId);
         var documentResponses = documents.Select(MapToDocumentResponse);
-        
+
         await _cacheService.SetAsync(cacheKey, documentResponses);
         return documentResponses;
     }
@@ -86,7 +86,7 @@ public class DocumentService : IDocumentService
         };
 
         var createdDocument = await _documentRepository.AddAsync(document);
-        
+
         // Invalidate user documents cache
         var userCacheKey = $"{_userDocumentsCachePrefix}{request.UserId}";
         await _cacheService.RemoveAsync(userCacheKey);

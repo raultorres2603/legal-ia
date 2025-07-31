@@ -1,11 +1,11 @@
+using Legal_IA.Interfaces.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
-using Legal_IA.Interfaces.Services;
 
 namespace Legal_IA.Services;
 
 /// <summary>
-/// Cache service implementation using Redis
+///     Cache service implementation using Redis
 /// </summary>
 public class CacheService : ICacheService
 {
@@ -20,8 +20,8 @@ public class CacheService : ICacheService
     public async Task<T?> GetAsync<T>(string key) where T : class
     {
         var cachedValue = await _cache.GetStringAsync(key);
-        return string.IsNullOrEmpty(cachedValue) 
-            ? null 
+        return string.IsNullOrEmpty(cachedValue)
+            ? null
             : JsonConvert.DeserializeObject<T>(cachedValue);
     }
 

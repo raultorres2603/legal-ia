@@ -1,17 +1,18 @@
+using System.Text;
 using Azure.Storage.Blobs;
-using Microsoft.Extensions.Logging;
 using Legal_IA.Interfaces.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Services;
 
 /// <summary>
-/// File storage service implementation using Azure Blob Storage (Azurite)
+///     File storage service implementation using Azure Blob Storage (Azurite)
 /// </summary>
 public class FileStorageService : IFileStorageService
 {
+    private const string ContainerName = "documents";
     private readonly BlobServiceClient _blobServiceClient;
     private readonly ILogger<FileStorageService> _logger;
-    private const string ContainerName = "documents";
 
     public FileStorageService(BlobServiceClient blobServiceClient, ILogger<FileStorageService> logger)
     {
@@ -26,12 +27,12 @@ public class FileStorageService : IFileStorageService
             var containerClient = await GetContainerClientAsync();
             var blobClient = containerClient.GetBlobClient(fileName);
 
-            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
-            await blobClient.UploadAsync(stream, overwrite: true);
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
+            await blobClient.UploadAsync(stream, true);
 
             var filePath = $"{ContainerName}/{fileName}";
             _logger.LogInformation("Document saved successfully: {FilePath}", filePath);
-            
+
             return filePath;
         }
         catch (Exception ex)

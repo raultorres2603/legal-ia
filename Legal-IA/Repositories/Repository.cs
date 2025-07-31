@@ -1,13 +1,12 @@
-using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using Legal_IA.Data;
 using Legal_IA.Interfaces.Repositories;
-using Legal_IA.Models;
-using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Repositories;
 
 /// <summary>
-/// Generic repository implementation
+///     Generic repository implementation
 /// </summary>
 public class Repository<T> : IRepository<T> where T : class
 {
@@ -71,12 +70,13 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
     {
-        return predicate == null 
-            ? await _dbSet.CountAsync() 
+        return predicate == null
+            ? await _dbSet.CountAsync()
             : await _dbSet.CountAsync(predicate);
     }
 
-    public virtual async Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize, Expression<Func<T, bool>>? predicate = null)
+    public virtual async Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize,
+        Expression<Func<T, bool>>? predicate = null)
     {
         var query = predicate == null ? _dbSet : _dbSet.Where(predicate);
         return await query

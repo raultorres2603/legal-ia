@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace Legal_IA.Functions.Activities;
 
 /// <summary>
-/// User-related activity functions
+///     User-related activity functions
 /// </summary>
 public class UserActivities(ILogger<UserActivities> logger, IUserService userService)
 {

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace Legal_IA.Functions.Activities;
 
 /// <summary>
-/// Notification-related activity functions
+///     Notification-related activity functions
 /// </summary>
 public class NotificationActivities(ILogger<NotificationActivities> logger, INotificationService notificationService)
 {

@@ -1,18 +1,18 @@
 using Legal_IA.DTOs;
-using Legal_IA.Interfaces.Services;
 using Legal_IA.Interfaces.Repositories;
+using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
 
 namespace Legal_IA.Services;
 
 /// <summary>
-/// User service implementation using repository pattern
+///     User service implementation using repository pattern
 /// </summary>
 public class UserService : IUserService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly ICacheService _cacheService;
     private readonly string _cacheKeyPrefix = "user:";
+    private readonly ICacheService _cacheService;
+    private readonly IUserRepository _userRepository;
 
     public UserService(IUserRepository userRepository, ICacheService cacheService)
     {
@@ -24,7 +24,7 @@ public class UserService : IUserService
     {
         var cacheKey = $"{_cacheKeyPrefix}{id}";
         var cachedUser = await _cacheService.GetAsync<UserResponse>(cacheKey);
-        
+
         if (cachedUser != null)
             return cachedUser;
 
@@ -70,7 +70,7 @@ public class UserService : IUserService
 
         var createdUser = await _userRepository.AddAsync(user);
         var userResponse = MapToUserResponse(createdUser);
-        
+
         var cacheKey = $"{_cacheKeyPrefix}{createdUser.Id}";
         await _cacheService.SetAsync(cacheKey, userResponse);
 
@@ -97,7 +97,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
 
         var updatedUser = await _userRepository.UpdateAsync(user);
-        
+
         // Invalidate cache
         var cacheKey = $"{_cacheKeyPrefix}{id}";
         await _cacheService.RemoveAsync(cacheKey);

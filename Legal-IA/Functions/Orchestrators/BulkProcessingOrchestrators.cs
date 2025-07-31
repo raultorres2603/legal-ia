@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Legal_IA.Functions.Orchestrators;
 
 /// <summary>
-/// Bulk processing orchestrator functions
+///     Bulk processing orchestrator functions
 /// </summary>
 public class BulkProcessingOrchestrators
 {

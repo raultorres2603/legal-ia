@@ -3,7 +3,7 @@ using Legal_IA.DTOs;
 namespace Legal_IA.Interfaces.Services;
 
 /// <summary>
-/// Service interface for caching operations
+///     Service interface for caching operations
 /// </summary>
 public interface ICacheService
 {
@@ -14,7 +14,7 @@ public interface ICacheService
 }
 
 /// <summary>
-/// Service interface for notification operations
+///     Service interface for notification operations
 /// </summary>
 public interface INotificationService
 {
@@ -25,7 +25,7 @@ public interface INotificationService
 }
 
 /// <summary>
-/// Service interface for AI document generation
+///     Service interface for AI document generation
 /// </summary>
 public interface IAIDocumentGeneratorService
 {
@@ -33,7 +33,7 @@ public interface IAIDocumentGeneratorService
 }
 
 /// <summary>
-/// Service interface for file storage operations
+///     Service interface for file storage operations
 /// </summary>
 public interface IFileStorageService
 {

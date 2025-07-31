@@ -1,17 +1,17 @@
+using Azure.Storage.Blobs;
+using FluentValidation;
+using Legal_IA.Data;
+using Legal_IA.DTOs;
+using Legal_IA.Interfaces.Repositories;
+using Legal_IA.Interfaces.Services;
+using Legal_IA.Repositories;
+using Legal_IA.Services;
+using Legal_IA.Validators;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Azure.Storage.Blobs;
-using Legal_IA.Data;
-using Legal_IA.Services;
-using Legal_IA.Repositories;
-using Legal_IA.Interfaces.Services;
-using Legal_IA.Interfaces.Repositories;
-using Legal_IA.Validators;
-using FluentValidation;
-using Legal_IA.DTOs;
 using Microsoft.Extensions.Logging;
 
 var builder = FunctionsApplication.CreateBuilder(args);
@@ -24,8 +24,8 @@ builder.Services
     .ConfigureFunctionsApplicationInsights();
 
 // Configure Entity Framework with PostgreSQL
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") 
-    ?? "Host=localhost;Port=5433;Database=LegalIA;Username=postgres;Password=password";
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+                       ?? "Host=localhost;Port=5433;Database=LegalIA;Username=postgres;Password=password";
 
 builder.Services.AddDbContext<LegalIADbContext>(options =>
 {
@@ -34,8 +34,8 @@ builder.Services.AddDbContext<LegalIADbContext>(options =>
 });
 
 // Configure Redis Cache
-var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis") 
-    ?? "localhost:6380";
+var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis")
+                            ?? "localhost:6380";
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -44,8 +44,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 // Configure Azure Blob Storage (Azurite)
-var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage") 
-    ?? "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;";
+var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
+                              ??
+                              "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;";
 
 builder.Services.AddSingleton<BlobServiceClient>(serviceProvider =>
 {
@@ -85,7 +86,8 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Could not ensure database is created. This may be expected if database is not available during startup.");
+        logger.LogWarning(ex,
+            "Could not ensure database is created. This may be expected if database is not available during startup.");
     }
 }
 

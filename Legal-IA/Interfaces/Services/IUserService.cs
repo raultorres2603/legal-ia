@@ -1,10 +1,9 @@
 using Legal_IA.DTOs;
-using Legal_IA.Models;
 
 namespace Legal_IA.Interfaces.Services;
 
 /// <summary>
-/// Service interface for managing user operations
+///     Service interface for managing user operations
 /// </summary>
 public interface IUserService
 {

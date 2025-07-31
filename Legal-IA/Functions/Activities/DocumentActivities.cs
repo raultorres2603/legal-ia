@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace Legal_IA.Functions.Activities;
 
 /// <summary>
-/// Document-related activity functions
+///     Document-related activity functions
 /// </summary>
 public class DocumentActivities(
     ILogger<DocumentActivities> logger,
@@ -106,10 +106,7 @@ public class DocumentActivities(
 
         var document = await documentService.UpdateDocumentAsync(documentId, updateRequest);
 
-        if (document != null)
-        {
-            logger.LogInformation($"Document {documentId} finalized with status {status}");
-        }
+        if (document != null) logger.LogInformation($"Document {documentId} finalized with status {status}");
 
         return document;
     }
