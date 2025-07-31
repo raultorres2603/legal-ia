@@ -285,95 +285,156 @@ Legal-IA/
 └── 📄 Program.cs               # Dependency injection configuration
 ```
 
-## 🧪 **Testing**
+## 🧪 **Testing & API Documentation**
 
 ### **Postman Collections**
-The project includes comprehensive Postman collections for testing:
+The project includes **6 comprehensive Postman collections** located in the `/Postman/` directory, providing complete API testing coverage for all functionality:
 
-- **Legal-IA Main Collection** - Core API endpoints
-- **User Management** - User CRUD operations
-- **Document Management** - Document lifecycle testing
-- **Spanish Bureaucratic Documents** - Document type-specific tests
-- **Validation & Edge Cases** - Error handling and validation
-- **Workflow Testing** - End-to-end process validation
+#### **1. Legal-IA Main Collection** 📋
+*Complete API collection for core functionality testing*
 
-### **Test Scenarios**
-1. **User Registration** - Spanish DNI/CIF validation
-2. **Document Creation** - Various document types
-3. **AI Generation** - Prompt-based document creation
-4. **File Operations** - Upload, download, metadata
-5. **Search & Filtering** - Content discovery
-6. **Error Handling** - Validation and edge cases
+**Features:**
+- **🤖 AI Document Generation** (4 endpoints)
+  - `POST /ai/documents/generate` - Generate documents from natural language prompts
+  - `POST /ai/documents/{id}/regenerate` - Update documents with new prompts
+  - `GET /ai/documents/{id}/status` - Check generation progress
+  - `GET /ai/documents/{id}/download` - Download generated PDFs
+- **👥 User Management** (5 endpoints) - Complete CRUD with Spanish validation
+- **📄 Document Management** (9 endpoints) - Traditional document operations
+- **Smart Variables** - Automatic ID capture and chaining between requests
+- **Global Test Scripts** - Performance and validation assertions
 
-## 🔐 **Security & Compliance**
+#### **2. Spanish Bureaucratic Documents** 🇪🇸
+*Specialized collection for AI generation of Spanish legal documents*
 
-### **Data Protection**
-- **GDPR Compliant** - EU data protection regulations
-- **Spanish LOPD** - Local data protection compliance
-- **Encryption** - Data at rest and in transit
-- **Access Control** - Role-based permissions
+**Document Categories:**
+- **💰 Facturas (Invoices)** - Service and product invoices with Spanish tax compliance
+  - Professional service invoices with IRPF 15% withholding
+  - Product sales invoices with IVA 21% calculations
+- **📊 Declaraciones Fiscales (Tax Returns)**
+  - Quarterly VAT returns (Modelo 303)
+  - Annual IRPF declarations with deductions
+- **🏢 Contratos (Contracts)**
+  - Technology service agreements
+  - Office rental contracts (Ley de Arrendamientos Urbanos)
+- **📋 Seguridad Social** - RETA registration forms for autonomous workers
+- **📊 Informes de Gastos** - Deductible expense reports with tax analysis
+- **📋 Recibos y Otros** - Professional receipts and business plans
 
-### **Validation**
-- **Spanish ID Validation** - DNI/CIF format verification
-- **Business Rules** - Legal document requirements
-- **Input Sanitization** - XSS and injection protection
-- **Rate Limiting** - API abuse prevention
+**Spanish Legal Compliance:**
+- Proper DNI/CIF format validation
+- Spanish tax calculations (IVA, IRPF, Social Security)
+- Compliance with Spanish bureaucratic requirements
+- Real-world scenarios for consultants and businesses
 
-## 📈 **Monitoring & Observability**
+#### **3. User Management** 👥
+*Dedicated collection for user account operations*
 
-### **Application Insights**
-- **Performance Metrics** - Response times, throughput
-- **Error Tracking** - Exception monitoring and alerting
-- **User Analytics** - Usage patterns and trends
-- **Custom Telemetry** - Business-specific metrics
+**Features:**
+- User registration with Spanish legal validation
+- Profile management and updates
+- Spanish identification validation (DNI, CIF)
+- Address and contact information handling
+- Business entity support
 
-### **Logging**
-- **Structured Logging** - JSON-formatted logs
-- **Correlation IDs** - Request tracing across services
-- **Audit Trail** - Document lifecycle tracking
-- **Performance Monitoring** - Slow query detection
+#### **4. Document Management** 📄
+*Traditional document CRUD operations*
 
-## 🚀 **Deployment**
+**Features:**
+- Document creation, reading, updating, deletion
+- Document filtering by type, status, user
+- Template management
+- Search functionality
+- File metadata handling
 
-### **Azure Deployment**
-1. **Azure Functions App** - Serverless compute
-2. **Azure Database for PostgreSQL** - Managed database
-3. **Azure Redis Cache** - Managed caching
-4. **Azure Blob Storage** - Document storage
-5. **Application Insights** - Monitoring and analytics
+#### **5. Validation & Edge Cases** ⚠️
+*Comprehensive error handling and security testing*
 
-### **Environment Configuration**
-- **Development** - Local Docker containers
-- **Staging** - Azure services with dev data
-- **Production** - Full Azure stack with monitoring
+**Test Categories:**
+- **🤖 AI Generation Validation**
+  - Invalid user IDs, empty prompts, prompt limits
+  - Invalid document types, non-existent documents
+  - Context length validation, regeneration errors
+- **👥 Spanish Legal Validation**
+  - DNI format: `12345678Z` pattern validation
+  - CIF format: `B12345678` pattern validation
+  - Spanish postal codes: `28001` format validation
+  - Spanish phone numbers: `+34912345678` format validation
+- **🔍 Security Testing**
+  - SQL injection prevention
+  - XSS attack prevention
+  - Data sanitization validation
+- **🚀 Performance Testing**
+  - Concurrent AI generation load testing
+  - Bulk document operations
+  - Response time benchmarks
 
-## 🤝 **Contributing**
+#### **6. Workflow Testing** 🔄
+*End-to-end process validation*
 
-### **Development Guidelines**
-1. Follow C# coding standards and conventions
-2. Implement comprehensive unit tests
-3. Update documentation for new features
-4. Validate Spanish legal compliance requirements
-5. Ensure API backward compatibility
+**Features:**
+- Complete user-to-document workflows
+- AI generation process validation
+- Multi-step document creation scenarios
+- Integration testing between services
 
-### **Code Quality**
-- **FluentValidation** - Input validation
-- **Entity Framework** - Data access patterns
-- **Dependency Injection** - Loose coupling
-- **Repository Pattern** - Data abstraction
-- **Clean Architecture** - Separation of concerns
+### **Collection Usage Guide**
 
-## 📞 **Support & Contact**
+#### **Getting Started**
+1. **Import Collections** - Import all `.postman_collection.json` files from `/Postman/` directory
+2. **Set Environment** - Configure base URL: `http://localhost:7071`
+3. **Start Infrastructure** - Run `docker-compose up -d` for databases
+4. **Run Application** - Execute `func start` to launch Azure Functions
+5. **Execute Tests** - Run collections individually or as a suite
 
-For questions, issues, or contributions related to Legal-IA:
+#### **Recommended Testing Flow**
+```
+1. Start with "Legal-IA Main Collection" → Test core functionality
+2. Use "User Management" → Create test users with Spanish data
+3. Run "Spanish Bureaucratic Documents" → Test realistic legal scenarios
+4. Execute "Validation & Edge Cases" → Ensure robust error handling
+5. Perform "Workflow Testing" → Validate end-to-end processes
+```
 
-- **Technical Issues** - GitHub Issues
-- **Feature Requests** - GitHub Discussions
-- **Legal Compliance** - Consult with Spanish legal experts
-- **Documentation** - Refer to inline code documentation
+#### **Smart Features**
+- **Automatic Variable Management** - Document IDs captured from responses
+- **Chained Requests** - Seamless flow between related operations
+- **Realistic Test Data** - Spanish legal scenarios with proper formatting
+- **Performance Monitoring** - Built-in response time validation
+- **Security Validation** - Automated security testing assertions
 
----
+### **Test Scenarios Coverage**
 
-**Legal-IA** - Empowering Spanish legal professionals with AI-driven document automation 🇪🇸⚖️
+#### **Spanish Legal Compliance Testing**
+1. **DNI/CIF Validation** - Spanish identification number formats
+2. **Tax Calculations** - IVA 21%, IRPF withholdings, Social Security
+3. **Legal Document Formats** - Compliance with Spanish regulations
+4. **Business Rules** - Autonomous worker requirements, contract law
 
-*Built with .NET 8, Azure Functions, and modern cloud-native architecture for scalable legal document processing.*
+#### **AI Document Generation Testing**
+1. **Natural Language Processing** - Prompt-based document creation
+2. **Document Types** - All 13 supported Spanish legal document types
+3. **Content Quality** - AI-generated content validation
+4. **PDF Generation** - File creation and blob storage integration
+
+#### **Security & Performance Testing**
+1. **Input Validation** - Comprehensive field validation testing
+2. **SQL Injection Prevention** - Database security validation
+3. **Load Testing** - Concurrent request handling
+4. **Error Handling** - Graceful failure scenarios
+
+#### **Integration Testing**
+1. **Database Operations** - PostgreSQL integration validation
+2. **Blob Storage** - Azure Blob Storage file operations
+3. **Caching** - Redis cache performance and consistency
+4. **External Services** - AI service integration readiness
+
+### **API Documentation**
+Each Postman collection includes:
+- **Detailed Request Documentation** - Clear descriptions and usage examples
+- **Response Examples** - Expected outputs for all scenarios
+- **Error Handling Examples** - Common error responses and solutions
+- **Spanish Legal Context** - Explanations of regulatory requirements
+- **Performance Benchmarks** - Expected response times and limits
+
+The collections serve as both **testing tools** and **comprehensive API documentation**, making them invaluable for developers, testers, and integration partners working with the Legal-IA system.

@@ -2,24 +2,521 @@
 	"info": {
 		"_postman_id": "legal-ia-main-collection",
 		"name": "Legal-IA API Collection",
-		"description": "Complete API collection for testing Legal-IA Azure Functions project - Spanish Autonomous Workers Document Management System",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"description": "Complete API collection for testing Legal-IA Azure Functions project - AI-Powered Spanish Legal Document Management System with AI Generation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": {
+			"major": 2,
+			"minor": 1,
+			"patch": 0
+		}
 	},
 	"variable": [
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:7071",
-			"type": "string"
+			"type": "string",
+			"description": "Base URL for Azure Functions local development"
 		},
 		{
 			"key": "userId",
 			"value": "550e8400-e29b-41d4-a716-446655440000",
-			"type": "string"
+			"type": "string",
+			"description": "Sample user ID for testing"
 		},
 		{
 			"key": "documentId",
 			"value": "550e8400-e29b-41d4-a716-446655440001",
-			"type": "string"
+			"type": "string",
+			"description": "Sample document ID for testing"
+		},
+		{
+			"key": "aiDocumentId",
+			"value": "",
+			"type": "string",
+			"description": "AI-generated document ID (set from response)"
+		}
+	],
+	"item": [
+		{
+			"name": "🤖 AI Document Generation",
+			"item": [
+				{
+					"name": "Generate AI Document",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('aiDocumentId', responseJson.documentId);",
+									"    console.log('AI Document ID set to:', responseJson.documentId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 1,\n  \"title\": \"Factura AI Generada\",\n  \"description\": \"Factura generada por IA para servicios de consultoría\",\n  \"userPrompts\": [\n    \"Crear una factura profesional para servicios de consultoría\",\n    \"Incluir detalles del cliente y servicios prestados\",\n    \"Aplicar IVA del 21% según normativa española\",\n    \"Formato estándar para autónomos en España\"\n  ],\n  \"additionalContext\": \"Factura para cliente español, servicios de consultoría tecnológica prestados en enero 2025. Incluir todos los campos obligatorios según normativa fiscal española.\",\n  \"tags\": \"factura, ia, consultoria, enero\",\n  \"amount\": 2500.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						},
+						"description": "Generate a new AI-powered legal document based on user prompts and context"
+					},
+					"response": []
+				},
+				{
+					"name": "Regenerate AI Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": \"{{aiDocumentId}}\",\n  \"updatedPrompts\": [\n    \"Actualizar la factura con descuento del 10%\",\n    \"Cambiar método de pago a transferencia bancaria\",\n    \"Incluir nota sobre facturación sin IVA por inversión del sujeto pasivo\",\n    \"Añadir términos y condiciones específicos\"\n  ],\n  \"updatedContext\": \"Cliente solicita descuento por volumen de trabajo. Aplicar facturación B2B con inversión del sujeto pasivo.\",\n  \"reason\": \"Cliente solicitó modificaciones en términos comerciales y fiscales\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/{{aiDocumentId}}/regenerate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "{{aiDocumentId}}", "regenerate"]
+						},
+						"description": "Regenerate an existing AI document with updated prompts and context"
+					},
+					"response": []
+				},
+				{
+					"name": "Get AI Document Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/{{aiDocumentId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "{{aiDocumentId}}", "status"]
+						},
+						"description": "Check the generation status of an AI document"
+					},
+					"response": []
+				},
+				{
+					"name": "Download AI Generated PDF",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/{{aiDocumentId}}/download",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "{{aiDocumentId}}", "download"]
+						},
+						"description": "Download the generated PDF document from blob storage"
+					},
+					"response": []
+				}
+			],
+			"description": "AI-powered document generation endpoints for creating legal documents from natural language prompts"
+		},
+		{
+			"name": "👥 User Management",
+			"item": [
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('userId', responseJson.id);",
+									"    console.log('User ID set to:', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"María\",\n  \"lastName\": \"García López\",\n  \"email\": \"maria.garcia@email.com\",\n  \"dni\": \"12345678Z\",\n  \"cif\": \"B12345678\",\n  \"businessName\": \"Consultoría García S.L.\",\n  \"address\": \"Calle Mayor, 123\",\n  \"postalCode\": \"28001\",\n  \"city\": \"Madrid\",\n  \"province\": \"Madrid\",\n  \"phone\": \"+34912345678\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						},
+						"description": "Create a new user with Spanish DNI/CIF validation"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{userId}}"]
+						},
+						"description": "Retrieve user information by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"María Carmen\",\n  \"lastName\": \"García López\",\n  \"email\": \"mariacarmen.garcia@email.com\",\n  \"businessName\": \"Consultoría García Premium S.L.\",\n  \"address\": \"Calle Mayor, 123, Piso 2º\",\n  \"phone\": \"+34912345679\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{userId}}"]
+						},
+						"description": "Update user profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{userId}}"]
+						},
+						"description": "Deactivate user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						},
+						"description": "Get all users (admin functionality)"
+					},
+					"response": []
+				}
+			],
+			"description": "User management endpoints with Spanish legal compliance (DNI/CIF validation)"
+		},
+		{
+			"name": "📄 Document Management",
+			"item": [
+				{
+					"name": "Create Document",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('documentId', responseJson.id);",
+									"    console.log('Document ID set to:', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Factura Enero 2025\",\n  \"type\": 1,\n  \"description\": \"Servicios de consultoría prestados durante el mes de enero\",\n  \"content\": \"Factura por servicios de consultoría tecnológica\",\n  \"tags\": \"factura, enero, consultoria\",\n  \"amount\": 1500.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents"]
+						},
+						"description": "Create a new document manually"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}"]
+						},
+						"description": "Retrieve document by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents by User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/user/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "user", "{{userId}}"]
+						},
+						"description": "Get all documents for a specific user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/type/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "type", "1"],
+							"query": [
+								{
+									"key": "type",
+									"value": "1",
+									"description": "1=Invoice, 2=Expense, 3=VATReturn, 4=IRPFReturn, 5=IncomeStatement, 6=SocialSecurityForm, 7=ExpenseReport, 8=Contract, 9=Receipt, 10=TaxForm, 11=BusinessPlan, 12=LegalDocument, 99=Other",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get documents by document type"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/status/3",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "status", "3"],
+							"query": [
+								{
+									"key": "status",
+									"value": "3",
+									"description": "1=Draft, 2=InProgress, 3=Generated, 4=Submitted, 5=Approved, 6=Rejected, 7=Archived",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get documents by status"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/search?term=factura&userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "search"],
+							"query": [
+								{
+									"key": "term",
+									"value": "factura"
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						},
+						"description": "Search documents by text content"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Templates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/templates",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "templates"]
+						},
+						"description": "Get available document templates"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Document",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Factura Enero 2025 - Actualizada\",\n  \"description\": \"Servicios de consultoría prestados durante el mes de enero - Versión corregida\",\n  \"content\": \"Contenido actualizado de la factura\",\n  \"status\": 3,\n  \"tags\": \"factura, enero, consultoria, actualizada\",\n  \"amount\": 1650.00,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}"]
+						},
+						"description": "Update document information"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "documents", "{{documentId}}"]
+						},
+						"description": "Delete a document"
+					},
+					"response": []
+				}
+			],
+			"description": "Traditional document management endpoints for CRUD operations"
+		}
+	],
+	"auth": {
+		"type": "noauth"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script for Legal-IA API",
+					"console.log('Making request to Legal-IA API:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script for Legal-IA API",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has proper headers', function () {",
+					"    pm.response.to.have.header('Content-Type');",
+					"});"
+				]
+			}
 		}
 	]
 }

@@ -1,242 +1,326 @@
 {
 	"info": {
-		"_postman_id": "spanish-documents-collection",
-		"name": "Spanish Bureaucratic Documents - Legal-IA",
-		"description": "Collection for testing Spanish autonomous workers' bureaucratic document creation and management",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "VAT Documents",
-			"item": [
-				{
-					"name": "Create VAT Return (Modelo 303)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Declaración IVA - 1T 2025\",\n  \"type\": 3,\n  \"description\": \"Declaración trimestral del IVA - Primer trimestre 2025\",\n  \"content\": \"\",\n  \"tags\": \"iva, declaracion, trimestral, modelo-303\",\n  \"amount\": 2100.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Generate VAT Return Content",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"cif\": \"B12345678\",\n    \"businessName\": \"Consultoría García S.L.\",\n    \"taxableBase\": \"10000.00\",\n    \"outputVAT\": \"2100.00\",\n    \"inputVAT\": \"420.00\",\n    \"result\": \"1680.00\",\n    \"amountToPay\": \"1680.00\",\n    \"amountToCompensate\": \"0.00\"\n  }\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents", "{{documentId}}", "generate"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "IRPF Documents",
-			"item": [
-				{
-					"name": "Create IRPF Return (Modelo 100)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Declaración IRPF 2024\",\n  \"type\": 4,\n  \"description\": \"Declaración anual del Impuesto sobre la Renta de las Personas Físicas\",\n  \"content\": \"\",\n  \"tags\": \"irpf, declaracion, anual, modelo-100, autonomo\",\n  \"amount\": 35000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": null,\n  \"year\": 2024,\n  \"isTemplate\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Generate IRPF Return Content",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"dni\": \"12345678Z\",\n    \"fullName\": \"Juan García Martín\",\n    \"birthDate\": \"01/01/1980\",\n    \"iaeCode\": \"861.1\",\n    \"activityDescription\": \"Actividades jurídicas\",\n    \"grossIncome\": \"45000.00\",\n    \"deductibleExpenses\": \"10000.00\",\n    \"workRetentions\": \"5000.00\",\n    \"fractionalPayments\": \"3000.00\",\n    \"integralQuota\": \"7000.00\",\n    \"liquidQuota\": \"6500.00\",\n    \"declarationResult\": \"-1500.00\"\n  }\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents", "{{documentId}}", "generate"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Social Security Documents",
-			"item": [
-				{
-					"name": "Create Social Security Form",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Liquidación Seguridad Social - 1T 2025\",\n  \"type\": 6,\n  \"description\": \"Liquidación de cuotas del Régimen Especial de Trabajadores Autónomos\",\n  \"content\": \"\",\n  \"tags\": \"seguridad-social, autonomo, cuotas, trimestral\",\n  \"amount\": 338.41,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Generate Social Security Form Content",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"parameters\": {\n    \"socialSecurityNumber\": \"123456789012\",\n    \"fullName\": \"Juan García Martín\",\n    \"dni\": \"12345678Z\",\n    \"minimumBase\": \"1166.70\",\n    \"chosenBase\": \"1166.70\",\n    \"commonContingencies\": \"325.57\",\n    \"cessationOfActivity\": \"11.67\",\n    \"professionalTraining\": \"1.17\",\n    \"totalAmount\": \"338.41\",\n    \"paymentMethod\": \"Domiciliación bancaria\",\n    \"dueDate\": \"2025-02-28\"\n  }\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents/{{documentId}}/generate",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents", "{{documentId}}", "generate"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Business Documents",
-			"item": [
-				{
-					"name": "Create Expense Report",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Informe de Gastos - 1T 2025\",\n  \"type\": 7,\n  \"description\": \"Informe detallado de gastos deducibles del primer trimestre\",\n  \"content\": \"\",\n  \"tags\": \"gastos, deducibles, trimestral, autonomo\",\n  \"amount\": 2500.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Service Contract",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Contrato de Prestación de Servicios\",\n  \"type\": 8,\n  \"description\": \"Contrato para servicios de consultoría jurídica\",\n  \"content\": \"\",\n  \"tags\": \"contrato, servicios, consultoria, juridico\",\n  \"amount\": 5000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": null,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Receipt",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"title\": \"Recibo de Pago\",\n  \"type\": 9,\n  \"description\": \"Recibo por servicios prestados\",\n  \"content\": \"\",\n  \"tags\": \"recibo, pago, servicios\",\n  \"amount\": 750.00,\n  \"currency\": \"EUR\",\n  \"quarter\": null,\n  \"year\": 2025,\n  \"isTemplate\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/documents",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "documents"]
-						}
-					},
-					"response": []
-				}
-			]
+		"_postman_id": "spanish-bureaucratic-documents",
+		"name": "Spanish Bureaucratic Documents - AI Generation",
+		"description": "Comprehensive collection for testing AI generation of all Spanish legal document types with realistic prompts and contexts",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": {
+			"major": 2,
+			"minor": 0,
+			"patch": 0
 		}
-	],
+	},
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:7071"
+			"value": "http://localhost:7071",
+			"type": "string"
 		},
 		{
 			"key": "userId",
-			"value": "550e8400-e29b-41d4-a716-446655440000"
+			"value": "550e8400-e29b-41d4-a716-446655440000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "💰 Facturas (Invoices)",
+			"item": [
+				{
+					"name": "AI Generate - Factura Servicios Consultoría",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 1,\n  \"title\": \"Factura Servicios Consultoría Tecnológica\",\n  \"description\": \"Factura por servicios de consultoría tecnológica prestados a empresa cliente\",\n  \"userPrompts\": [\n    \"Crear factura profesional para servicios de consultoría tecnológica\",\n    \"Cliente: TechCorp Solutions S.L., CIF: B87654321\",\n    \"Servicios: Análisis de sistemas, desarrollo de arquitectura, consultoría DevOps\",\n    \"Aplicar IVA 21% según normativa española\",\n    \"Incluir forma de pago: transferencia bancaria a 30 días\",\n    \"Añadir datos completos del autónomo emisor\"\n  ],\n  \"additionalContext\": \"Factura para cliente empresarial español. Servicios prestados durante enero 2025. Cumplir con todos los requisitos fiscales españoles para facturas entre empresas. Incluir retención IRPF del 15% por servicios profesionales.\",\n  \"tags\": \"factura, consultoria, tecnologia, irpf\",\n  \"amount\": 3500.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AI Generate - Factura Productos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 1,\n  \"title\": \"Factura Venta Productos Informáticos\",\n  \"description\": \"Factura por venta de equipos informáticos y software\",\n  \"userPrompts\": [\n    \"Generar factura para venta de productos informáticos\",\n    \"Productos: 5x Portátiles HP, 3x Licencias Microsoft Office, 2x Servidores Dell\",\n    \"Cliente: Oficinas Centrales S.A., CIF: A12345678\",\n    \"Sin retención IRPF (venta de productos, no servicios)\",\n    \"IVA 21% aplicable\",\n    \"Pago al contado, transferencia bancaria\"\n  ],\n  \"additionalContext\": \"Venta de productos tecnológicos a empresa. No aplicar retención IRPF ya que es venta de bienes, no servicios. Incluir garantías y condiciones de venta.\",\n  \"tags\": \"factura, productos, tecnologia, hardware\",\n  \"amount\": 12500.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "AI generation of Spanish invoices with proper tax calculations and legal requirements"
 		},
 		{
-			"key": "documentId",
-			"value": "550e8400-e29b-41d4-a716-446655440001"
+			"name": "📊 Declaraciones Fiscales (Tax Returns)",
+			"item": [
+				{
+					"name": "AI Generate - Declaración IVA Trimestral",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 3,\n  \"title\": \"Declaración IVA - 1er Trimestre 2025\",\n  \"description\": \"Declaración trimestral de IVA para autónomo - Q1 2025\",\n  \"userPrompts\": [\n    \"Generar declaración trimestral de IVA para autónomo\",\n    \"Período: Enero-Marzo 2025 (primer trimestre)\",\n    \"Facturación total: €45,000 con IVA 21%\",\n    \"Gastos deducibles: €12,000 (con IVA recuperable)\",\n    \"Incluir casillas del modelo 303\",\n    \"Calcular IVA a ingresar o a devolver\",\n    \"Aplicar régimen general de IVA\"\n  ],\n  \"additionalContext\": \"Autónomo en régimen general de IVA. Actividad: servicios de consultoría tecnológica. Incluir todos los cálculos necesarios según el modelo 303 de Hacienda.\",\n  \"tags\": \"iva, declaracion, trimestral, modelo303\",\n  \"amount\": 7350.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AI Generate - Declaración IRPF Anual",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 4,\n  \"title\": \"Declaración IRPF - Renta 2024\",\n  \"description\": \"Declaración anual del Impuesto sobre la Renta de las Personas Físicas\",\n  \"userPrompts\": [\n    \"Generar declaración IRPF para autónomo año 2024\",\n    \"Ingresos por actividad económica: €180,000 anuales\",\n    \"Gastos deducibles: oficina €12,000, vehículo €8,000, formación €3,000\",\n    \"Retenciones IRPF practicadas: €27,000\",\n    \"Incluir datos familiares: casado, 2 hijos menores\",\n    \"Aplicar deducciones autonómicas de Madrid\",\n    \"Calcular cuota resultante y pagos adicionales\"\n  ],\n  \"additionalContext\": \"Autónomo con actividad de consultoría. Residente en Madrid. Régimen de estimación directa simplificada. Incluir todas las deducciones aplicables y calcular la cuota final a pagar o devolver.\",\n  \"tags\": \"irpf, renta, anual, autonomo\",\n  \"amount\": 15600.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 4,\n  \"year\": 2024\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "AI generation of Spanish tax returns (IVA, IRPF) with proper calculations and legal compliance"
+		},
+		{
+			"name": "🏢 Contratos (Contracts)",
+			"item": [
+				{
+					"name": "AI Generate - Contrato Prestación Servicios",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 8,\n  \"title\": \"Contrato de Prestación de Servicios Tecnológicos\",\n  \"description\": \"Contrato para prestación de servicios de desarrollo de software\",\n  \"userPrompts\": [\n    \"Crear contrato de prestación de servicios tecnológicos\",\n    \"Prestador: Autónomo desarrollador, DNI: 12345678Z\",\n    \"Cliente: StartupTech S.L., CIF: B98765432\",\n    \"Servicios: Desarrollo aplicación web, mantenimiento, soporte técnico\",\n    \"Duración: 12 meses renovables\",\n    \"Precio: €4,000 mensuales + IVA\",\n    \"Incluir cláusulas de confidencialidad y propiedad intelectual\",\n    \"Condiciones de pago: mensual, 30 días\",\n    \"Legislación aplicable: española\"\n  ],\n  \"additionalContext\": \"Contrato entre autónomo y empresa española. Debe cumplir con el Código Civil español y normativa laboral. Incluir cláusulas de protección de datos (RGPD) y resolución de conflictos.\",\n  \"tags\": \"contrato, servicios, tecnologia, desarrollo\",\n  \"amount\": 48000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AI Generate - Contrato Arrendamiento Oficina",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 8,\n  \"title\": \"Contrato de Arrendamiento de Oficina\",\n  \"description\": \"Contrato de alquiler de oficina para actividad profesional\",\n  \"userPrompts\": [\n    \"Generar contrato de arrendamiento de oficina\",\n    \"Arrendador: Inmobiliaria Madrid Centro S.A.\",\n    \"Arrendatario: Autónomo consultor, actividad profesional\",\n    \"Ubicación: Calle Serrano 150, Madrid\",\n    \"Superficie: 45 m², oficina exterior, 2ª planta\",\n    \"Renta mensual: €1,200 + gastos comunidad\",\n    \"Duración: 3 años prorrogables\",\n    \"Fianza: 2 mensualidades\",\n    \"Uso exclusivo: oficina profesional, no vivienda\",\n    \"Aplicar Ley de Arrendamientos Urbanos española\"\n  ],\n  \"additionalContext\": \"Contrato de arrendamiento para uso profesional bajo la Ley 29/1994 de Arrendamientos Urbanos. Incluir todas las cláusulas necesarias para proteger ambas partes y cumplir con la legislación española.\",\n  \"tags\": \"contrato, arrendamiento, oficina, alquiler\",\n  \"amount\": 43200.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "AI generation of Spanish contracts with proper legal clauses and compliance"
+		},
+		{
+			"name": "📋 Seguridad Social",
+			"item": [
+				{
+					"name": "AI Generate - Alta Autónomo Seguridad Social",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 6,\n  \"title\": \"Solicitud Alta Régimen Especial Trabajadores Autónomos\",\n  \"description\": \"Formulario de alta en el RETA para nuevo autónomo\",\n  \"userPrompts\": [\n    \"Generar solicitud de alta como autónomo en Seguridad Social\",\n    \"Régimen: RETA (Régimen Especial de Trabajadores Autónomos)\",\n    \"Actividad: Consultoría informática (CNAE 6202)\",\n    \"Base de cotización: €1,000 mensual (mínima)\",\n    \"Fecha de inicio de actividad: 01/02/2025\",\n    \"Aplicar tarifa plana para nuevos autónomos\",\n    \"Incluir datos personales y dirección fiscal\",\n    \"Cobertura por IT (Incapacidad Temporal) voluntaria\"\n  ],\n  \"additionalContext\": \"Nuevo autónomo que inicia actividad de consultoría informática. Aplicar beneficios de tarifa plana (€80/mes los primeros 12 meses). Incluir todos los formularios y documentación necesaria para el alta en Seguridad Social.\",\n  \"tags\": \"seguridad social, alta, autonomo, reta\",\n  \"amount\": 80.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "AI generation of Spanish Social Security forms for autonomous workers"
+		},
+		{
+			"name": "📊 Informes de Gastos",
+			"item": [
+				{
+					"name": "AI Generate - Informe Gastos Deducibles",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 7,\n  \"title\": \"Informe de Gastos Deducibles - Q1 2025\",\n  \"description\": \"Informe detallado de gastos deducibles para actividad profesional\",\n  \"userPrompts\": [\n    \"Crear informe de gastos deducibles para autónomo\",\n    \"Período: Enero-Marzo 2025\",\n    \"Categorías: oficina, vehículo, formación, suministros, tecnología\",\n    \"Gastos oficina: alquiler €3,600, luz €240, internet €180\",\n    \"Vehículo: combustible €450, seguro €200, mantenimiento €150\",\n    \"Formación: curso certificación €800\",\n    \"Tecnología: software €300, hardware €1,200\",\n    \"Incluir porcentaje de deducibilidad según normativa\",\n    \"Calcular IVA recuperable de cada gasto\"\n  ],\n  \"additionalContext\": \"Informe para justificar gastos deducibles en la actividad profesional. Cumplir con los requisitos de Hacienda para la deducibilidad de gastos. Incluir solo gastos necesarios y proporcionados para la actividad.\",\n  \"tags\": \"gastos, deducibles, informe, trimestral\",\n  \"amount\": 7120.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "AI generation of Spanish expense reports with tax deductibility analysis"
+		},
+		{
+			"name": "📋 Recibos y Otros",
+			"item": [
+				{
+					"name": "AI Generate - Recibo Honorarios Profesionales",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 9,\n  \"title\": \"Recibo de Honorarios Profesionales\",\n  \"description\": \"Recibo por servicios profesionales de consultoría\",\n  \"userPrompts\": [\n    \"Generar recibo de honorarios profesionales\",\n    \"Profesional: Consultor tecnológico, colegiado nº 12345\",\n    \"Cliente: Corporación Digital S.L.\",\n    \"Servicios: Auditoría de seguridad informática\",\n    \"Importe: €2,500 + IVA 21%\",\n    \"Retención IRPF: 15% sobre base imponible\",\n    \"Forma de pago: transferencia bancaria\",\n    \"Incluir datos de colegiación profesional\",\n    \"Cumplir normativa de honorarios profesionales\"\n  ],\n  \"additionalContext\": \"Recibo para servicios de consultoría especializada. El profesional está colegiado y debe aplicarse retención IRPF del 15%. Incluir todos los datos fiscales necesarios.\",\n  \"tags\": \"recibo, honorarios, profesional, consultoria\",\n  \"amount\": 2525.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AI Generate - Plan de Negocio Startup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"documentType\": 11,\n  \"title\": \"Plan de Negocio - Plataforma SaaS\",\n  \"description\": \"Plan de negocio para startup tecnológica de software como servicio\",\n  \"userPrompts\": [\n    \"Crear plan de negocio para startup SaaS\",\n    \"Producto: Plataforma de gestión de proyectos en la nube\",\n    \"Mercado objetivo: PYMES españolas (10-100 empleados)\",\n    \"Modelo de negocio: Suscripción mensual €29-€99\",\n    \"Proyección financiera: 3 años\",\n    \"Inversión inicial: €250,000\",\n    \"Equipo: 3 fundadores + 5 empleados año 1\",\n    \"Estrategia de marketing: digital, partners, eventos\",\n    \"Análisis competencia y diferenciación\",\n    \"Plan de financiación y búsqueda de inversores\"\n  ],\n  \"additionalContext\": \"Plan de negocio completo para presentar a inversores y aceleradoras. Incluir análisis de mercado español, regulaciones aplicables, estrategia de crecimiento y proyecciones realistas. Formato profesional para pitch deck.\",\n  \"tags\": \"plan negocio, startup, saas, tecnologia\",\n  \"amount\": 250000.00,\n  \"currency\": \"EUR\",\n  \"quarter\": 1,\n  \"year\": 2025\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ai/documents/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["ai", "documents", "generate"]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "AI generation of receipts, business plans and other Spanish legal documents"
+		}
+	],
+	"auth": {
+		"type": "noauth"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set Spanish locale for testing",
+					"pm.globals.set('locale', 'es-ES');",
+					"console.log('Testing Spanish bureaucratic document:', pm.info.requestName);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Validate Spanish document generation",
+					"pm.test('Response status is success', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+					"});",
+					"",
+					"if (pm.response.code === 201) {",
+					"    const responseJson = pm.response.json();",
+					"",
+					"    pm.test('Document has Spanish currency', function () {",
+					"        pm.expect(responseJson.currency || 'EUR').to.equal('EUR');",
+					"    });",
+					"",
+					"    pm.test('Document generated successfully', function () {",
+					"        pm.expect(responseJson.status).to.be.oneOf(['Generated', 'InProgress']);",
+					"        pm.expect(responseJson.documentId).to.not.be.empty;",
+					"    });",
+					"",
+					"    console.log('Spanish document generated:', responseJson.title);",
+					"}"
+				]
+			}
 		}
 	]
 }
