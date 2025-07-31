@@ -1,0 +1,39 @@
+meta {
+  name: Generate VAT Return with AI
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/documents/{{documentId}}/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "documentId": "{{documentId}}",
+    "parameters": {
+      "cif": "B12345678",
+      "businessName": "Consultoría García S.L.",
+      "taxableBase": "10000.00",
+      "outputVAT": "2100.00",
+      "inputVAT": "420.00",
+      "result": "1680.00",
+      "amountToPay": "1680.00",
+      "amountToCompensate": "0.00"
+    }
+  }
+}
+
+vars {
+  documentId: 550e8400-e29b-41d4-a716-446655440002
+}
+
+docs {
+  Generates a VAT return document using AI with specific Spanish tax parameters
+}

@@ -1,0 +1,31 @@
+meta {
+  name: Update Document
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/documents/{{documentId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Factura Enero 2025 - Actualizada",
+    "description": "Servicios de consultoría prestados durante el mes de enero - Versión corregida",
+    "content": "Contenido actualizado de la factura",
+    "status": 3,
+    "tags": "factura, enero, consultoria, actualizada",
+    "amount": 1650.00,
+    "currency": "EUR"
+  }
+}
+
+vars {
+  documentId: 550e8400-e29b-41d4-a716-446655440001
+}

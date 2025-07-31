@@ -1,0 +1,39 @@
+meta {
+  name: Create Social Security Form
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/documents
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "title": "Liquidación Seguridad Social - 1T 2025",
+    "type": 6,
+    "description": "Liquidación de cuotas del Régimen Especial de Trabajadores Autónomos",
+    "content": "",
+    "tags": "seguridad-social, autonomo, cuotas, trimestral",
+    "amount": 338.41,
+    "currency": "EUR",
+    "quarter": 1,
+    "year": 2025,
+    "isTemplate": false
+  }
+}
+
+vars {
+  userId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+docs {
+  Creates a Social Security form for autonomous workers quarterly payment
+}

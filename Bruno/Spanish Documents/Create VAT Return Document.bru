@@ -1,0 +1,39 @@
+meta {
+  name: Create VAT Return Document
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/documents
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "title": "Declaración IVA - 1T 2025",
+    "type": 3,
+    "description": "Declaración trimestral del IVA - Primer trimestre 2025",
+    "content": "",
+    "tags": "iva, declaracion, trimestral, modelo-303",
+    "amount": 2100.00,
+    "currency": "EUR",
+    "quarter": 1,
+    "year": 2025,
+    "isTemplate": false
+  }
+}
+
+vars {
+  userId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+docs {
+  Creates a VAT Return document (Modelo 303) for Spanish autonomous workers
+}

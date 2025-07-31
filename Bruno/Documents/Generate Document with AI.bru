@@ -1,0 +1,38 @@
+meta {
+  name: Generate Document with AI
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/documents/{{documentId}}/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "documentId": "{{documentId}}",
+    "parameters": {
+      "businessName": "Consultoría García S.L.",
+      "cif": "B12345678",
+      "address": "Calle Mayor, 123, 28001 Madrid",
+      "phone": "912345678",
+      "email": "contacto@consultoria-garcia.com",
+      "clientName": "Empresa ABC S.A.",
+      "clientAddress": "Avenida de la Castellana, 200, 28046 Madrid",
+      "clientTaxId": "A87654321",
+      "quantity": "1",
+      "paymentMethod": "Transferencia bancaria",
+      "dueDate": "2025-02-28"
+    }
+  }
+}
+
+vars {
+  documentId: 550e8400-e29b-41d4-a716-446655440001
+}

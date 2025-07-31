@@ -1,0 +1,19 @@
+meta {
+  name: Get Templates
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/documents/templates
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Retrieves all document templates available for creating new documents
+}

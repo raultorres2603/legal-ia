@@ -1,0 +1,10 @@
+{
+  "version": "1",
+  "name": "Legal-IA API Collection",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
+

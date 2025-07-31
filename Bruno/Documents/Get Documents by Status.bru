@@ -1,0 +1,30 @@
+meta {
+  name: Get Documents by Status
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/documents?status={{documentStatus}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars {
+  documentStatus: 1
+}
+
+docs {
+  Document Status:
+  1 = Draft
+  2 = InProgress
+  3 = Generated
+  4 = Submitted
+  5 = Approved
+  6 = Rejected
+  7 = Archived
+}

@@ -1,0 +1,31 @@
+meta {
+  name: Create User
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/users
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "firstName": "Juan",
+    "lastName": "García Martín",
+    "email": "juan.garcia@example.com",
+    "dni": "12345678Z",
+    "cif": "B12345678",
+    "businessName": "Consultoría García S.L.",
+    "address": "Calle Mayor, 123",
+    "postalCode": "28001",
+    "city": "Madrid",
+    "province": "Madrid",
+    "phone": "912345678"
+  }
+}

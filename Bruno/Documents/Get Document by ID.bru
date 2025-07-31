@@ -1,0 +1,19 @@
+meta {
+  name: Get Document by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+vars {
+  documentId: 550e8400-e29b-41d4-a716-446655440001
+}
