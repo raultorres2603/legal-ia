@@ -10,17 +10,8 @@ using Newtonsoft.Json;
 
 namespace Legal_IA.Functions;
 
-public class UserHttpTriggers
+public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService userService)
 {
-    private readonly ILogger<UserHttpTriggers> _logger;
-    private readonly IUserService _userService;
-
-    public UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService userService)
-    {
-        _logger = logger;
-        _userService = userService;
-    }
-
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users")]
@@ -28,12 +19,12 @@ public class UserHttpTriggers
     {
         try
         {
-            var users = await _userService.GetAllUsersAsync();
+            var users = await userService.GetAllUsersAsync();
             return new OkObjectResult(users);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting users");
+            logger.LogError(ex, "Error getting users");
             return new StatusCodeResult(500);
         }
     }
@@ -49,7 +40,7 @@ public class UserHttpTriggers
             if (!Guid.TryParse(id, out var userId))
                 return new BadRequestObjectResult("Invalid user ID format");
 
-            var user = await _userService.GetUserByIdAsync(userId);
+            var user = await userService.GetUserByIdAsync(userId);
             if (user == null)
                 return new NotFoundResult();
 
@@ -57,7 +48,7 @@ public class UserHttpTriggers
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting user {UserId}", id);
+            logger.LogError(ex, "Error getting user {UserId}", id);
             return new StatusCodeResult(500);
         }
     }
@@ -77,10 +68,10 @@ public class UserHttpTriggers
                 return new BadRequestObjectResult("Invalid request body");
 
             // Check if user already exists
-            if (await _userService.UserExistsByEmailAsync(createRequest.Email))
+            if (await userService.UserExistsByEmailAsync(createRequest.Email))
                 return new ConflictObjectResult("User with this email already exists");
 
-            if (await _userService.UserExistsByDNIAsync(createRequest.DNI))
+            if (await userService.UserExistsByDNIAsync(createRequest.DNI))
                 return new ConflictObjectResult("User with this DNI already exists");
 
             // Start orchestration for user creation workflow
@@ -91,7 +82,7 @@ public class UserHttpTriggers
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating user");
+            logger.LogError(ex, "Error creating user");
             return new StatusCodeResult(500);
         }
     }
@@ -122,7 +113,7 @@ public class UserHttpTriggers
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating user {UserId}", id);
+            logger.LogError(ex, "Error updating user {UserId}", id);
             return new StatusCodeResult(500);
         }
     }
@@ -138,7 +129,7 @@ public class UserHttpTriggers
             if (!Guid.TryParse(id, out var userId))
                 return new BadRequestObjectResult("Invalid user ID format");
 
-            var result = await _userService.DeleteUserAsync(userId);
+            var result = await userService.DeleteUserAsync(userId);
             if (!result)
                 return new NotFoundResult();
 
@@ -146,7 +137,7 @@ public class UserHttpTriggers
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting user {UserId}", id);
+            logger.LogError(ex, "Error deleting user {UserId}", id);
             return new StatusCodeResult(500);
         }
     }
