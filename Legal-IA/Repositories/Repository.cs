@@ -8,16 +8,11 @@ namespace Legal_IA.Repositories;
 /// <summary>
 ///     Generic repository implementation
 /// </summary>
-public class Repository<T> : IRepository<T> where T : class
+public class Repository<T>(LegalIADbContext context) : IRepository<T>
+    where T : class
 {
-    protected readonly LegalIADbContext _context;
-    protected readonly DbSet<T> _dbSet;
-
-    public Repository(LegalIADbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<T>();
-    }
+    protected readonly LegalIADbContext _context = context;
+    protected readonly DbSet<T> _dbSet = context.Set<T>();
 
     public virtual async Task<T?> GetByIdAsync(Guid id)
     {

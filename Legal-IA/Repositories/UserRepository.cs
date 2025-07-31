@@ -8,12 +8,8 @@ namespace Legal_IA.Repositories;
 /// <summary>
 ///     User repository implementation with specific user operations
 /// </summary>
-public class UserRepository : Repository<User>, IUserRepository
+public class UserRepository(LegalIADbContext context) : Repository<User>(context), IUserRepository
 {
-    public UserRepository(LegalIADbContext context) : base(context)
-    {
-    }
-
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
