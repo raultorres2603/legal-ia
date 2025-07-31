@@ -8,32 +8,25 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     Document service implementation using repository pattern
 /// </summary>
-public class DocumentService : IDocumentService
+public class DocumentService(IDocumentRepository documentRepository, ICacheService cacheService) 
+    : IDocumentService
 {
     private readonly string _cacheKeyPrefix = "document:";
-    private readonly ICacheService _cacheService;
-    private readonly IDocumentRepository _documentRepository;
     private readonly string _userDocumentsCachePrefix = "user_docs:";
-
-    public DocumentService(IDocumentRepository documentRepository, ICacheService cacheService)
-    {
-        _documentRepository = documentRepository;
-        _cacheService = cacheService;
-    }
 
     public async Task<DocumentResponse?> GetDocumentByIdAsync(Guid id)
     {
         var cacheKey = $"{_cacheKeyPrefix}{id}";
-        var cachedDocument = await _cacheService.GetAsync<DocumentResponse>(cacheKey);
+        var cachedDocument = await cacheService.GetAsync<DocumentResponse>(cacheKey);
 
         if (cachedDocument != null)
             return cachedDocument;
 
-        var document = await _documentRepository.GetByIdAsync(id);
+        var document = await documentRepository.GetByIdAsync(id);
         if (document == null) return null;
 
         var documentResponse = MapToDocumentResponse(document);
-        await _cacheService.SetAsync(cacheKey, documentResponse);
+        await cacheService.SetAsync(cacheKey, documentResponse);
 
         return documentResponse;
     }
@@ -41,27 +34,27 @@ public class DocumentService : IDocumentService
     public async Task<IEnumerable<DocumentResponse>> GetDocumentsByUserIdAsync(Guid userId)
     {
         var cacheKey = $"{_userDocumentsCachePrefix}{userId}";
-        var cachedDocuments = await _cacheService.GetAsync<IEnumerable<DocumentResponse>>(cacheKey);
+        var cachedDocuments = await cacheService.GetAsync<IEnumerable<DocumentResponse>>(cacheKey);
 
         if (cachedDocuments != null)
             return cachedDocuments;
 
-        var documents = await _documentRepository.GetByUserIdAsync(userId);
+        var documents = await documentRepository.GetByUserIdAsync(userId);
         var documentResponses = documents.Select(MapToDocumentResponse);
 
-        await _cacheService.SetAsync(cacheKey, documentResponses);
+        await cacheService.SetAsync(cacheKey, documentResponses);
         return documentResponses;
     }
 
     public async Task<IEnumerable<DocumentResponse>> GetDocumentsByTypeAsync(DocumentType type)
     {
-        var documents = await _documentRepository.GetByTypeAsync(type);
+        var documents = await documentRepository.GetByTypeAsync(type);
         return documents.Select(MapToDocumentResponse);
     }
 
     public async Task<IEnumerable<DocumentResponse>> GetDocumentsByStatusAsync(DocumentStatus status)
     {
-        var documents = await _documentRepository.GetByStatusAsync(status);
+        var documents = await documentRepository.GetByStatusAsync(status);
         return documents.Select(MapToDocumentResponse);
     }
 
@@ -85,18 +78,18 @@ public class DocumentService : IDocumentService
             UpdatedAt = DateTime.UtcNow
         };
 
-        var createdDocument = await _documentRepository.AddAsync(document);
+        var createdDocument = await documentRepository.AddAsync(document);
 
         // Invalidate user documents cache
         var userCacheKey = $"{_userDocumentsCachePrefix}{request.UserId}";
-        await _cacheService.RemoveAsync(userCacheKey);
+        await cacheService.RemoveAsync(userCacheKey);
 
         return MapToDocumentResponse(createdDocument);
     }
 
     public async Task<DocumentResponse?> UpdateDocumentAsync(Guid id, UpdateDocumentRequest request)
     {
-        var document = await _documentRepository.GetByIdAsync(id);
+        var document = await documentRepository.GetByIdAsync(id);
         if (document == null) return null;
 
         // Update fields
@@ -112,32 +105,32 @@ public class DocumentService : IDocumentService
 
         document.UpdatedAt = DateTime.UtcNow;
 
-        var updatedDocument = await _documentRepository.UpdateAsync(document);
+        var updatedDocument = await documentRepository.UpdateAsync(document);
 
         // Invalidate caches
         var cacheKey = $"{_cacheKeyPrefix}{id}";
         var userCacheKey = $"{_userDocumentsCachePrefix}{document.UserId}";
-        await _cacheService.RemoveAsync(cacheKey);
-        await _cacheService.RemoveAsync(userCacheKey);
+        await cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveAsync(userCacheKey);
 
         return MapToDocumentResponse(updatedDocument);
     }
 
     public async Task<bool> DeleteDocumentAsync(Guid id)
     {
-        var document = await _documentRepository.GetByIdAsync(id);
+        var document = await documentRepository.GetByIdAsync(id);
         if (document == null) return false;
 
         var userId = document.UserId;
-        var result = await _documentRepository.DeleteAsync(id);
+        var result = await documentRepository.DeleteAsync(id);
 
         if (result)
         {
             // Invalidate caches
             var cacheKey = $"{_cacheKeyPrefix}{id}";
             var userCacheKey = $"{_userDocumentsCachePrefix}{userId}";
-            await _cacheService.RemoveAsync(cacheKey);
-            await _cacheService.RemoveAsync(userCacheKey);
+            await cacheService.RemoveAsync(cacheKey);
+            await cacheService.RemoveAsync(userCacheKey);
         }
 
         return result;
@@ -145,7 +138,7 @@ public class DocumentService : IDocumentService
 
     public async Task<DocumentResponse?> UpdateDocumentStatusAsync(Guid id, DocumentStatus status)
     {
-        var document = await _documentRepository.GetByIdAsync(id);
+        var document = await documentRepository.GetByIdAsync(id);
         if (document == null) return null;
 
         document.Status = status;
@@ -156,26 +149,26 @@ public class DocumentService : IDocumentService
         else if (status == DocumentStatus.Submitted)
             document.SubmittedAt = DateTime.UtcNow;
 
-        var updatedDocument = await _documentRepository.UpdateAsync(document);
+        var updatedDocument = await documentRepository.UpdateAsync(document);
 
         // Invalidate caches
         var cacheKey = $"{_cacheKeyPrefix}{id}";
         var userCacheKey = $"{_userDocumentsCachePrefix}{document.UserId}";
-        await _cacheService.RemoveAsync(cacheKey);
-        await _cacheService.RemoveAsync(userCacheKey);
+        await cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveAsync(userCacheKey);
 
         return MapToDocumentResponse(updatedDocument);
     }
 
     public async Task<IEnumerable<DocumentResponse>> GetTemplatesAsync()
     {
-        var templates = await _documentRepository.GetTemplatesAsync();
+        var templates = await documentRepository.GetTemplatesAsync();
         return templates.Select(MapToDocumentResponse);
     }
 
     public async Task<IEnumerable<DocumentResponse>> SearchDocumentsAsync(string searchTerm, Guid? userId = null)
     {
-        var documents = await _documentRepository.SearchAsync(searchTerm, userId);
+        var documents = await documentRepository.SearchAsync(searchTerm, userId);
         return documents.Select(MapToDocumentResponse);
     }
 
