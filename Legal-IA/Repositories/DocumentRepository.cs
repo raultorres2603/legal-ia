@@ -16,7 +16,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> GetByUserIdAsync(Guid userId)
     {
-        return await _dbSet
+        return await DbSet
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
@@ -24,7 +24,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> GetByTypeAsync(DocumentType type)
     {
-        return await _dbSet
+        return await DbSet
             .Where(d => d.Type == type)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
@@ -32,7 +32,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> GetByStatusAsync(DocumentStatus status)
     {
-        return await _dbSet
+        return await DbSet
             .Where(d => d.Status == status)
             .OrderByDescending(d => d.UpdatedAt)
             .ToListAsync();
@@ -40,7 +40,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> GetTemplatesAsync()
     {
-        return await _dbSet
+        return await DbSet
             .Where(d => d.IsTemplate)
             .OrderBy(d => d.Type)
             .ThenBy(d => d.Title)
@@ -49,7 +49,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> SearchAsync(string searchTerm, Guid? userId = null)
     {
-        var query = _dbSet.AsQueryable();
+        var query = DbSet.AsQueryable();
 
         if (userId.HasValue)
             query = query.Where(d => d.UserId == userId.Value);
@@ -66,7 +66,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> GetByQuarterAndYearAsync(int quarter, int year)
     {
-        return await _dbSet
+        return await DbSet
             .Where(d => d.Quarter == quarter && d.Year == year)
             .OrderBy(d => d.Type)
             .ThenBy(d => d.CreatedAt)
@@ -75,7 +75,7 @@ public class DocumentRepository : Repository<Document>, IDocumentRepository
 
     public async Task<IEnumerable<Document>> GetRecentDocumentsAsync(Guid userId, int count = 10)
     {
-        return await _dbSet
+        return await DbSet
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.UpdatedAt)
             .Take(count)

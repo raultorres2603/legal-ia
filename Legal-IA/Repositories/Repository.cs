@@ -11,40 +11,40 @@ namespace Legal_IA.Repositories;
 public class Repository<T>(LegalIADbContext context) : IRepository<T>
     where T : class
 {
-    protected readonly LegalIADbContext _context = context;
-    protected readonly DbSet<T> _dbSet = context.Set<T>();
+    protected readonly LegalIADbContext Context = context;
+    protected readonly DbSet<T> DbSet = context.Set<T>();
 
     public virtual async Task<T?> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FindAsync(id);
+        return await DbSet.FindAsync(id);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        return await DbSet.ToListAsync();
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _dbSet.Where(predicate).ToListAsync();
+        return await DbSet.Where(predicate).ToListAsync();
     }
 
     public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _dbSet.FirstOrDefaultAsync(predicate);
+        return await DbSet.FirstOrDefaultAsync(predicate);
     }
 
     public virtual async Task<T> AddAsync(T entity)
     {
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await DbSet.AddAsync(entity);
+        await Context.SaveChangesAsync();
         return entity;
     }
 
     public virtual async Task<T> UpdateAsync(T entity)
     {
-        _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        DbSet.Update(entity);
+        await Context.SaveChangesAsync();
         return entity;
     }
 
@@ -53,27 +53,27 @@ public class Repository<T>(LegalIADbContext context) : IRepository<T>
         var entity = await GetByIdAsync(id);
         if (entity == null) return false;
 
-        _dbSet.Remove(entity);
-        await _context.SaveChangesAsync();
+        DbSet.Remove(entity);
+        await Context.SaveChangesAsync();
         return true;
     }
 
     public virtual async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _dbSet.AnyAsync(predicate);
+        return await DbSet.AnyAsync(predicate);
     }
 
     public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
     {
         return predicate == null
-            ? await _dbSet.CountAsync()
-            : await _dbSet.CountAsync(predicate);
+            ? await DbSet.CountAsync()
+            : await DbSet.CountAsync(predicate);
     }
 
     public virtual async Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize,
         Expression<Func<T, bool>>? predicate = null)
     {
-        var query = predicate == null ? _dbSet : _dbSet.Where(predicate);
+        var query = predicate == null ? DbSet : DbSet.Where(predicate);
         return await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

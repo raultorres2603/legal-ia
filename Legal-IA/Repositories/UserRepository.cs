@@ -12,22 +12,22 @@ public class UserRepository(LegalIADbContext context) : Repository<User>(context
 {
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
+        return await DbSet.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<User?> GetByDNIAsync(string dni)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.DNI == dni);
+        return await DbSet.FirstOrDefaultAsync(u => u.DNI == dni);
     }
 
     public async Task<User?> GetByCIFAsync(string cif)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.CIF == cif);
+        return await DbSet.FirstOrDefaultAsync(u => u.CIF == cif);
     }
 
     public async Task<IEnumerable<User>> GetActiveUsersAsync()
     {
-        return await _dbSet
+        return await DbSet
             .Where(u => u.IsActive)
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
