@@ -24,7 +24,6 @@ public interface INotificationService
     Task SendDocumentStatusChangeNotificationAsync(DocumentResponse document, string previousStatus);
 }
 
-
 /// <summary>
 ///     Service interface for file storage operations
 /// </summary>
@@ -34,7 +33,7 @@ public interface IFileStorageService
     Task<string> GetDocumentAsync(string filePath);
     Task<bool> DeleteDocumentAsync(string filePath);
     Task<string> GetDocumentUrlAsync(string filePath);
-    
+
     // New methods for binary file support (PDFs)
     Task<string> SaveDocumentBytesAsync(byte[] content, string fileName, string contentType);
     Task<byte[]> GetDocumentBytesAsync(string filePath);

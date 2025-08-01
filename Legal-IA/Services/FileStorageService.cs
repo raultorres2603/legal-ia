@@ -1,5 +1,6 @@
 using System.Text;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Legal_IA.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 
@@ -94,7 +95,7 @@ public class FileStorageService(BlobServiceClient blobServiceClient, ILogger<Fil
             await blobClient.UploadAsync(stream, true);
 
             // Set content type for proper handling
-            await blobClient.SetHttpHeadersAsync(new Azure.Storage.Blobs.Models.BlobHttpHeaders
+            await blobClient.SetHttpHeadersAsync(new BlobHttpHeaders
             {
                 ContentType = contentType
             });

@@ -8,7 +8,7 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     Document service implementation using repository pattern
 /// </summary>
-public class DocumentService(IDocumentRepository documentRepository, ICacheService cacheService) 
+public class DocumentService(IDocumentRepository documentRepository, ICacheService cacheService)
     : IDocumentService
 {
     private readonly string _cacheKeyPrefix = "document:";
@@ -172,7 +172,8 @@ public class DocumentService(IDocumentRepository documentRepository, ICacheServi
         return documents.Select(MapToDocumentResponse);
     }
 
-    public async Task<DocumentResponse?> UpdateDocumentFileInfoAsync(Guid id, string filePath, string fileName, string fileFormat, long fileSize)
+    public async Task<DocumentResponse?> UpdateDocumentFileInfoAsync(Guid id, string filePath, string fileName,
+        string fileFormat, long fileSize)
     {
         var document = await documentRepository.GetByIdAsync(id);
         if (document == null) return null;

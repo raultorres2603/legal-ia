@@ -1,269 +1,241 @@
-using System.Net;
 using Legal_IA.DTOs;
-using Legal_IA.Interfaces.Services;
-using Legal_IA.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Legal_IA.Functions;
 
 /// <summary>
-///     HTTP triggers for AI document generation operations
+///     HTTP triggers for AI document generation operations using orchestrator pattern
 /// </summary>
-public class AIDocumentHttpTriggers(
-    IAIDocumentGenerationService aiDocumentService,
-    IDocumentService documentService,
-    IFileStorageService fileStorageService,
-    ILogger<AIDocumentHttpTriggers> logger)
+public class AIDocumentHttpTriggers(ILogger<AIDocumentHttpTriggers> logger)
 {
     /// <summary>
     ///     Generate a new document using AI based on user prompts
     /// </summary>
-    [Function("GenerateDocument")]
-    public async Task<HttpResponseData> GenerateDocumentAsync(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/documents/generate")] HttpRequestData req)
+    [Function("GenerateAIDocument")]
+    public async Task<IActionResult> GenerateAIDocumentAsync(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/documents/generate")]
+        HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<GenerateDocumentRequest>(requestBody);
 
-            if (request == null)
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("Invalid request body");
-                return badRequest;
-            }
+            if (request == null) return new BadRequestObjectResult("Invalid request body");
 
-            // Validate required fields
+            // Basic validation before starting orchestration
             if (request.UserId == Guid.Empty || request.UserPrompts.Count == 0)
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("UserId and UserPrompts are required");
-                return badRequest;
-            }
+                return new BadRequestObjectResult("UserId and UserPrompts are required");
 
-            logger.LogInformation("Generating AI document for user {UserId} with {PromptCount} prompts", 
+            logger.LogInformation(
+                "Starting AI document generation orchestration for user {UserId} with {PromptCount} prompts",
                 request.UserId, request.UserPrompts.Count);
 
-            var documentResponse = await aiDocumentService.GenerateDocumentAsync(request);
+            // Start the orchestration
+            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                "AIDocumentGenerationOrchestrator", request);
 
-            var response = req.CreateResponse(HttpStatusCode.Created);
-            await response.WriteStringAsync(JsonConvert.SerializeObject(new GenerateDocumentResponse
-            {
-                DocumentId = documentResponse.Id,
-                Title = documentResponse.Title,
-                Type = documentResponse.Type,
-                Status = documentResponse.Status,
-                BlobPath = documentResponse.FileName, // This will contain the blob path
-                FileName = documentResponse.FileName,
-                FileSize = documentResponse.FileSize,
-                GeneratedAt = documentResponse.GeneratedAt ?? DateTime.UtcNow,
-                Message = "Document generated successfully"
-            }));
+            logger.LogInformation("AI document generation orchestration started with instance ID: {InstanceId}",
+                instanceId);
 
-            response.Headers.Add("Content-Type", "application/json");
-            return response;
+            return new AcceptedResult($"/api/ai/orchestrations/{instanceId}", new { instanceId });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error generating AI document");
-            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteStringAsync($"Error generating document: {ex.Message}");
-            return errorResponse;
+            logger.LogError(ex, "Error starting AI document generation");
+            return new StatusCodeResult(500);
         }
     }
 
     /// <summary>
     ///     Regenerate an existing document with updated prompts
     /// </summary>
-    [Function("RegenerateDocument")]
-    public async Task<HttpResponseData> RegenerateDocumentAsync(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/documents/{documentId}/regenerate")] 
-        HttpRequestData req, string documentId)
+    [Function("RegenerateAIDocument")]
+    public async Task<IActionResult> RegenerateAIDocumentAsync(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/documents/{documentId}/regenerate")]
+        HttpRequestData req,
+        string documentId,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
-            if (!Guid.TryParse(documentId, out var docId))
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("Invalid document ID");
-                return badRequest;
-            }
+            if (!Guid.TryParse(documentId, out var docId)) return new BadRequestObjectResult("Invalid document ID");
 
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<RegenerateDocumentRequest>(requestBody);
 
             if (request == null || request.UpdatedPrompts.Count == 0)
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("UpdatedPrompts are required");
-                return badRequest;
-            }
+                return new BadRequestObjectResult("UpdatedPrompts are required");
 
-            // Get existing document
-            var existingDocument = await documentService.GetDocumentByIdAsync(docId);
-            if (existingDocument == null)
-            {
-                var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-                await notFound.WriteStringAsync("Document not found");
-                return notFound;
-            }
+            // Set the document ID from the route parameter
+            request.DocumentId = docId;
 
-            logger.LogInformation("Regenerating document {DocumentId} with {PromptCount} updated prompts", 
+            logger.LogInformation(
+                "Starting AI document regeneration orchestration for document {DocumentId} with {PromptCount} updated prompts",
                 docId, request.UpdatedPrompts.Count);
 
-            // Create new generation request based on existing document
-            var generateRequest = new GenerateDocumentRequest
-            {
-                UserId = existingDocument.UserId,
-                DocumentType = existingDocument.Type,
-                Title = existingDocument.Title,
-                Description = existingDocument.Description,
-                UserPrompts = request.UpdatedPrompts,
-                AdditionalContext = request.UpdatedContext ?? string.Empty,
-                Tags = existingDocument.Tags,
-                Amount = existingDocument.Amount,
-                Currency = existingDocument.Currency,
-                Quarter = existingDocument.Quarter,
-                Year = existingDocument.Year
-            };
+            // Start the orchestration
+            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                "AIDocumentRegenerationOrchestrator", request);
 
-            var documentResponse = await aiDocumentService.GenerateDocumentAsync(generateRequest);
+            logger.LogInformation("AI document regeneration orchestration started with instance ID: {InstanceId}",
+                instanceId);
 
-            // Delete the old document if regeneration was successful
-            await documentService.DeleteDocumentAsync(docId);
-
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteStringAsync(JsonConvert.SerializeObject(new GenerateDocumentResponse
-            {
-                DocumentId = documentResponse.Id,
-                Title = documentResponse.Title,
-                Type = documentResponse.Type,
-                Status = documentResponse.Status,
-                BlobPath = documentResponse.FileName,
-                FileName = documentResponse.FileName,
-                FileSize = documentResponse.FileSize,
-                GeneratedAt = documentResponse.GeneratedAt ?? DateTime.UtcNow,
-                Message = "Document regenerated successfully"
-            }));
-
-            response.Headers.Add("Content-Type", "application/json");
-            return response;
+            return new AcceptedResult($"/api/ai/orchestrations/{instanceId}", new { instanceId });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error regenerating document {DocumentId}", documentId);
-            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteStringAsync($"Error regenerating document: {ex.Message}");
-            return errorResponse;
+            logger.LogError(ex, "Error starting AI document regeneration for document {DocumentId}", documentId);
+            return new StatusCodeResult(500);
         }
     }
 
     /// <summary>
     ///     Download a generated PDF document
     /// </summary>
-    [Function("DownloadDocument")]
-    public async Task<HttpResponseData> DownloadDocumentAsync(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/documents/{documentId}/download")] 
-        HttpRequestData req, string documentId)
+    [Function("DownloadAIDocument")]
+    public async Task<IActionResult> DownloadAIDocumentAsync(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/documents/{documentId}/download")]
+        HttpRequestData req,
+        string documentId,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
-            if (!Guid.TryParse(documentId, out var docId))
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("Invalid document ID");
-                return badRequest;
-            }
+            if (!Guid.TryParse(documentId, out var docId)) return new BadRequestObjectResult("Invalid document ID");
 
-            var document = await documentService.GetDocumentByIdAsync(docId);
-            if (document == null)
-            {
-                var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-                await notFound.WriteStringAsync("Document not found");
-                return notFound;
-            }
+            logger.LogInformation("Starting AI document download orchestration for document {DocumentId}", docId);
 
-            if (string.IsNullOrEmpty(document.FileName) || document.Status != DocumentStatus.Generated)
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("Document not yet generated or file not available");
-                return badRequest;
-            }
+            // Start the orchestration
+            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                "AIDocumentDownloadOrchestrator", docId);
 
-            // Get file from blob storage
-            var filePath = $"documents/{document.FileName}";
-            var fileBytes = await fileStorageService.GetDocumentBytesAsync(filePath);
+            logger.LogInformation("AI document download orchestration started with instance ID: {InstanceId}",
+                instanceId);
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "application/pdf");
-            response.Headers.Add("Content-Disposition", $"attachment; filename=\"{document.FileName}\"");
-            await response.WriteBytesAsync(fileBytes);
-
-            logger.LogInformation("Document {DocumentId} downloaded successfully", docId);
-            return response;
+            // For download operations, we might want to wait for completion and return the file directly
+            // But following the pattern, we'll return the orchestration reference
+            return new AcceptedResult($"/api/ai/orchestrations/{instanceId}/download", new { instanceId });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error downloading document {DocumentId}", documentId);
-            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteStringAsync($"Error downloading document: {ex.Message}");
-            return errorResponse;
+            logger.LogError(ex, "Error starting AI document download for document {DocumentId}", documentId);
+            return new StatusCodeResult(500);
         }
     }
 
     /// <summary>
     ///     Get AI document generation status
     /// </summary>
-    [Function("GetDocumentStatus")]
-    public async Task<HttpResponseData> GetDocumentStatusAsync(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/documents/{documentId}/status")] 
-        HttpRequestData req, string documentId)
+    [Function("GetAIDocumentStatus")]
+    public async Task<IActionResult> GetAIDocumentStatusAsync(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/documents/{documentId}/status")]
+        HttpRequestData req,
+        string documentId,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
-            if (!Guid.TryParse(documentId, out var docId))
-            {
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequest.WriteStringAsync("Invalid document ID");
-                return badRequest;
-            }
+            if (!Guid.TryParse(documentId, out var docId)) return new BadRequestObjectResult("Invalid document ID");
 
-            var document = await documentService.GetDocumentByIdAsync(docId);
-            if (document == null)
-            {
-                var notFound = req.CreateResponse(HttpStatusCode.NotFound);
-                await notFound.WriteStringAsync("Document not found");
-                return notFound;
-            }
+            logger.LogInformation("Starting AI document status check orchestration for document {DocumentId}", docId);
 
-            var statusResponse = new
-            {
-                DocumentId = document.Id,
-                Status = document.Status.ToString(),
-                Title = document.Title,
-                Type = document.Type.ToString(),
-                CreatedAt = document.CreatedAt,
-                UpdatedAt = document.UpdatedAt,
-                GeneratedAt = document.GeneratedAt,
-                FileSize = document.FileSize,
-                IsReady = document.Status == DocumentStatus.Generated && !string.IsNullOrEmpty(document.FileName)
-            };
+            // Start the orchestration
+            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                "AIDocumentStatusOrchestrator", docId);
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteStringAsync(JsonConvert.SerializeObject(statusResponse));
-            response.Headers.Add("Content-Type", "application/json");
-            return response;
+            logger.LogInformation("AI document status orchestration started with instance ID: {InstanceId}",
+                instanceId);
+
+            return new AcceptedResult($"/api/ai/orchestrations/{instanceId}/status", new { instanceId });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting document status {DocumentId}", documentId);
-            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteStringAsync($"Error getting document status: {ex.Message}");
-            return errorResponse;
+            logger.LogError(ex, "Error starting AI document status check for document {DocumentId}", documentId);
+            return new StatusCodeResult(500);
+        }
+    }
+
+    /// <summary>
+    ///     Get orchestration status for AI document operations
+    /// </summary>
+    [Function("GetAIDocumentOrchestrationStatus")]
+    public async Task<IActionResult> GetAIDocumentOrchestrationStatusAsync(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/orchestrations/{instanceId}")]
+        HttpRequestData req,
+        string instanceId,
+        [DurableClient] DurableTaskClient client)
+    {
+        try
+        {
+            logger.LogInformation("Getting orchestration status for instance {InstanceId}", instanceId);
+
+            var status = await client.GetInstanceAsync(instanceId);
+            if (status == null) return new NotFoundObjectResult($"Orchestration instance {instanceId} not found");
+
+            var response = new
+            {
+                status.InstanceId,
+                RuntimeStatus = status.RuntimeStatus.ToString(),
+                status.CreatedAt,
+                status.LastUpdatedAt,
+                Input = status.SerializedInput,
+                Output = status.SerializedOutput
+            };
+
+            return new OkObjectResult(response);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting orchestration status for instance {InstanceId}", instanceId);
+            return new StatusCodeResult(500);
+        }
+    }
+
+    /// <summary>
+    ///     Get the result of a completed download orchestration
+    /// </summary>
+    [Function("GetAIDocumentDownloadResult")]
+    public async Task<IActionResult> GetAIDocumentDownloadResultAsync(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/orchestrations/{instanceId}/download")]
+        HttpRequestData req,
+        string instanceId,
+        [DurableClient] DurableTaskClient client)
+    {
+        try
+        {
+            logger.LogInformation("Getting download result for orchestration instance {InstanceId}", instanceId);
+
+            var status = await client.GetInstanceAsync(instanceId);
+            if (status == null) return new NotFoundObjectResult($"Orchestration instance {instanceId} not found");
+
+            if (status.RuntimeStatus != OrchestrationRuntimeStatus.Completed)
+                return new BadRequestObjectResult(
+                    $"Orchestration is in status: {status.RuntimeStatus}. Expected: Completed");
+
+            // Parse the output to get the file bytes
+            if (string.IsNullOrEmpty(status.SerializedOutput))
+                return new BadRequestObjectResult("No output available from orchestration");
+
+            var fileBytes = JsonConvert.DeserializeObject<byte[]>(status.SerializedOutput);
+            if (fileBytes == null || fileBytes.Length == 0) return new BadRequestObjectResult("No file data available");
+
+            // Return the file as PDF
+            return new FileContentResult(fileBytes, "application/pdf")
+            {
+                FileDownloadName = $"document_{instanceId}.pdf"
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting download result for orchestration instance {InstanceId}", instanceId);
+            return new StatusCodeResult(500);
         }
     }
 }

@@ -79,7 +79,8 @@ public class DocumentActivities(
         return await Task.FromResult(generatedContent);
     }
 
-    private static string GenerateSimpleDocumentContent(DocumentResponse document, Dictionary<string, object> parameters)
+    private static string GenerateSimpleDocumentContent(DocumentResponse document,
+        Dictionary<string, object> parameters)
     {
         return $@"
 DOCUMENT: {document.Title}
