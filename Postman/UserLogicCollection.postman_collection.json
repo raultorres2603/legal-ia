@@ -1,0 +1,77 @@
+{
+  "info": {
+    "_postman_id": "user-logic-collection-001",
+    "name": "User Logic Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection for testing User logic endpoints."
+  },
+  "item": [
+    {
+      "name": "Get User",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/user/{{userId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "user", "{{userId}}"]
+        }
+      }
+    },
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/user",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "user"]
+        }
+      }
+    },
+    {
+      "name": "Update User",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/user/{{userId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "user", "{{userId}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete User",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/user/{{userId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "user", "{{userId}}"]
+        }
+      }
+    }
+  ]
+}
+

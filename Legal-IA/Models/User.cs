@@ -17,7 +17,7 @@ public class User
 
     [Required] [MaxLength(20)] public string DNI { get; set; } = string.Empty;
 
-    [Required] [MaxLength(20)] public string CIF { get; set; } = string.Empty;
+    [MaxLength(20)] public string? CIF { get; set; } = null;
 
     [MaxLength(255)] public string BusinessName { get; set; } = string.Empty;
 

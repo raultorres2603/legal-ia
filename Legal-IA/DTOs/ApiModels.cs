@@ -8,7 +8,7 @@ public class CreateUserRequest
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string DNI { get; set; } = string.Empty;
-    public string CIF { get; set; } = string.Empty;
+    public string? CIF { get; set; } = null;
     public string BusinessName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
@@ -38,7 +38,7 @@ public class UserResponse
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string DNI { get; set; } = string.Empty;
-    public string CIF { get; set; } = string.Empty;
+    public string? CIF { get; set; } = null;
     public string BusinessName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;

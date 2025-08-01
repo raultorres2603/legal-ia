@@ -25,8 +25,9 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
             .Matches(@"^\d{8}[A-Za-z]$").WithMessage("DNI must have 8 digits followed by a letter");
 
         RuleFor(x => x.CIF)
-            .NotEmpty().WithMessage("CIF is required")
-            .Matches(@"^[A-Za-z]\d{7}[A-Za-z0-9]$").WithMessage("Invalid CIF format");
+            .NotEmpty().WithMessage("CIF is required for businesses")
+            .Matches(@"^[A-Za-z]\d{7}[A-Za-z0-9]$").WithMessage("Invalid CIF format")
+            .When(x => !string.IsNullOrWhiteSpace(x.BusinessName));
 
         RuleFor(x => x.PostalCode)
             .Matches(@"^\d{5}$").WithMessage("Postal code must be 5 digits")
