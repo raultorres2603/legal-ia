@@ -11,8 +11,8 @@ namespace Legal_IA.Functions.Activities;
 /// <summary>
 ///     AI Document generation-related activity functions
 /// </summary>
-public class AIDocumentActivities(
-    ILogger<AIDocumentActivities> logger,
+public class AiDocumentActivities(
+    ILogger<AiDocumentActivities> logger,
     IAIDocumentGenerationService aiDocumentService,
     IDocumentService documentService,
     IFileStorageService fileStorageService,
@@ -33,7 +33,7 @@ public class AIDocumentActivities(
     }
 
     [Function("GenerateAIDocumentActivity")]
-    public async Task<DocumentResponse> GenerateAIDocumentActivity([ActivityTrigger] GenerateDocumentRequest request)
+    public async Task<DocumentResponse> GenerateAiDocumentActivity([ActivityTrigger] GenerateDocumentRequest request)
     {
         logger.LogInformation("Generating AI document for user {UserId}, type {DocumentType}",
             request.UserId, request.DocumentType);
@@ -67,7 +67,7 @@ public class AIDocumentActivities(
     }
 
     [Function("RegenerateAIDocumentActivity")]
-    public async Task<DocumentResponse> RegenerateAIDocumentActivity([ActivityTrigger] dynamic input)
+    public async Task<DocumentResponse> RegenerateAiDocumentActivity([ActivityTrigger] dynamic input)
     {
         var existingDocument = JsonConvert.DeserializeObject<DocumentResponse>(input.ExistingDocument.ToString());
         var regenerateRequest =
@@ -149,7 +149,7 @@ public class AIDocumentActivities(
     }
 
     [Function("LogAIDocumentGenerationActivity")]
-    public Task LogAIDocumentGenerationActivity([ActivityTrigger] dynamic input)
+    public Task LogAiDocumentGenerationActivity([ActivityTrigger] dynamic input)
     {
         var documentId = Guid.Parse(input.DocumentId.ToString());
         var userId = Guid.Parse(input.UserId.ToString());

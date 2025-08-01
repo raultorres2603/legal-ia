@@ -9,24 +9,17 @@ namespace Legal_IA.Functions.Orchestrators;
 /// <summary>
 ///     AI Document generation-related orchestrator functions
 /// </summary>
-public class AIDocumentOrchestrators
+public class AiDocumentOrchestrators(ILogger<AiDocumentOrchestrators> logger)
 {
-    private readonly ILogger<AIDocumentOrchestrators> _logger;
-
-    public AIDocumentOrchestrators(ILogger<AIDocumentOrchestrators> logger)
-    {
-        _logger = logger;
-    }
-
     [Function("AIDocumentGenerationOrchestrator")]
-    public async Task<GenerateDocumentResponse> AIDocumentGenerationOrchestrator(
+    public async Task<GenerateDocumentResponse> AiDocumentGenerationOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var generateRequest = context.GetInput<GenerateDocumentRequest>()!;
 
         try
         {
-            _logger.LogInformation("Starting AI document generation orchestration for user {UserId}",
+            logger.LogInformation("Starting AI document generation orchestration for user {UserId}",
                 generateRequest.UserId);
 
             // Step 1: Validate the generation request
@@ -52,7 +45,7 @@ public class AIDocumentOrchestrators
             // Step 5: Send notification (fire and forget)
             await context.CallActivityAsync("NotifyDocumentGenerationActivity", documentResponse);
 
-            _logger.LogInformation("AI document generation orchestration completed for document {DocumentId}",
+            logger.LogInformation("AI document generation orchestration completed for document {DocumentId}",
                 documentResponse.Id);
 
             return new GenerateDocumentResponse
@@ -70,21 +63,21 @@ public class AIDocumentOrchestrators
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in AI document generation orchestration for user {UserId}",
+            logger.LogError(ex, "Error in AI document generation orchestration for user {UserId}",
                 generateRequest.UserId);
             throw;
         }
     }
 
     [Function("AIDocumentRegenerationOrchestrator")]
-    public async Task<GenerateDocumentResponse> AIDocumentRegenerationOrchestrator(
+    public async Task<GenerateDocumentResponse> AiDocumentRegenerationOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var regenerateRequest = context.GetInput<RegenerateDocumentRequest>()!;
 
         try
         {
-            _logger.LogInformation("Starting AI document regeneration orchestration for document {DocumentId}",
+            logger.LogInformation("Starting AI document regeneration orchestration for document {DocumentId}",
                 regenerateRequest.DocumentId);
 
             // Step 1: Validate the regeneration request
@@ -118,7 +111,7 @@ public class AIDocumentOrchestrators
             // Step 5: Send notification
             await context.CallActivityAsync("NotifyDocumentGenerationActivity", newDocument);
 
-            _logger.LogInformation("AI document regeneration orchestration completed. New document {DocumentId}",
+            logger.LogInformation("AI document regeneration orchestration completed. New document {DocumentId}",
                 newDocument.Id);
 
             return new GenerateDocumentResponse
@@ -136,21 +129,21 @@ public class AIDocumentOrchestrators
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in AI document regeneration orchestration for document {DocumentId}",
+            logger.LogError(ex, "Error in AI document regeneration orchestration for document {DocumentId}",
                 regenerateRequest.DocumentId);
             throw;
         }
     }
 
     [Function("AIDocumentDownloadOrchestrator")]
-    public async Task<byte[]> AIDocumentDownloadOrchestrator(
+    public async Task<byte[]> AiDocumentDownloadOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var documentId = context.GetInput<Guid>();
 
         try
         {
-            _logger.LogInformation("Starting AI document download orchestration for document {DocumentId}", documentId);
+            logger.LogInformation("Starting AI document download orchestration for document {DocumentId}", documentId);
 
             // Step 1: Verify document exists and get its details
             var document =
@@ -162,27 +155,27 @@ public class AIDocumentOrchestrators
             // Step 3: Download the document from blob storage
             var fileBytes = await context.CallActivityAsync<byte[]>("DownloadDocumentActivity", document);
 
-            _logger.LogInformation("AI document download orchestration completed for document {DocumentId}",
+            logger.LogInformation("AI document download orchestration completed for document {DocumentId}",
                 documentId);
 
             return fileBytes;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in AI document download orchestration for document {DocumentId}", documentId);
+            logger.LogError(ex, "Error in AI document download orchestration for document {DocumentId}", documentId);
             throw;
         }
     }
 
     [Function("AIDocumentStatusOrchestrator")]
-    public async Task<object> AIDocumentStatusOrchestrator(
+    public async Task<object> AiDocumentStatusOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var documentId = context.GetInput<Guid>();
 
         try
         {
-            _logger.LogInformation("Getting AI document status for document {DocumentId}", documentId);
+            logger.LogInformation("Getting AI document status for document {DocumentId}", documentId);
 
             // Get document status
             var document = await context.CallActivityAsync<DocumentResponse>("GetDocumentStatusActivity", documentId);
@@ -202,7 +195,7 @@ public class AIDocumentOrchestrators
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting AI document status for document {DocumentId}", documentId);
+            logger.LogError(ex, "Error getting AI document status for document {DocumentId}", documentId);
             throw;
         }
     }
