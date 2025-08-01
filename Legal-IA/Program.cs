@@ -56,21 +56,14 @@ builder.Services.AddSingleton<BlobServiceClient>(serviceProvider =>
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 // Register services
 builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IFileStorageService, FileStorageService>();
-builder.Services.AddScoped<IAIDocumentGenerationService, AiDocumentGenerationService>();
 
 // Register validators
 builder.Services.AddTransient<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
-builder.Services.AddTransient<IValidator<CreateDocumentRequest>, CreateDocumentRequestValidator>();
-builder.Services.AddTransient<IValidator<GenerateDocumentRequest>, GenerateDocumentRequestValidator>();
-builder.Services.AddTransient<IValidator<RegenerateDocumentRequest>, RegenerateDocumentRequestValidator>();
 
 // Configure logging
 builder.Services.AddLogging();

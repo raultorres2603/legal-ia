@@ -29,26 +29,4 @@ public class NotificationService(ILogger<NotificationService> logger) : INotific
 
         logger.LogInformation("Update notification sent successfully to user {UserId}", user.Id);
     }
-
-    public async Task SendDocumentGenerationNotificationAsync(DocumentResponse document)
-    {
-        logger.LogInformation("Sending document generation notification for document {DocumentId}", document.Id);
-
-        // TODO: Implement actual notification logic
-        await Task.Delay(100); // Simulate async operation
-
-        logger.LogInformation("Document generation notification sent for document {DocumentId}", document.Id);
-    }
-
-    public async Task SendDocumentStatusChangeNotificationAsync(DocumentResponse document, string previousStatus)
-    {
-        logger.LogInformation(
-            "Sending status change notification for document {DocumentId}: {PreviousStatus} -> {CurrentStatus}",
-            document.Id, previousStatus, document.Status);
-
-        // TODO: Implement actual notification logic based on status change
-        await Task.Delay(100); // Simulate async operation
-
-        logger.LogInformation("Status change notification sent for document {DocumentId}", document.Id);
-    }
 }

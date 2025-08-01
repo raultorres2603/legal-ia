@@ -30,17 +30,3 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByCIFAsync(string cif);
     Task<IEnumerable<User>> GetActiveUsersAsync();
 }
-
-/// <summary>
-///     Document-specific repository interface
-/// </summary>
-public interface IDocumentRepository : IRepository<Document>
-{
-    Task<IEnumerable<Document>> GetByUserIdAsync(Guid userId);
-    Task<IEnumerable<Document>> GetByTypeAsync(DocumentType type);
-    Task<IEnumerable<Document>> GetByStatusAsync(DocumentStatus status);
-    Task<IEnumerable<Document>> GetTemplatesAsync();
-    Task<IEnumerable<Document>> SearchAsync(string searchTerm, Guid? userId = null);
-    Task<IEnumerable<Document>> GetByQuarterAndYearAsync(int quarter, int year);
-    Task<IEnumerable<Document>> GetRecentDocumentsAsync(Guid userId, int count = 10);
-}
