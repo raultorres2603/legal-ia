@@ -9,10 +9,10 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     AI Document Generation service that creates PDF documents based on user prompts
 /// </summary>
-public class AIDocumentGenerationService(
+public class AiDocumentGenerationService(
     IFileStorageService fileStorageService,
     IDocumentService documentService,
-    ILogger<AIDocumentGenerationService> logger) : IAIDocumentGenerationService
+    ILogger<AiDocumentGenerationService> logger) : IAIDocumentGenerationService
 {
     public async Task<DocumentResponse> GenerateDocumentAsync(GenerateDocumentRequest request)
     {
@@ -22,7 +22,7 @@ public class AIDocumentGenerationService(
                 request.UserId, request.DocumentType);
 
             // Step 1: Generate document content using AI based on prompts
-            var generatedContent = await GenerateContentWithAI(request);
+            var generatedContent = await GenerateContentWithAi(request);
 
             // Step 2: Convert content to PDF
             var pdfBytes = await ConvertToPdf(generatedContent, request.DocumentType);
@@ -74,7 +74,7 @@ public class AIDocumentGenerationService(
         }
     }
 
-    private async Task<string> GenerateContentWithAI(GenerateDocumentRequest request)
+    private async Task<string> GenerateContentWithAi(GenerateDocumentRequest request)
     {
         // TODO: Integrate with your preferred AI service (OpenAI, Azure OpenAI, etc.)
         // This is a placeholder implementation
