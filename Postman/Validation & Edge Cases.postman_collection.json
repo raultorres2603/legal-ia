@@ -14,17 +14,44 @@
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:7071",
-			"type": "string"
+			"type": "string",
+			"description": "Base URL for Azure Functions local development"
 		},
 		{
-			"key": "invalidUserId",
-			"value": "00000000-0000-0000-0000-000000000000",
-			"type": "string"
+			"key": "userId",
+			"value": "",
+			"type": "string",
+			"description": "User ID for chaining requests"
 		},
 		{
-			"key": "invalidDocumentId",
-			"value": "99999999-9999-9999-9999-999999999999",
-			"type": "string"
+			"key": "documentId",
+			"value": "",
+			"type": "string",
+			"description": "Document ID for chaining requests"
+		},
+		{
+			"key": "aiDocumentId",
+			"value": "",
+			"type": "string",
+			"description": "AI-generated document ID for chaining requests"
+		},
+		{
+			"key": "orchestrationId",
+			"value": "",
+			"type": "string",
+			"description": "Orchestration instance ID for AI workflows"
+		},
+		{
+			"key": "templateId",
+			"value": "",
+			"type": "string",
+			"description": "Document template ID for template operations"
+		},
+		{
+			"key": "fileName",
+			"value": "",
+			"type": "string",
+			"description": "File name for file storage operations"
 		}
 	],
 	"item": [
@@ -944,4 +971,3 @@
 		}
 	]
 }
-

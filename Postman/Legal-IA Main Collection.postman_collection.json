@@ -19,21 +19,39 @@
 		},
 		{
 			"key": "userId",
-			"value": "550e8400-e29b-41d4-a716-446655440000",
+			"value": "",
 			"type": "string",
-			"description": "Sample user ID for testing"
+			"description": "User ID for chaining requests"
 		},
 		{
 			"key": "documentId",
-			"value": "550e8400-e29b-41d4-a716-446655440001",
+			"value": "",
 			"type": "string",
-			"description": "Sample document ID for testing"
+			"description": "Document ID for chaining requests"
 		},
 		{
 			"key": "aiDocumentId",
 			"value": "",
 			"type": "string",
-			"description": "AI-generated document ID (set from response)"
+			"description": "AI-generated document ID for chaining requests"
+		},
+		{
+			"key": "orchestrationId",
+			"value": "",
+			"type": "string",
+			"description": "Orchestration instance ID for AI workflows"
+		},
+		{
+			"key": "templateId",
+			"value": "",
+			"type": "string",
+			"description": "Document template ID for template operations"
+		},
+		{
+			"key": "fileName",
+			"value": "",
+			"type": "string",
+			"description": "File name for file storage operations"
 		}
 	],
 	"item": [
@@ -517,7 +535,20 @@
 					"});"
 				]
 			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"exec": [
+					"if (pm.response.code === 201 || pm.response.code === 200) {",
+					"    const responseJson = pm.response.json();",
+					"    if (responseJson.id) pm.environment.set('userId', responseJson.id);",
+					"    if (responseJson.documentId) pm.environment.set('documentId', responseJson.documentId);",
+					"    if (responseJson.aiDocumentId) pm.environment.set('aiDocumentId', responseJson.aiDocumentId);",
+					"}"
+				],
+				"type": "text/javascript"
+			}
 		}
 	]
 }
-

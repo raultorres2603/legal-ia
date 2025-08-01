@@ -134,6 +134,37 @@ public class FileStorageService(BlobServiceClient blobServiceClient, ILogger<Fil
         }
     }
 
+    public async Task<bool> DeleteFileAsync(string fileName)
+    {
+        try
+        {
+            var containerClient = await GetContainerClientAsync();
+            var blobClient = containerClient.GetBlobClient(fileName);
+            var response = await blobClient.DeleteIfExistsAsync();
+            return response.Value;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error deleting file {FileName}", fileName);
+            return false;
+        }
+    }
+
+    public async Task<bool> FileExistsAsync(string fileName)
+    {
+        try
+        {
+            var containerClient = await GetContainerClientAsync();
+            var blobClient = containerClient.GetBlobClient(fileName);
+            return await blobClient.ExistsAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error checking if file exists {FileName}", fileName);
+            return false;
+        }
+    }
+
     /// <summary>
     ///     Get document metadata from blob storage
     /// </summary>
