@@ -49,7 +49,10 @@ jobs:
           az functionapp config appsettings set \
             --name 'legal-ia-func-app' \
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
-            --settings AzureWebJobsStorage="${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" CUSTOM_SETTING1="value1" CUSTOM_SETTING2="value2"
+            --settings AzureWebJobsStorage="${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" \
+              FUNCTIONS_WORKER_RUNTIME="dotnet-isolated" \
+              ConnectionStrings__DefaultConnection="${{ secrets.POSTGRESQL_CONNECTION_STRING }}" \
+              ConnectionStrings__Redis="${{ secrets.REDIS_CONNECTION_STRING }}" \
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
