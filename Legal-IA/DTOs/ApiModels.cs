@@ -50,3 +50,9 @@ public class UserResponse
     public DateTime UpdatedAt { get; set; }
     public bool IsActive { get; set; }
 }
+
+public class UpdateUserOrchestrationInput
+{
+    public Guid UserId { get; set; }
+    public UpdateUserRequest UpdateRequest { get; set; } = default!;
+}

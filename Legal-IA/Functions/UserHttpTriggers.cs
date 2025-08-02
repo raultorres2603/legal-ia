@@ -21,8 +21,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         {
             var users = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserGetAllOrchestrator", null);
-            var response = await client.WaitForInstanceCompletionAsync(users, CancellationToken.None);
-            return new OkObjectResult(response);
+            var response = await client.WaitForInstanceCompletionAsync(users, true, CancellationToken.None);
+            return new OkObjectResult(response.ReadOutputAs<List<UserResponse>>());
         }
         catch (Exception ex)
         {
@@ -41,15 +41,29 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         try
         {
             if (!Guid.TryParse(id, out var userId))
+            {
                 return new BadRequestObjectResult("Invalid user ID format");
-
-            var user = await client.ScheduleNewOrchestrationInstanceAsync(
+            }
+            var orchestrationId = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserGetByIdOrchestrator", userId);
-            if (user == null)
-                return new NotFoundResult();
-
-            var response = await client.WaitForInstanceCompletionAsync(user, CancellationToken.None);
-            return new OkObjectResult(response);
+            var response = await client.WaitForInstanceCompletionAsync(orchestrationId, true, CancellationToken.None);
+            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
+            {
+                logger.LogError("Failed to get user {UserId}: {Error}", id, response.FailureDetails);
+                return new StatusCodeResult(500);
+            }
+            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            {
+                // Use GetOutput<T>() to deserialize output to UserResponse
+                var userResponse = response.ReadOutputAs<UserResponse>();
+                if (userResponse == null)
+                {
+                    logger.LogWarning("User not found for id {UserId}", id);
+                    return new NotFoundResult();
+                }
+                return new OkObjectResult(userResponse);
+            }
+            return new StatusCodeResult(500);
         }
         catch (Exception ex)
         {
@@ -74,7 +88,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
             var result = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserCreateOrchestrator", createRequest);
-            var response = await client.WaitForInstanceCompletionAsync(result, CancellationToken.None);
+            var response = await client.WaitForInstanceCompletionAsync(result, true, CancellationToken.None);
             if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             {
                 if (response.SerializedOutput == null && response.FailureDetails != null)
@@ -85,12 +99,12 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
                 return new OkObjectResult(new
                 {
                     message = "User created successfully",
-                    instanceId = result
+                    instanceId = response.ReadOutputAs<UserResponse>()
                 });
             }
             if (response.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
             {
-                return new ConflictObjectResult(response.SerializedOutput ?? "User creation failed due to a conflict or error.");
+                return new ConflictObjectResult("User creation failed due to a conflict or error.");
             }
             return new StatusCodeResult(500);
         }
@@ -122,14 +136,23 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
             var updateData = new { UserId = userId, UpdateRequest = updateRequest };
             var result = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserUpdateOrchestrator", updateData);
-            var response = await client.WaitForInstanceCompletionAsync(result, CancellationToken.None);
-            if (response.SerializedOutput == "false")
-                return new NotFoundResult();
-            return new OkObjectResult(new
+            var response = await client.WaitForInstanceCompletionAsync(result, true, CancellationToken.None);
+            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
             {
-                message = "User updated successfully",
-                instanceId = result
-            });
+                logger.LogError("Failed to update user {UserId}: {Error}", id, response.FailureDetails);
+                return new StatusCodeResult(500);
+            }
+            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            {
+                if (response.ReadOutputAs<UserResponse>() == null)
+                    return new NotFoundResult();
+                return new OkObjectResult(new
+                {
+                    message = "User updated successfully",
+                    userUpdated = response.ReadOutputAs<UserResponse>(),
+                });
+            }
+            return new StatusCodeResult(500);
         }
         catch (Exception ex)
         {

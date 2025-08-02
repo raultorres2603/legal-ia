@@ -37,6 +37,11 @@ namespace Legal_IA.Functions.Activities
             try
             {
                 var result = await userService.GetUserByIdAsync(userId);
+                if (result == null)
+                {
+                    logger.LogWarning("User not found for UserId: {UserId}", userId);
+                    return null;
+                }
                 logger.LogInformation("GetUserByIdActivity succeeded for UserId: {UserId}", userId);
                 return result;
             }
@@ -71,13 +76,18 @@ namespace Legal_IA.Functions.Activities
     public class UpdateUserActivity(IUserService userService, ILogger<UpdateUserActivity> logger)
     {
         [Function("UpdateUserActivity")]
-        public async Task<string> Run([ActivityTrigger] dynamic updateData)
+        public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
         {
             logger.LogInformation($"Starting UpdateUserActivity for UserId: {updateData.UserId}");
             try
             {
                 var result = await userService.UpdateUserAsync(updateData.UserId, updateData.UpdateRequest);
-                logger.LogInformation($"UpdateUserActivity succeeded for UserId: {updateData.UserId}");
+                if (result == null)
+                {
+                    logger.LogWarning($"User not found for UserId: {updateData.UserId}");
+                    return null;
+                }
+                logger.LogInformation($"User updated successfully for UserId: {updateData.UserId}");
                 return result;
             }
             catch (Exception ex)

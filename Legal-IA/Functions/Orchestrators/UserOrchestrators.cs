@@ -64,21 +64,28 @@ namespace Legal_IA.Functions.Orchestrators
         }
 
         [Function("UserUpdateOrchestrator")]
-        public static async Task<string> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
+        public static async Task<UserResponse?> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var updateData = context.GetInput<dynamic>();
-            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserUpdateOrchestrator for UserId: {updateData.UserId}");
-            try
+            var updateData = context.GetInput<UpdateUserOrchestrationInput>();
+            if (updateData != null)
             {
-                var result = await context.CallActivityAsync<string>("UpdateUserActivity", updateData);
-                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserUpdateOrchestrator for UserId: {updateData.UserId}");
-                return result;
+                System.Diagnostics.Trace.TraceInformation(
+                    $"Orchestration started: UserUpdateOrchestrator for UserId: {updateData.UserId}");
+                try
+                {
+                    var result = await context.CallActivityAsync<UserResponse>("UpdateUserActivity", updateData);
+                    System.Diagnostics.Trace.TraceInformation(
+                        $"Orchestration succeeded: UserUpdateOrchestrator for UserId: {updateData.UserId}");
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.TraceError(
+                        $"Error in UserUpdateOrchestrator for UserId: {updateData.UserId}: {ex}");
+                    throw;
+                }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.TraceError($"Error in UserUpdateOrchestrator for UserId: {updateData.UserId}: {ex}");
-                throw;
-            }
+            return null;
         }
 
         [Function("UserDeleteOrchestrator")]
