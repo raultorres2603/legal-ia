@@ -46,13 +46,13 @@ namespace Legal_IA.Functions.Orchestrators
         }
 
         [Function("UserCreateOrchestrator")]
-        public static async Task<string> RunCreate([OrchestrationTrigger] TaskOrchestrationContext context)
+        public static async Task<UserResponse> RunCreate([OrchestrationTrigger] TaskOrchestrationContext context)
         {
             var createRequest = context.GetInput<CreateUserRequest>();
-            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserCreateOrchestrator for Email: {createRequest.Email}");
+            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserCreateOrchestrator for Email: {createRequest!.Email}");
             try
             {
-                var result = await context.CallActivityAsync<string>("CreateUserActivity", createRequest);
+                var result = await context.CallActivityAsync<UserResponse>("CreateUserActivity", createRequest);
                 System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserCreateOrchestrator for Email: {createRequest.Email}");
                 return result;
             }
