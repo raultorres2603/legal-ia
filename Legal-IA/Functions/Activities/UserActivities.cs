@@ -1,84 +1,110 @@
-using System.Net.Mail;
-using FluentValidation;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Legal_IA.DTOs;
 using Legal_IA.Interfaces.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
-namespace Legal_IA.Functions.Activities;
-
-/// <summary>
-///     User-related activity functions
-/// </summary>
-public class UserActivities(ILogger<UserActivities> logger, IUserService userService)
+namespace Legal_IA.Functions.Activities
 {
-    private readonly ILogger<UserActivities> _logger = logger;
-
-    [Function("ValidateUserActivity")]
-    public async Task ValidateUserActivity([ActivityTrigger] CreateUserRequest request)
+    public class GetAllUsersActivity(IUserService userService, ILogger<GetAllUsersActivity> logger)
     {
-        if (string.IsNullOrWhiteSpace(request.Email))
-            throw new ValidationException("Email is required");
-
-        if (string.IsNullOrWhiteSpace(request.DNI))
-            throw new ValidationException("DNI is required");
-
-        if (string.IsNullOrWhiteSpace(request.CIF))
-            throw new ValidationException("CIF is required");
-
-        // Check if user already exists
-        if (await userService.UserExistsByEmailAsync(request.Email))
-            throw new ValidationException("User with this email already exists");
-
-        if (await userService.UserExistsByDNIAsync(request.DNI))
-            throw new ValidationException("User with this DNI already exists");
-    }
-
-    [Function("CreateUserActivity")]
-    public async Task<UserResponse> CreateUserActivity([ActivityTrigger] CreateUserRequest request)
-    {
-        return await userService.CreateUserAsync(request);
-    }
-
-    [Function("ValidateUserUpdateActivity")]
-    public Task ValidateUserUpdateActivity([ActivityTrigger] UpdateUserRequest request)
-    {
-        // Add validation logic for update requests
-        if (!string.IsNullOrWhiteSpace(request.Email) && !IsValidEmail(request.Email))
-            throw new ValidationException("Invalid email format");
-
-        return Task.CompletedTask;
-    }
-
-    [Function("UpdateUserActivity")]
-    public async Task<UserResponse?> UpdateUserActivity([ActivityTrigger] dynamic input)
-    {
-        var userId = Guid.Parse(input.UserId.ToString());
-        var updateRequest = JsonConvert.DeserializeObject<UpdateUserRequest>(input.UpdateRequest.ToString());
-
-        return await userService.UpdateUserAsync(userId, updateRequest!);
-    }
-
-    [Function("VerifyUserExistsActivity")]
-    public async Task VerifyUserExistsActivity([ActivityTrigger] Guid userId)
-    {
-        var user = await userService.GetUserByIdAsync(userId);
-        if (user == null)
-            throw new ValidationException($"User {userId} not found");
-    }
-
-    // Helper methods
-    private static bool IsValidEmail(string email)
-    {
-        try
+        [Function("GetAllUsersActivity")]
+        public async Task<List<UserResponse>> Run([ActivityTrigger] object? input)
         {
-            var addr = new MailAddress(email);
-            return addr.Address == email;
+            logger.LogInformation("Starting GetAllUsersActivity");
+            try
+            {
+                var result = await userService.GetAllUsersAsync();
+                logger.LogInformation("GetAllUsersActivity succeeded. Returned {Count} users.", result.Count);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in GetAllUsersActivity");
+                throw;
+            }
         }
-        catch
+    }
+
+    public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdActivity> logger)
+    {
+        [Function("GetUserByIdActivity")]
+        public async Task<UserResponse?> Run([ActivityTrigger] Guid userId)
         {
-            return false;
+            logger.LogInformation("Starting GetUserByIdActivity for UserId: {UserId}", userId);
+            try
+            {
+                var result = await userService.GetUserByIdAsync(userId);
+                logger.LogInformation("GetUserByIdActivity succeeded for UserId: {UserId}", userId);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in GetUserByIdActivity for UserId: {UserId}", userId);
+                throw;
+            }
+        }
+    }
+
+    public class CreateUserActivity(IUserService userService, ILogger<CreateUserActivity> logger)
+    {
+        [Function("CreateUserActivity")]
+        public async Task<UserResponse> Run([ActivityTrigger] CreateUserRequest request)
+        {
+            logger.LogInformation("Starting CreateUserActivity for Email: {Email}", request.Email);
+            try
+            {
+                var result = await userService.CreateUserAsync(request);
+                logger.LogInformation("CreateUserActivity succeeded for Email: {Email}", request.Email);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in CreateUserActivity for Email: {Email}", request.Email);
+                throw;
+            }
+        }
+    }
+
+    public class UpdateUserActivity(IUserService userService, ILogger<UpdateUserActivity> logger)
+    {
+        [Function("UpdateUserActivity")]
+        public async Task<string> Run([ActivityTrigger] dynamic updateData)
+        {
+            logger.LogInformation($"Starting UpdateUserActivity for UserId: {updateData.UserId}");
+            try
+            {
+                var result = await userService.UpdateUserAsync(updateData.UserId, updateData.UpdateRequest);
+                logger.LogInformation($"UpdateUserActivity succeeded for UserId: {updateData.UserId}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Error in UpdateUserActivity for UserId: {updateData.UserId}");
+                throw;
+            }
+        }
+    }
+
+    public class DeleteUserActivity(IUserService userService, ILogger<DeleteUserActivity> logger)
+    {
+        [Function("DeleteUserActivity")]
+        public async Task<bool> Run([ActivityTrigger] Guid userId)
+        {
+            logger.LogInformation("Starting DeleteUserActivity for UserId: {UserId}", userId);
+            try
+            {
+                var result = await userService.DeleteUserAsync(userId);
+                logger.LogInformation("DeleteUserActivity succeeded for UserId: {UserId}", userId);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in DeleteUserActivity for UserId: {UserId}", userId);
+                throw;
+            }
         }
     }
 }

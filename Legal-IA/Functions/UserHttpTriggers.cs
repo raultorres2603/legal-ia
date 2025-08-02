@@ -9,16 +9,18 @@ using Newtonsoft.Json;
 
 namespace Legal_IA.Functions;
 
-public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService userService)
+public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 {
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users")]
-        HttpRequestData req)
+        HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
-            var users = await userService.GetAllUsersAsync();
+            var users = await client.ScheduleNewOrchestrationInstanceAsync(
+                "UserGetAllOrchestrator", null);
             return new OkObjectResult(users);
         }
         catch (Exception ex)
@@ -32,14 +34,16 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService use
     public async Task<IActionResult> GetUser(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/{id}")]
         HttpRequestData req,
-        string id)
+        string id,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
             if (!Guid.TryParse(id, out var userId))
                 return new BadRequestObjectResult("Invalid user ID format");
 
-            var user = await userService.GetUserByIdAsync(userId);
+            var user = await client.ScheduleNewOrchestrationInstanceAsync(
+                "UserGetByIdOrchestrator", userId);
             if (user == null)
                 return new NotFoundResult();
 
@@ -66,18 +70,10 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService use
             if (createRequest == null)
                 return new BadRequestObjectResult("Invalid request body");
 
-            // Check if user already exists
-            if (await userService.UserExistsByEmailAsync(createRequest.Email))
-                return new ConflictObjectResult("User with this email already exists");
+            var result = await client.ScheduleNewOrchestrationInstanceAsync(
+                "UserCreateOrchestrator", createRequest);
 
-            if (await userService.UserExistsByDNIAsync(createRequest.DNI))
-                return new ConflictObjectResult("User with this DNI already exists");
-
-            // Start orchestration for user creation workflow
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                "UserCreationOrchestrator", createRequest);
-
-            return new AcceptedResult($"/api/orchestrations/{instanceId}", new { instanceId });
+            return new AcceptedResult($"/api/orchestrations/{result}", new { instanceId = result });
         }
         catch (Exception ex)
         {
@@ -105,10 +101,10 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService use
                 return new BadRequestObjectResult("Invalid request body");
 
             var updateData = new { UserId = userId, UpdateRequest = updateRequest };
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+            var result = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserUpdateOrchestrator", updateData);
 
-            return new AcceptedResult($"/api/orchestrations/{instanceId}", new { instanceId });
+            return new AcceptedResult($"/api/orchestrations/{result}", new { instanceId = result });
         }
         catch (Exception ex)
         {
@@ -121,18 +117,19 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IUserService use
     public async Task<IActionResult> DeleteUser(
         [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "users/{id}")]
         HttpRequestData req,
-        string id)
+        string id,
+        [DurableClient] DurableTaskClient client)
     {
         try
         {
             if (!Guid.TryParse(id, out var userId))
                 return new BadRequestObjectResult("Invalid user ID format");
-
-            var result = await userService.DeleteUserAsync(userId);
-            if (!result)
+            var result = await client.ScheduleNewOrchestrationInstanceAsync(
+                "UserDeleteOrchestrator", userId);
+            var response = await client.WaitForInstanceCompletionAsync(result, CancellationToken.None);
+            if (response.SerializedOutput == "false")
                 return new NotFoundResult();
-
-            return new NoContentResult();
+            return new AcceptedResult("Deleted successfully", new { instanceId = result });
         }
         catch (Exception ex)
         {

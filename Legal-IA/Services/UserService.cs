@@ -2,43 +2,83 @@ using Legal_IA.DTOs;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Services;
 
 /// <summary>
 ///     User service implementation using repository pattern
 /// </summary>
-public class UserService(IUserRepository userRepository, ICacheService cacheService) : IUserService
+public class UserService(IUserRepository userRepository, ICacheService cacheService, ILogger<UserService> logger) : IUserService
 {
-    private readonly string _cacheKeyPrefix = "user:";
+    private const string CacheKeyPrefix = "user:";
 
     public async Task<UserResponse?> GetUserByIdAsync(Guid id)
     {
-        var cacheKey = $"{_cacheKeyPrefix}{id}";
-        var cachedUser = await cacheService.GetAsync<UserResponse>(cacheKey);
-
-        if (cachedUser != null)
-            return cachedUser;
-
-        var user = await userRepository.GetByIdAsync(id);
-        if (user == null) return null;
-
-        var userResponse = MapToUserResponse(user);
-        await cacheService.SetAsync(cacheKey, userResponse);
-
-        return userResponse;
+        try
+        {
+            var cacheKey = $"{CacheKeyPrefix}{id}";
+            var cachedUser = await cacheService.GetAsync<UserResponse>(cacheKey);
+            if (cachedUser != null)
+            {
+                logger.LogInformation("Cache hit for user {UserId}", id);
+                return cachedUser;
+            }
+            logger.LogInformation("Cache miss for user {UserId}, querying repository", id);
+            var user = await userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                logger.LogWarning("User not found for id {UserId}", id);
+                return null;
+            }
+            var userResponse = MapToUserResponse(user);
+            await cacheService.SetAsync(cacheKey, userResponse);
+            logger.LogInformation("User {UserId} cached successfully", id);
+            return userResponse;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error in GetUserByIdAsync for id {UserId}", id);
+            throw new Exception($"Error retrieving user by id {id}", ex);
+        }
     }
 
     public async Task<UserResponse?> GetUserByEmailAsync(string email)
     {
-        var user = await userRepository.GetByEmailAsync(email);
-        return user != null ? MapToUserResponse(user) : null;
+        try
+        {
+            logger.LogInformation("Getting user by email: {Email}", email);
+            var user = await userRepository.GetByEmailAsync(email);
+            if (user != null)
+            {
+                logger.LogInformation("User found for email: {Email}", email);
+                return MapToUserResponse(user);
+            }
+            logger.LogWarning("User not found for email: {Email}", email);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error in GetUserByEmailAsync for email {Email}", email);
+            throw new Exception($"Error retrieving user by email {email}", ex);
+        }
     }
 
-    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
+    public async Task<List<UserResponse>> GetAllUsersAsync()
     {
-        var users = await userRepository.GetActiveUsersAsync();
-        return users.Select(MapToUserResponse);
+        try
+        {
+            logger.LogInformation("Getting all active users");
+            var users = await userRepository.GetActiveUsersAsync();
+            var enumerable = users.ToList();
+            logger.LogInformation("Found {Count} active users", enumerable.Count());
+            return enumerable.Select(MapToUserResponse).ToList();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error in GetAllUsersAsync");
+            throw new Exception("Error retrieving active users", e);
+        }
     }
 
     public async Task<UserResponse> CreateUserAsync(CreateUserRequest request)
@@ -63,7 +103,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         var createdUser = await userRepository.AddAsync(user);
         var userResponse = MapToUserResponse(createdUser);
 
-        var cacheKey = $"{_cacheKeyPrefix}{createdUser.Id}";
+        var cacheKey = $"{CacheKeyPrefix}{createdUser.Id}";
         await cacheService.SetAsync(cacheKey, userResponse);
 
         return userResponse;
@@ -91,7 +131,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         var updatedUser = await userRepository.UpdateAsync(user);
 
         // Invalidate cache
-        var cacheKey = $"{_cacheKeyPrefix}{id}";
+        var cacheKey = $"{CacheKeyPrefix}{id}";
         await cacheService.RemoveAsync(cacheKey);
 
         return MapToUserResponse(updatedUser);
@@ -107,7 +147,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         await userRepository.UpdateAsync(user);
 
         // Invalidate cache
-        var cacheKey = $"{_cacheKeyPrefix}{id}";
+        var cacheKey = $"{CacheKeyPrefix}{id}";
         await cacheService.RemoveAsync(cacheKey);
 
         return true;
