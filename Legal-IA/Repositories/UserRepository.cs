@@ -2,13 +2,14 @@ using Legal_IA.Data;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Repositories;
 
 /// <summary>
 ///     User repository implementation with specific user operations
 /// </summary>
-public class UserRepository(LegalIADbContext context) : Repository<User>(context), IUserRepository
+public class UserRepository(LegalIADbContext context, ILogger<UserRepository> logger) : Repository<User>(context), IUserRepository
 {
     public async Task<User?> GetByEmailAsync(string email)
     {
@@ -27,10 +28,17 @@ public class UserRepository(LegalIADbContext context) : Repository<User>(context
 
     public async Task<IEnumerable<User>> GetActiveUsersAsync()
     {
-        return await DbSet
-            .Where(u => u.IsActive)
-            .OrderBy(u => u.LastName)
-            .ThenBy(u => u.FirstName)
-            .ToListAsync();
+        try
+        {
+            return await DbSet
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.LastName)
+                .ThenBy(u => u.FirstName)
+                .ToListAsync();
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Error retrieving active users", e);
+        }
     }
 }

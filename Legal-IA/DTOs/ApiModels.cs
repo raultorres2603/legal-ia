@@ -8,7 +8,7 @@ public class CreateUserRequest
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string DNI { get; set; } = string.Empty;
-    public string CIF { get; set; } = string.Empty;
+    public string? CIF { get; set; } = null;
     public string BusinessName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
@@ -24,6 +24,7 @@ public class UpdateUserRequest
     public string? Email { get; set; }
     public string? BusinessName { get; set; }
     public string? Address { get; set; }
+    public string? CIF { get; set; }
     public string? PostalCode { get; set; }
     public string? City { get; set; }
     public string? Province { get; set; }
@@ -38,7 +39,7 @@ public class UserResponse
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string DNI { get; set; } = string.Empty;
-    public string CIF { get; set; } = string.Empty;
+    public string? CIF { get; set; } = null;
     public string BusinessName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
@@ -48,4 +49,10 @@ public class UserResponse
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsActive { get; set; }
+}
+
+public class UpdateUserOrchestrationInput
+{
+    public Guid UserId { get; set; }
+    public UpdateUserRequest UpdateRequest { get; set; } = default!;
 }
