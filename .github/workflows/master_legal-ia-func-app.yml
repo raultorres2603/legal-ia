@@ -43,6 +43,13 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D0A66CA9309146DD9DA56D99388B6B09 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BD749B372AA34144A06A1438B83A1BD1 }}
 
+      - name: Set Azure Function App settings
+        run: |
+          az functionapp config appsettings set \
+            --name 'legal-ia-func-app' \
+            --resource-group '${{ secrets.AZURE_RESOURCE_GROUP }}' \
+            --settings AzureWebJobsStorage='${{ secrets.AZURE_BLOB_CONNECTION_STRING }}' CUSTOM_SETTING1='value1' CUSTOM_SETTING2='value2'
+
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
@@ -50,4 +57,3 @@ jobs:
           app-name: 'legal-ia-func-app'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
