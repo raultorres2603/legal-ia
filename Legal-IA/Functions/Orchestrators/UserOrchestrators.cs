@@ -13,17 +13,16 @@ namespace Legal_IA.Functions.Orchestrators
         [Function("UserGetAllOrchestrator")]
         public static async Task<List<UserResponse>> RunGetAll([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var logger = context.CreateReplaySafeLogger<UserOrchestrators>();
-            logger.LogInformation("Orchestration started: UserGetAllOrchestrator");
+            System.Diagnostics.Trace.TraceInformation("Orchestration started: UserGetAllOrchestrator");
             try
             {
                 var result = await context.CallActivityAsync<List<UserResponse>>("GetAllUsersActivity", null);
-                logger.LogInformation("Orchestration succeeded: UserGetAllOrchestrator, returned {Count} users.", result.Count);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserGetAllOrchestrator, returned {result.Count} users.");
                 return result;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in UserGetAllOrchestrator");
+                System.Diagnostics.Trace.TraceError($"Error in UserGetAllOrchestrator: {ex}");
                 throw;
             }
         }
@@ -31,18 +30,17 @@ namespace Legal_IA.Functions.Orchestrators
         [Function("UserGetByIdOrchestrator")]
         public static async Task<UserResponse?> RunGetById([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var logger = context.CreateReplaySafeLogger<UserOrchestrators>();
             var userId = context.GetInput<Guid>();
-            logger.LogInformation("Orchestration started: UserGetByIdOrchestrator for UserId: {UserId}", userId);
+            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserGetByIdOrchestrator for UserId: {userId}");
             try
             {
                 var result = await context.CallActivityAsync<UserResponse?>("GetUserByIdActivity", userId);
-                logger.LogInformation("Orchestration succeeded: UserGetByIdOrchestrator for UserId: {UserId}", userId);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserGetByIdOrchestrator for UserId: {userId}");
                 return result;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in UserGetByIdOrchestrator for UserId: {UserId}", userId);
+                System.Diagnostics.Trace.TraceError($"Error in UserGetByIdOrchestrator for UserId: {userId}: {ex}");
                 throw;
             }
         }
@@ -50,18 +48,17 @@ namespace Legal_IA.Functions.Orchestrators
         [Function("UserCreateOrchestrator")]
         public static async Task<string> RunCreate([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var logger = context.CreateReplaySafeLogger<UserOrchestrators>();
             var createRequest = context.GetInput<CreateUserRequest>();
-            logger.LogInformation("Orchestration started: UserCreateOrchestrator for Email: {Email}", createRequest.Email);
+            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserCreateOrchestrator for Email: {createRequest.Email}");
             try
             {
                 var result = await context.CallActivityAsync<string>("CreateUserActivity", createRequest);
-                logger.LogInformation("Orchestration succeeded: UserCreateOrchestrator for Email: {Email}", createRequest.Email);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserCreateOrchestrator for Email: {createRequest.Email}");
                 return result;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in UserCreateOrchestrator for Email: {Email}", createRequest.Email);
+                System.Diagnostics.Trace.TraceError($"Error in UserCreateOrchestrator for Email: {createRequest.Email}: {ex}");
                 throw;
             }
         }
@@ -69,18 +66,17 @@ namespace Legal_IA.Functions.Orchestrators
         [Function("UserUpdateOrchestrator")]
         public static async Task<string> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var logger = context.CreateReplaySafeLogger<UserOrchestrators>();
             var updateData = context.GetInput<dynamic>();
-            logger.LogInformation("Orchestration started: UserUpdateOrchestrator for UserId: {UserId}", updateData.UserId);
+            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserUpdateOrchestrator for UserId: {updateData.UserId}");
             try
             {
                 var result = await context.CallActivityAsync<string>("UpdateUserActivity", updateData);
-                logger.LogInformation("Orchestration succeeded: UserUpdateOrchestrator for UserId: {UserId}", updateData.UserId);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserUpdateOrchestrator for UserId: {updateData.UserId}");
                 return result;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in UserUpdateOrchestrator for UserId: {UserId}", updateData.UserId);
+                System.Diagnostics.Trace.TraceError($"Error in UserUpdateOrchestrator for UserId: {updateData.UserId}: {ex}");
                 throw;
             }
         }
@@ -88,18 +84,17 @@ namespace Legal_IA.Functions.Orchestrators
         [Function("UserDeleteOrchestrator")]
         public static async Task<bool> RunDelete([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var logger = context.CreateReplaySafeLogger<UserOrchestrators>();
             var userId = context.GetInput<Guid>();
-            logger.LogInformation("Orchestration started: UserDeleteOrchestrator for UserId: {UserId}", userId);
+            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserDeleteOrchestrator for UserId: {userId}");
             try
             {
                 var result = await context.CallActivityAsync<bool>("DeleteUserActivity", userId);
-                logger.LogInformation("Orchestration succeeded: UserDeleteOrchestrator for UserId: {UserId}", userId);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserDeleteOrchestrator for UserId: {userId}");
                 return result;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in UserDeleteOrchestrator for UserId: {UserId}", userId);
+                System.Diagnostics.Trace.TraceError($"Error in UserDeleteOrchestrator for UserId: {userId}: {ex}");
                 throw;
             }
         }

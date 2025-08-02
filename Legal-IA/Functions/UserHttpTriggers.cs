@@ -1,4 +1,5 @@
 using Legal_IA.DTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -20,7 +21,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         {
             var users = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserGetAllOrchestrator", null);
-            return new OkObjectResult(users);
+            var response = await client.WaitForInstanceCompletionAsync(users, CancellationToken.None);
+            return new OkObjectResult(response);
         }
         catch (Exception ex)
         {
@@ -46,7 +48,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
             if (user == null)
                 return new NotFoundResult();
 
-            return new OkObjectResult(user);
+            var response = await client.WaitForInstanceCompletionAsync(user, CancellationToken.None);
+            return new OkObjectResult(response);
         }
         catch (Exception ex)
         {
@@ -72,7 +75,11 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
             var result = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserCreateOrchestrator", createRequest);
 
-            return new AcceptedResult($"/api/orchestrations/{result}", new { instanceId = result });
+            return new OkObjectResult(new
+            {
+                message = "User created successfully",
+                instanceId = result
+            });
         }
         catch (Exception ex)
         {
@@ -102,8 +109,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
             var updateData = new { UserId = userId, UpdateRequest = updateRequest };
             var result = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserUpdateOrchestrator", updateData);
-
-            return new AcceptedResult($"/api/orchestrations/{result}", new { instanceId = result });
+            var response = await client.WaitForInstanceCompletionAsync(result, CancellationToken.None);
+            if (response.SerializedOutput == "false")
+                return new NotFoundResult();
+            return new OkObjectResult(new
+            {
+                message = "User updated successfully",
+                instanceId = result
+            });
         }
         catch (Exception ex)
         {
