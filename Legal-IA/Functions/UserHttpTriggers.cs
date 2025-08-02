@@ -1,5 +1,4 @@
 using Legal_IA.DTOs;
-using Legal_IA.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
