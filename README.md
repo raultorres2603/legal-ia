@@ -143,29 +143,6 @@ Legal-IA addresses the critical need for automated legal document generation in 
 | `DELETE` | `/api/users/{id}` | Deactivate user account |
 | `GET` | `/api/users` | List all users (admin) |
 
-### **Document Management** (`/api/documents`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/documents` | Create new document |
-| `GET` | `/api/documents/{id}` | Get document by ID |
-| `PUT` | `/api/documents/{id}` | Update document |
-| `DELETE` | `/api/documents/{id}` | Delete document |
-| `GET` | `/api/documents/user/{userId}` | Get user's documents |
-| `GET` | `/api/documents/type/{type}` | Get documents by type |
-| `GET` | `/api/documents/status/{status}` | Get documents by status |
-| `GET` | `/api/documents/templates` | Get available templates |
-| `GET` | `/api/documents/search?term={term}` | Search documents |
-
-### **AI Document Generation** (`/ai/documents`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/ai/documents/generate` | Generate new AI document |
-| `POST` | `/ai/documents/{id}/regenerate` | Regenerate with updated prompts |
-| `GET` | `/ai/documents/{id}/download` | Download generated PDF |
-| `GET` | `/ai/documents/{id}/status` | Check generation status |
-
 ## 📊 **Data Models**
 
 ### **User Entity**
@@ -186,30 +163,6 @@ public class User
     public string Phone { get; set; }
     public bool IsActive { get; set; }
     // ... timestamps
-}
-```
-
-### **Document Entity**
-```csharp
-public class Document
-{
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public string Title { get; set; }
-    public DocumentType Type { get; set; }
-    public string Description { get; set; }
-    public string Content { get; set; }
-    public string FilePath { get; set; }     // Blob storage path
-    public string FileName { get; set; }
-    public string FileFormat { get; set; }
-    public long FileSize { get; set; }
-    public DocumentStatus Status { get; set; }
-    public decimal? Amount { get; set; }
-    public string Currency { get; set; }
-    public int? Quarter { get; set; }
-    public int? Year { get; set; }
-    public bool IsTemplate { get; set; }
-    // ... timestamps and navigation properties
 }
 ```
 
