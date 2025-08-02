@@ -74,12 +74,25 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
             var result = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserCreateOrchestrator", createRequest);
-
-            return new OkObjectResult(new
+            var response = await client.WaitForInstanceCompletionAsync(result, CancellationToken.None);
+            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             {
-                message = "User created successfully",
-                instanceId = result
-            });
+                if (response.SerializedOutput == null && response.FailureDetails != null)
+                {
+                    logger.LogError("User creation failed: {Error}", response.FailureDetails);
+                    return new ConflictObjectResult(response.SerializedOutput ?? "User creation failed due to a conflict or error.");
+                }
+                return new OkObjectResult(new
+                {
+                    message = "User created successfully",
+                    instanceId = result
+                });
+            }
+            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
+            {
+                return new ConflictObjectResult(response.SerializedOutput ?? "User creation failed due to a conflict or error.");
+            }
+            return new StatusCodeResult(500);
         }
         catch (Exception ex)
         {
