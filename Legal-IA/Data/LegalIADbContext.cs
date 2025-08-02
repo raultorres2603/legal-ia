@@ -20,7 +20,7 @@ public class LegalIADbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.DNI).IsRequired();
-            entity.Property(e => e.CIF).IsRequired();
+            entity.Property(e => e.CIF).IsRequired(false); // CIF is only required if BusinessName is set
             entity.Property(e => e.Email).IsRequired();
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.DNI).IsUnique();

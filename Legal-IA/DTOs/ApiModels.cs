@@ -24,6 +24,7 @@ public class UpdateUserRequest
     public string? Email { get; set; }
     public string? BusinessName { get; set; }
     public string? Address { get; set; }
+    public string? CIF { get; set; }
     public string? PostalCode { get; set; }
     public string? City { get; set; }
     public string? Province { get; set; }

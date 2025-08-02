@@ -3,6 +3,8 @@ using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
 using Microsoft.Extensions.Logging;
+using FluentValidation;
+using Legal_IA.Validators;
 
 namespace Legal_IA.Services;
 
@@ -100,6 +102,15 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
             UpdatedAt = DateTime.UtcNow
         };
 
+        var validator = new UserValidator();
+        var validationResult = validator.Validate(user);
+        if (!validationResult.IsValid)
+        {
+            var errorMessages = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+            logger.LogWarning("User creation validation failed: {Errors}", errorMessages);
+            throw new ValidationException(errorMessages);
+        }
+
         var createdUser = await userRepository.AddAsync(user);
         var userResponse = MapToUserResponse(createdUser);
 
@@ -119,6 +130,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         if (!string.IsNullOrEmpty(request.LastName)) user.LastName = request.LastName;
         if (!string.IsNullOrEmpty(request.Email)) user.Email = request.Email;
         if (!string.IsNullOrEmpty(request.BusinessName)) user.BusinessName = request.BusinessName;
+        if (!string.IsNullOrEmpty(request.CIF)) user.CIF = request.CIF;
         if (!string.IsNullOrEmpty(request.Address)) user.Address = request.Address;
         if (!string.IsNullOrEmpty(request.PostalCode)) user.PostalCode = request.PostalCode;
         if (!string.IsNullOrEmpty(request.City)) user.City = request.City;
@@ -127,6 +139,15 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
 
         user.UpdatedAt = DateTime.UtcNow;
+
+        var validator = new UserValidator();
+        var validationResult = validator.Validate(user);
+        if (!validationResult.IsValid)
+        {
+            var errorMessages = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+            logger.LogWarning("User update validation failed: {Errors}", errorMessages);
+            throw new ValidationException(errorMessages);
+        }
 
         var updatedUser = await userRepository.UpdateAsync(user);
 

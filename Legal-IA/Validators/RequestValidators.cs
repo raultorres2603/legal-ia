@@ -1,5 +1,6 @@
 using FluentValidation;
 using Legal_IA.DTOs;
+using Legal_IA.Models;
 
 namespace Legal_IA.Validators;
 
@@ -36,5 +37,17 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
         RuleFor(x => x.Phone)
             .Matches(@"^(\+34|0034|34)?[6789]\d{8}$").WithMessage("Invalid Spanish phone number")
             .When(x => !string.IsNullOrEmpty(x.Phone));
+    }
+}
+
+public class UserValidator : AbstractValidator<User>
+{
+    public UserValidator()
+    {
+        RuleFor(x => x.CIF)
+            .NotEmpty()
+            .When(x => !string.IsNullOrWhiteSpace(x.BusinessName))
+            .WithMessage("CIF is required when BusinessName is provided.");
+        // Add other rules as needed
     }
 }
