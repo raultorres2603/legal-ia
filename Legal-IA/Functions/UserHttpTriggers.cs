@@ -248,7 +248,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         var instance = await client.ScheduleNewOrchestrationInstanceAsync("LoginUserOrchestrator", loginRequest);
         var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            return new OkObjectResult(response.ReadOutputAs<object>());
+        {
+            var authResponse = response.ReadOutputAs<AuthResponse>();
+            if (authResponse == null || !authResponse.Success)
+            {
+                return new UnauthorizedObjectResult(new { message = authResponse?.Message ?? "Unauthorized" });
+            }
+            return new OkObjectResult(authResponse.Data);
+        }
         return new UnauthorizedResult();
     }
 }
