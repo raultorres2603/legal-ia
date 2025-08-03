@@ -90,6 +90,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
+            Password = request.Password,
             DNI = request.DNI,
             CIF = request.CIF,
             BusinessName = request.BusinessName,
@@ -103,7 +104,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         };
 
         var validator = new UserValidator();
-        var validationResult = validator.Validate(user);
+        var validationResult = await validator.ValidateAsync(user);
         if (!validationResult.IsValid)
         {
             var errorMessages = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
@@ -141,7 +142,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         user.UpdatedAt = DateTime.UtcNow;
 
         var validator = new UserValidator();
-        var validationResult = validator.Validate(user);
+        var validationResult = await validator.ValidateAsync(user);
         if (!validationResult.IsValid)
         {
             var errorMessages = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
