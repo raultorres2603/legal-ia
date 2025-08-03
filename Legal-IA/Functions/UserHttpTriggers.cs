@@ -1,22 +1,40 @@
 using Legal_IA.DTOs;
-using Microsoft.AspNetCore.Http;
+using Legal_IA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace Legal_IA.Functions;
 
-public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
+public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration configuration)
 {
+    private async Task<ClaimsPrincipal?> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
+    {
+        if (!req.Headers.TryGetValues("Authorization", out var authHeaders))
+            return null;
+        var bearer = authHeaders.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(bearer) || !bearer.StartsWith("Bearer "))
+            return null;
+        var token = bearer.Substring("Bearer ".Length);
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("JwtValidationOrchestrator", token);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        return response.ReadOutputAs<ClaimsPrincipal?>();
+    }
+
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users")]
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
+        var principal = await ValidateJwtAsync(req, client);
+        if (principal == null)
+            return new UnauthorizedResult();
         try
         {
             var users = await client.ScheduleNewOrchestrationInstanceAsync(
@@ -33,11 +51,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("GetUser")]
     public async Task<IActionResult> GetUser(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
     {
+        var principal = await ValidateJwtAsync(req, client);
+        if (principal == null)
+            return new UnauthorizedResult();
         try
         {
             if (!Guid.TryParse(id, out var userId))
@@ -74,10 +95,13 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("CreateUser")]
     public async Task<IActionResult> CreateUser(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "users")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "users")]
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
+        var principal = await ValidateJwtAsync(req, client);
+        if (principal == null)
+            return new UnauthorizedResult();
         try
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -117,11 +141,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("UpdateUser")]
     public async Task<IActionResult> UpdateUser(
-        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
     {
+        var principal = await ValidateJwtAsync(req, client);
+        if (principal == null)
+            return new UnauthorizedResult();
         try
         {
             if (!Guid.TryParse(id, out var userId))
@@ -163,11 +190,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("DeleteUser")]
     public async Task<IActionResult> DeleteUser(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
     {
+        var principal = await ValidateJwtAsync(req, client);
+        if (principal == null)
+            return new UnauthorizedResult();
         try
         {
             if (!Guid.TryParse(id, out var userId))

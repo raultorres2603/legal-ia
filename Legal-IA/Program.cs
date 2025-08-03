@@ -24,7 +24,7 @@ builder.Services
     .ConfigureFunctionsApplicationInsights();
 
 // Configure Entity Framework with PostgreSQL
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:DefaultConnection")
                        ?? "Host=localhost;Port=5433;Database=LegalIA;Username=postgres;Password=password";
 
 builder.Services.AddDbContext<LegalIADbContext>(options =>
@@ -34,7 +34,7 @@ builder.Services.AddDbContext<LegalIADbContext>(options =>
 });
 
 // Configure Redis Cache
-var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis")
+var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings:Redis")
                             ?? "localhost:6380";
 
 builder.Services.AddStackExchangeRedisCache(options =>
