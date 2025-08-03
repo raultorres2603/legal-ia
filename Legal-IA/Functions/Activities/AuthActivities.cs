@@ -17,7 +17,7 @@ namespace Legal_IA.Functions.Activities
     public class RegisterUserActivity(IUserService userService, ILogger<RegisterUserActivity> logger)
     {
         [Function("RegisterUserActivity")]
-        public async Task<object> Run([ActivityTrigger] RegisterUserRequest request)
+        public async Task<AuthResponse> Run([ActivityTrigger] RegisterUserRequest request)
         {
             logger.LogInformation("RegisterUserActivity started for email: {Email}", request.Email);
             try
@@ -27,7 +27,7 @@ namespace Legal_IA.Functions.Activities
                 if (existingUser != null)
                 {
                     logger.LogWarning("User already exists with email: {Email}", request.Email);
-                    return new { success = false, message = "User already exists." };
+                    return new AuthResponse { Success = false, Message = "User already exists." };
                 }
                 // Hash password
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -51,12 +51,12 @@ namespace Legal_IA.Functions.Activities
                 };
                 var createdUser = await userService.CreateUserAsync(user);
                 logger.LogInformation("User registered successfully: {Email}", user.Email);
-                return new { success = true, userId = createdUser.Id };
+                return new AuthResponse { Success = true, Data = new { userId = createdUser.Id } };
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error in RegisterUserActivity for email: {Email}", request.Email);
-                return new { success = false, message = "Registration failed." };
+                return new AuthResponse { Success = false, Message = "Registration failed." };
             }
         }
     }
@@ -64,7 +64,7 @@ namespace Legal_IA.Functions.Activities
     public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivity> logger, JwtService jwtService)
     {
         [Function("LoginUserActivity")]
-        public async Task<object> Run([ActivityTrigger] LoginUserRequest request)
+        public async Task<AuthResponse> Run([ActivityTrigger] LoginUserRequest request)
         {
             logger.LogInformation("LoginUserActivity started for email: {Email}", request.Email);
             try
@@ -73,24 +73,23 @@ namespace Legal_IA.Functions.Activities
                 if (user == null)
                 {
                     logger.LogWarning("User not found for email: {Email}", request.Email);
-                    return new { success = false, message = "Invalid credentials." };
+                    return new AuthResponse { Success = false, Message = "Invalid credentials." };
                 }
                 if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 {
                     logger.LogWarning("Invalid password for email: {Email}", request.Email);
-                    return new { success = false, message = "Invalid credentials." };
+                    return new AuthResponse { Success = false, Message = "Invalid credentials." };
                 }
                 // Generate JWT
                 var token = jwtService.GenerateToken(user);
                 logger.LogInformation("Login successful for email: {Email}", request.Email);
-                return new { success = true, token };
+                return new AuthResponse { Success = true, Data = new { token } };
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error in LoginUserActivity for email: {Email}", request.Email);
-                return new { success = false, message = "Login failed." };
+                return new AuthResponse { Success = false, Message = "Login failed." };
             }
         }
     }
 }
-
