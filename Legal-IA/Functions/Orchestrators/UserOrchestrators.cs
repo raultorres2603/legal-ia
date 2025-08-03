@@ -25,84 +25,97 @@ namespace Legal_IA.Functions.Orchestrators
                 System.Diagnostics.Trace.TraceError($"Error in UserGetAllOrchestrator: {ex}");
                 throw;
             }
+            finally
+            {
+                System.Diagnostics.Trace.TraceInformation("Orchestration finished: UserGetAllOrchestrator");
+            }
         }
 
         [Function("UserGetByIdOrchestrator")]
         public static async Task<UserResponse?> RunGetById([OrchestrationTrigger] TaskOrchestrationContext context)
         {
+            System.Diagnostics.Trace.TraceInformation("Orchestration started: UserGetByIdOrchestrator");
             var userId = context.GetInput<Guid>();
-            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserGetByIdOrchestrator for UserId: {userId}");
             try
             {
                 var result = await context.CallActivityAsync<UserResponse?>("GetUserByIdActivity", userId);
-                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserGetByIdOrchestrator for UserId: {userId}");
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserGetByIdOrchestrator, returned user: {result?.Id}");
                 return result;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError($"Error in UserGetByIdOrchestrator for UserId: {userId}: {ex}");
+                System.Diagnostics.Trace.TraceError($"Error in UserGetByIdOrchestrator: {ex}");
                 throw;
+            }
+            finally
+            {
+                System.Diagnostics.Trace.TraceInformation("Orchestration finished: UserGetByIdOrchestrator");
             }
         }
 
         [Function("UserCreateOrchestrator")]
-        public static async Task<UserResponse> RunCreate([OrchestrationTrigger] TaskOrchestrationContext context)
+        public static async Task<UserResponse?> RunCreate([OrchestrationTrigger] TaskOrchestrationContext context)
         {
+            System.Diagnostics.Trace.TraceInformation("Orchestration started: UserCreateOrchestrator");
             var createRequest = context.GetInput<CreateUserRequest>();
-            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserCreateOrchestrator for Email: {createRequest!.Email}");
             try
             {
-                var result = await context.CallActivityAsync<UserResponse>("CreateUserActivity", createRequest);
-                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserCreateOrchestrator for Email: {createRequest.Email}");
+                var result = await context.CallActivityAsync<UserResponse?>("CreateUserActivity", createRequest);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserCreateOrchestrator, created user: {result?.Id}");
                 return result;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError($"Error in UserCreateOrchestrator for Email: {createRequest.Email}: {ex}");
+                System.Diagnostics.Trace.TraceError($"Error in UserCreateOrchestrator: {ex}");
                 throw;
+            }
+            finally
+            {
+                System.Diagnostics.Trace.TraceInformation("Orchestration finished: UserCreateOrchestrator");
             }
         }
 
         [Function("UserUpdateOrchestrator")]
         public static async Task<UserResponse?> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            var updateData = context.GetInput<UpdateUserOrchestrationInput>();
-            if (updateData != null)
+            System.Diagnostics.Trace.TraceInformation("Orchestration started: UserUpdateOrchestrator");
+            var updateData = context.GetInput<dynamic>();
+            try
             {
-                System.Diagnostics.Trace.TraceInformation(
-                    $"Orchestration started: UserUpdateOrchestrator for UserId: {updateData.UserId}");
-                try
-                {
-                    var result = await context.CallActivityAsync<UserResponse>("UpdateUserActivity", updateData);
-                    System.Diagnostics.Trace.TraceInformation(
-                        $"Orchestration succeeded: UserUpdateOrchestrator for UserId: {updateData.UserId}");
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Trace.TraceError(
-                        $"Error in UserUpdateOrchestrator for UserId: {updateData.UserId}: {ex}");
-                    throw;
-                }
+                var result = await context.CallActivityAsync<UserResponse?>("UpdateUserActivity", updateData);
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserUpdateOrchestrator, updated user: {result?.Id}");
+                return result;
             }
-            return null;
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError($"Error in UserUpdateOrchestrator: {ex}");
+                throw;
+            }
+            finally
+            {
+                System.Diagnostics.Trace.TraceInformation("Orchestration finished: UserUpdateOrchestrator");
+            }
         }
 
         [Function("UserDeleteOrchestrator")]
         public static async Task<bool> RunDelete([OrchestrationTrigger] TaskOrchestrationContext context)
         {
+            System.Diagnostics.Trace.TraceInformation("Orchestration started: UserDeleteOrchestrator");
             var userId = context.GetInput<Guid>();
-            System.Diagnostics.Trace.TraceInformation($"Orchestration started: UserDeleteOrchestrator for UserId: {userId}");
             try
             {
                 var result = await context.CallActivityAsync<bool>("DeleteUserActivity", userId);
-                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserDeleteOrchestrator for UserId: {userId}");
+                System.Diagnostics.Trace.TraceInformation($"Orchestration succeeded: UserDeleteOrchestrator, deleted user: {userId}, result: {result}");
                 return result;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError($"Error in UserDeleteOrchestrator for UserId: {userId}: {ex}");
+                System.Diagnostics.Trace.TraceError($"Error in UserDeleteOrchestrator: {ex}");
                 throw;
+            }
+            finally
+            {
+                System.Diagnostics.Trace.TraceInformation("Orchestration finished: UserDeleteOrchestrator");
             }
         }
     }
