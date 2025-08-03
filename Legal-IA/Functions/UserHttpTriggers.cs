@@ -215,4 +215,40 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
             return new StatusCodeResult(500);
         }
     }
+
+    [Function("RegisterUser")]
+    public async Task<IActionResult> RegisterUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/register")]
+        HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        // Extract registration data from request
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var registerRequest = JsonConvert.DeserializeObject<RegisterUserRequest>(requestBody);
+        if (registerRequest == null)
+            return new BadRequestObjectResult("Invalid registration data");
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("RegisterUserOrchestrator", registerRequest);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<object>());
+        return new StatusCodeResult(500);
+    }
+
+    [Function("LoginUser")]
+    public async Task<IActionResult> LoginUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/login")]
+        HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        // Extract login data from request
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var loginRequest = JsonConvert.DeserializeObject<LoginUserRequest>(requestBody);
+        if (loginRequest == null)
+            return new BadRequestObjectResult("Invalid login data");
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("LoginUserOrchestrator", loginRequest);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<object>());
+        return new UnauthorizedResult();
+    }
 }

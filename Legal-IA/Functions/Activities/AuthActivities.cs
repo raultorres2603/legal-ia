@@ -1,0 +1,96 @@
+using Legal_IA.DTOs;
+using Legal_IA.Interfaces.Services;
+using Legal_IA.Models;
+using Legal_IA.Services;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+
+namespace Legal_IA.Functions.Activities
+{
+    public class RegisterUserActivity(IUserService userService, ILogger<RegisterUserActivity> logger)
+    {
+        [Function("RegisterUserActivity")]
+        public async Task<object> Run([ActivityTrigger] RegisterUserRequest request)
+        {
+            logger.LogInformation("RegisterUserActivity started for email: {Email}", request.Email);
+            try
+            {
+                // Check if user already exists
+                var existingUser = await userService.GetUserByEmailAsync(request.Email);
+                if (existingUser != null)
+                {
+                    logger.LogWarning("User already exists with email: {Email}", request.Email);
+                    return new { success = false, message = "User already exists." };
+                }
+                // Hash password
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                var user = new CreateUserRequest
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    DNI = request.DNI,
+                    CIF = request.CIF,
+                    BusinessName = request.BusinessName,
+                    Address = request.Address,
+                    PostalCode = request.PostalCode,
+                    City = request.City,
+                    Province = request.Province,
+                    Phone = request.Phone,
+                    Password = hashedPassword,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+                var createdUser = await userService.CreateUserAsync(user);
+                logger.LogInformation("User registered successfully: {Email}", user.Email);
+                return new { success = true, userId = createdUser.Id };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in RegisterUserActivity for email: {Email}", request.Email);
+                return new { success = false, message = "Registration failed." };
+            }
+        }
+    }
+
+    public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivity> logger, JwtService jwtService)
+    {
+        [Function("LoginUserActivity")]
+        public async Task<object> Run([ActivityTrigger] LoginUserRequest request)
+        {
+            logger.LogInformation("LoginUserActivity started for email: {Email}", request.Email);
+            try
+            {
+                var user = await userService.GetUserByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    logger.LogWarning("User not found for email: {Email}", request.Email);
+                    return new { success = false, message = "Invalid credentials." };
+                }
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+                {
+                    logger.LogWarning("Invalid password for email: {Email}", request.Email);
+                    return new { success = false, message = "Invalid credentials." };
+                }
+                // Generate JWT
+                var token = jwtService.GenerateToken(user);
+                logger.LogInformation("Login successful for email: {Email}", request.Email);
+                return new { success = true, token };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error in LoginUserActivity for email: {Email}", request.Email);
+                return new { success = false, message = "Login failed." };
+            }
+        }
+    }
+}
+

@@ -31,6 +31,10 @@ public class User
 
     [MaxLength(20)] public string Phone { get; set; } = string.Empty;
 
+    [Required]
+    [MaxLength(255)]
+    public string Password { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; } = true;

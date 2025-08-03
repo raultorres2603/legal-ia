@@ -1,5 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Legal_IA.DTOs;
+using Legal_IA.Models;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
 
@@ -35,6 +37,29 @@ namespace Legal_IA.Services
             {
                 return null;
             }
+        }
+
+        public string GenerateToken(UserResponse user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = System.Text.Encoding.UTF8.GetBytes(_secret);
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("name", user.FirstName + " " + user.LastName),
+                new Claim("role", "User") // You can customize roles/claims as needed
+            };
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(2),
+                Issuer = _issuer,
+                Audience = _audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }
