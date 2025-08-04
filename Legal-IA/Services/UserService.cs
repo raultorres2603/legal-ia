@@ -180,11 +180,6 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         return await userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
     }
 
-    public async Task<bool> UserExistsByDNIAsync(string dni)
-    {
-        return await userRepository.ExistsAsync(u => u.DNI == dni && u.IsActive);
-    }
-
     public Task<User?> GetUserEntityByEmailAsync(string email)
     {
         return userRepository.GetByEmailAsync(email);
