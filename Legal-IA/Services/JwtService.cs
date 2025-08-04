@@ -39,7 +39,7 @@ namespace Legal_IA.Services
             }
         }
 
-        public string GenerateToken(UserResponse user)
+        public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = System.Text.Encoding.UTF8.GetBytes(_secret);

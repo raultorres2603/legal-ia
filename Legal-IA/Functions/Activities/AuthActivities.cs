@@ -69,12 +69,13 @@ namespace Legal_IA.Functions.Activities
             logger.LogInformation("LoginUserActivity started for email: {Email}", request.Email);
             try
             {
-                var user = await userService.GetUserByEmailAsync(request.Email);
-                if (user == null)
+                var user = await userService.GetUserEntityByEmailAsync(request.Email);
+                if (user == null || string.IsNullOrWhiteSpace(user.Password))
                 {
-                    logger.LogWarning("User not found for email: {Email}", request.Email);
+                    logger.LogWarning("User not found or password missing for email: {Email}", request.Email);
                     return new AuthResponse { Success = false, Message = "Invalid credentials." };
                 }
+                logger.LogInformation("User logged in: {Email} with password: {Password}", user.Email, user.Password);
                 if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 {
                     logger.LogWarning("Invalid password for email: {Email}", request.Email);

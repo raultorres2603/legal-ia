@@ -185,6 +185,11 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         return await userRepository.ExistsAsync(u => u.DNI == dni && u.IsActive);
     }
 
+    public Task<User?> GetUserEntityByEmailAsync(string email)
+    {
+        return userRepository.GetByEmailAsync(email);
+    }
+
     private static UserResponse MapToUserResponse(User user)
     {
         return new UserResponse
