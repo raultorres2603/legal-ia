@@ -48,7 +48,7 @@ namespace Legal_IA.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("name", user.FirstName + " " + user.LastName),
-                new Claim("role", "User") // You can customize roles/claims as needed
+                new Claim("role", user.Role.ToString())
             };
             var tokenDescriptor = new SecurityTokenDescriptor
             {

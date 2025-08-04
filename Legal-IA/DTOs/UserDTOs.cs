@@ -2,6 +2,12 @@ using System;
 
 namespace Legal_IA.DTOs
 {
+    public enum UserRole
+    {
+        User = 0,
+        Admin = 1
+    }
+
     public class CreateUserRequest
     {
         public string FirstName { get; set; } = string.Empty;
@@ -19,6 +25,7 @@ namespace Legal_IA.DTOs
         public string City { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public UserRole Role { get; set; } = UserRole.User;
     }
 
     public class UpdateUserRequest
@@ -53,6 +60,7 @@ namespace Legal_IA.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }
+        public UserRole Role { get; set; } = UserRole.User;
     }
 
     public class UpdateUserOrchestrationInput

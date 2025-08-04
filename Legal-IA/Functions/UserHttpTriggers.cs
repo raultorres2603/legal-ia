@@ -13,17 +13,17 @@ namespace Legal_IA.Functions;
 
 public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration configuration)
 {
-    private async Task<ClaimsPrincipal?> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
+    private async Task<JwtValidationResult> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
     {
         if (!req.Headers.TryGetValues("Authorization", out var authHeaders))
-            return null;
+            return new JwtValidationResult { IsValid = false };
         var bearer = authHeaders.FirstOrDefault();
         if (string.IsNullOrWhiteSpace(bearer) || !bearer.StartsWith("Bearer "))
-            return null;
+            return new JwtValidationResult { IsValid = false };
         var token = bearer.Substring("Bearer ".Length);
         var instance = await client.ScheduleNewOrchestrationInstanceAsync("JwtValidationOrchestrator", token);
         var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
-        return response.ReadOutputAs<ClaimsPrincipal?>();
+        return response.ReadOutputAs<JwtValidationResult>()!;
     }
 
     [Function("GetUsers")]
@@ -32,8 +32,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
-        var principal = await ValidateJwtAsync(req, client);
-        if (principal == null)
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
             return new UnauthorizedResult();
         try
         {
@@ -56,8 +56,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         string id,
         [DurableClient] DurableTaskClient client)
     {
-        var principal = await ValidateJwtAsync(req, client);
-        if (principal == null)
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
             return new UnauthorizedResult();
         try
         {
@@ -99,8 +99,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
-        var principal = await ValidateJwtAsync(req, client);
-        if (principal == null)
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
             return new UnauthorizedResult();
         try
         {
@@ -146,8 +146,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         string id,
         [DurableClient] DurableTaskClient client)
     {
-        var principal = await ValidateJwtAsync(req, client);
-        if (principal == null)
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
             return new UnauthorizedResult();
         try
         {
@@ -195,8 +195,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         string id,
         [DurableClient] DurableTaskClient client)
     {
-        var principal = await ValidateJwtAsync(req, client);
-        if (principal == null)
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
             return new UnauthorizedResult();
         try
         {

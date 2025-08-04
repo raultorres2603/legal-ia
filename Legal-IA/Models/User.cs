@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Legal_IA.Enums;
 
 namespace Legal_IA.Models;
 
@@ -34,6 +35,10 @@ public class User
     [Required]
     [MaxLength(255)]
     public string Password { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(20)]
+    public UserRole Role { get; set; } = UserRole.User;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
