@@ -3,12 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Data;
 
-public class LegalIADbContext : DbContext
+public class LegalIADbContext(DbContextOptions<LegalIADbContext> options) : DbContext(options)
 {
-    public LegalIADbContext(DbContextOptions<LegalIADbContext> options) : base(options)
-    {
-    }
-
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -7,14 +7,30 @@
   },
   "item": [
     {
+      "name": "Get Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["users"]
+        }
+      }
+    },
+    {
       "name": "Get User",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt}}" }
+        ],
         "url": {
-          "raw": "{{baseUrl}}/api/user/{{userId}}",
+          "raw": "{{baseUrl}}/users/{{userId}}",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "user", "{{userId}}"]
+          "path": ["users", "{{userId}}"]
         }
       }
     },
@@ -23,19 +39,17 @@
       "request": {
         "method": "POST",
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwt}}" }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\"\n}"
+          "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"dni\": \"12345678A\",\n  \"password\": \"yourPassword\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/user",
+          "raw": "{{baseUrl}}/users",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "user"]
+          "path": ["users"]
         }
       }
     },
@@ -44,19 +58,17 @@
       "request": {
         "method": "PUT",
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwt}}" }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\"\n}"
+          "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"email\": \"jane@example.com\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/user/{{userId}}",
+          "raw": "{{baseUrl}}/users/{{userId}}",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "user", "{{userId}}"]
+          "path": ["users", "{{userId}}"]
         }
       }
     },
@@ -64,11 +76,49 @@
       "name": "Delete User",
       "request": {
         "method": "DELETE",
-        "header": [],
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt}}" }
+        ],
         "url": {
-          "raw": "{{baseUrl}}/api/user/{{userId}}",
+          "raw": "{{baseUrl}}/users/{{userId}}",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "user", "{{userId}}"]
+          "path": ["users", "{{userId}}"]
+        }
+      }
+    },
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"dni\": \"12345678A\",\n  \"password\": \"yourPassword\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"yourPassword\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
         }
       }
     }

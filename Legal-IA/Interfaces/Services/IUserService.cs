@@ -1,4 +1,5 @@
 using Legal_IA.DTOs;
+using Legal_IA.Models;
 
 namespace Legal_IA.Interfaces.Services;
 
@@ -13,6 +14,5 @@ public interface IUserService
     Task<UserResponse> CreateUserAsync(CreateUserRequest request);
     Task<UserResponse?> UpdateUserAsync(Guid id, UpdateUserRequest request);
     Task<bool> DeleteUserAsync(Guid id);
-    Task<bool> UserExistsByEmailAsync(string email);
-    Task<bool> UserExistsByDNIAsync(string dni);
+    Task<User?> GetUserEntityByEmailAsync(string email);
 }

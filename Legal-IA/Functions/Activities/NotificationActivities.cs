@@ -16,13 +16,31 @@ public class NotificationActivities(ILogger<NotificationActivities> logger, INot
     public async Task SendWelcomeNotificationActivity([ActivityTrigger] UserResponse user)
     {
         logger.LogInformation("Sending welcome notification to user {UserId} at {Email}", user.Id, user.Email);
-        await notificationService.SendWelcomeNotificationAsync(user);
+        try
+        {
+            await notificationService.SendWelcomeNotificationAsync(user);
+            logger.LogInformation("Welcome notification sent successfully to user {UserId}", user.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending welcome notification to user {UserId}", user.Id);
+            throw;
+        }
     }
 
     [Function("SendUserUpdateNotificationActivity")]
     public async Task SendUserUpdateNotificationActivity([ActivityTrigger] UserResponse user)
     {
         logger.LogInformation("Sending update notification to user {UserId}", user.Id);
-        await notificationService.SendUserUpdateNotificationAsync(user);
+        try
+        {
+            await notificationService.SendUserUpdateNotificationAsync(user);
+            logger.LogInformation("Update notification sent successfully to user {UserId}", user.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending update notification to user {UserId}", user.Id);
+            throw;
+        }
     }
 }

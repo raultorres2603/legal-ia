@@ -24,7 +24,7 @@ builder.Services
     .ConfigureFunctionsApplicationInsights();
 
 // Configure Entity Framework with PostgreSQL
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:DefaultConnection")
                        ?? "Host=localhost;Port=5433;Database=LegalIA;Username=postgres;Password=password";
 
 builder.Services.AddDbContext<LegalIADbContext>(options =>
@@ -34,7 +34,7 @@ builder.Services.AddDbContext<LegalIADbContext>(options =>
 });
 
 // Configure Redis Cache
-var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis")
+var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings:Redis")
                             ?? "localhost:6380";
 
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -48,10 +48,7 @@ var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsSt
                               ??
                               "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;";
 
-builder.Services.AddSingleton<BlobServiceClient>(serviceProvider =>
-{
-    return new BlobServiceClient(azuriteConnectionString);
-});
+builder.Services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServiceClient(azuriteConnectionString));
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -67,6 +64,9 @@ builder.Services.AddTransient<IValidator<CreateUserRequest>, CreateUserRequestVa
 
 // Configure logging
 builder.Services.AddLogging();
+
+// Register JwtService
+builder.Services.AddSingleton<JwtService>();
 
 var app = builder.Build();
 

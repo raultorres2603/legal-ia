@@ -35,7 +35,7 @@ jobs:
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           dotnet build --configuration Release --output ./output
           popd
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -51,8 +51,11 @@ jobs:
             --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
             --settings AzureWebJobsStorage="${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" \
               FUNCTIONS_WORKER_RUNTIME="dotnet-isolated" \
-              ConnectionStrings__DefaultConnection="${{ secrets.POSTGRESQL_CONNECTION_STRING }}" \
-              ConnectionStrings__Redis="${{ secrets.REDIS_CONNECTION_STRING }}" \
+              ConnectionStrings:DefaultConnection="${{ secrets.POSTGRESQL_CONNECTION_STRING }}" \
+              ConnectionStrings:Redis="${{ secrets.REDIS_CONNECTION_STRING }}" \
+              Jwt:Issuer="${{ secrets.JWT_ISSUER }}" \
+              Jwt:Audience="${{ secrets.JWT_AUDIENCE }}" \
+              Jwt:Secret="${{ secrets.JWT_SECRET }}" \
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1

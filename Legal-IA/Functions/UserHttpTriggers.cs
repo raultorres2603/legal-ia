@@ -1,22 +1,40 @@
 using Legal_IA.DTOs;
-using Microsoft.AspNetCore.Http;
+using Legal_IA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace Legal_IA.Functions;
 
-public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
+public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration configuration)
 {
+    private async Task<JwtValidationResult> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
+    {
+        if (!req.Headers.TryGetValues("Authorization", out var authHeaders))
+            return new JwtValidationResult { IsValid = false };
+        var bearer = authHeaders.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(bearer) || !bearer.StartsWith("Bearer "))
+            return new JwtValidationResult { IsValid = false };
+        var token = bearer.Substring("Bearer ".Length);
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("JwtValidationOrchestrator", token);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        return response.ReadOutputAs<JwtValidationResult>()!;
+    }
+
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users")]
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+            return new UnauthorizedResult();
         try
         {
             var users = await client.ScheduleNewOrchestrationInstanceAsync(
@@ -33,11 +51,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("GetUser")]
     public async Task<IActionResult> GetUser(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
     {
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+            return new UnauthorizedResult();
         try
         {
             if (!Guid.TryParse(id, out var userId))
@@ -74,10 +95,13 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("CreateUser")]
     public async Task<IActionResult> CreateUser(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "users")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "users")]
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+            return new UnauthorizedResult();
         try
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -117,11 +141,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("UpdateUser")]
     public async Task<IActionResult> UpdateUser(
-        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
     {
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+            return new UnauthorizedResult();
         try
         {
             if (!Guid.TryParse(id, out var userId))
@@ -163,11 +190,14 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
     [Function("DeleteUser")]
     public async Task<IActionResult> DeleteUser(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
     {
+        var jwtResult = await ValidateJwtAsync(req, client);
+        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+            return new UnauthorizedResult();
         try
         {
             if (!Guid.TryParse(id, out var userId))
@@ -184,5 +214,48 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
             logger.LogError(ex, "Error deleting user {UserId}", id);
             return new StatusCodeResult(500);
         }
+    }
+
+    [Function("RegisterUser")]
+    public async Task<IActionResult> RegisterUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/register")]
+        HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        // Extract registration data from request
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var registerRequest = JsonConvert.DeserializeObject<RegisterUserRequest>(requestBody);
+        if (registerRequest == null)
+            return new BadRequestObjectResult("Invalid registration data");
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("RegisterUserOrchestrator", registerRequest);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<object>());
+        return new StatusCodeResult(500);
+    }
+
+    [Function("LoginUser")]
+    public async Task<IActionResult> LoginUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "auth/login")]
+        HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        // Extract login data from request
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var loginRequest = JsonConvert.DeserializeObject<LoginUserRequest>(requestBody);
+        if (loginRequest == null)
+            return new BadRequestObjectResult("Invalid login data");
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("LoginUserOrchestrator", loginRequest);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var authResponse = response.ReadOutputAs<AuthResponse>();
+            if (authResponse == null || !authResponse.Success)
+            {
+                return new UnauthorizedObjectResult(new { message = authResponse?.Message ?? "Unauthorized" });
+            }
+            return new OkObjectResult(authResponse.Data);
+        }
+        return new UnauthorizedResult();
     }
 }
