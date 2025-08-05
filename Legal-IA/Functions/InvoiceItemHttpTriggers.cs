@@ -1,6 +1,5 @@
 using Legal_IA.DTOs;
 using Legal_IA.Enums;
-using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Models;
 using Legal_IA.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +9,8 @@ using Microsoft.DurableTask.Client;
 
 namespace Legal_IA.Functions;
 
-public class InvoiceItemHttpTriggers(IInvoiceItemRepository invoiceItemRepository)
+public class InvoiceItemHttpTriggers()
 {
-    private readonly IInvoiceItemRepository _invoiceItemRepository = invoiceItemRepository;
-
     [Function("GetInvoiceItems")]
     public async Task<IActionResult> GetInvoiceItems(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items")] HttpRequestData req,
