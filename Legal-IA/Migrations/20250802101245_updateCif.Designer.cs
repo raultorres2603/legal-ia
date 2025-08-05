@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Legal_IA.Migrations
 {
-    [DbContext(typeof(LegalIADbContext))]
+    [DbContext(typeof(LegalIaDbContext))]
     [Migration("20250802101245_updateCif")]
     partial class updateCif
     {

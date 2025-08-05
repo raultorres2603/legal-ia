@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Legal_IA.Migrations
 {
-    [DbContext(typeof(LegalIADbContext))]
+    [DbContext(typeof(LegalIaDbContext))]
     [Migration("20250803100531_password-on-user")]
     partial class passwordonuser
     {

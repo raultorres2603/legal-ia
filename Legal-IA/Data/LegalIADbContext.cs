@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Data;
 
-public class LegalIADbContext(DbContextOptions<LegalIADbContext> options) : DbContext(options)
+public class LegalIaDbContext(DbContextOptions<LegalIaDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Invoice> Invoices { get; set; }

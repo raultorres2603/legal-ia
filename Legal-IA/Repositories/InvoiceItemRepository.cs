@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Repositories;
 
-public class InvoiceItemRepository(LegalIADbContext context) : IInvoiceItemRepository
+public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepository
 {
     public async Task<InvoiceItem?> GetByIdAsync(Guid id)
     {

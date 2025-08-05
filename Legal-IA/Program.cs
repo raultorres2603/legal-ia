@@ -27,7 +27,7 @@ builder.Services
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:DefaultConnection")
                        ?? "Host=localhost;Port=5433;Database=LegalIA;Username=postgres;Password=password";
 
-builder.Services.AddDbContext<LegalIADbContext>(options =>
+builder.Services.AddDbContext<LegalIaDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
     options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
@@ -73,7 +73,7 @@ var app = builder.Build();
 // Ensure database is created
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<LegalIADbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<LegalIaDbContext>();
     try
     {
         context.Database.EnsureCreated();
