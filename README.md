@@ -143,6 +143,45 @@ Legal-IA addresses the critical need for automated legal document generation in 
 | `DELETE` | `/api/users/{id}` | Deactivate user account |
 | `GET` | `/api/users` | List all users (admin) |
 
+# 🧾 Invoices & Invoice Items Module
+
+## Why We Added This
+
+Spanish autonomous professionals ("autónomos") are required by law to issue invoices for their services, including specific details such as VAT (IVA), IRPF (retención), and itemized breakdowns. To support this, Legal-IA now includes:
+- **Invoice model**: Captures all required fields for Spanish invoices.
+- **InvoiceItem model**: Allows itemized details per invoice, supporting legal compliance.
+- **Repository, orchestrators, and activities**: Ensure robust, scalable, and maintainable CRUD operations.
+- **Role-based access**: Only authorized users can manage invoices/items.
+
+## Endpoints
+
+All endpoints are protected by JWT and require the `User` role:
+
+### Invoice Endpoints
+- `GET /invoices` — List all invoices
+- `GET /invoices/{id}` — Get invoice by ID
+- `POST /invoices` — Create a new invoice
+- `PUT /invoices/{id}` — Update an invoice
+- `DELETE /invoices/{id}` — Delete an invoice
+
+### Invoice Item Endpoints
+- `GET /invoice-items` — List all invoice items
+- `GET /invoice-items/{id}` — Get invoice item by ID
+- `POST /invoice-items` — Create a new invoice item
+- `PUT /invoice-items/{id}` — Update an invoice item
+- `DELETE /invoice-items/{id}` — Delete an invoice item
+
+## How to Test
+
+1. **Obtain a JWT token** by logging in as a user with the `User` role.
+2. **Use Postman or curl** to call the endpoints above, including the `Authorization: Bearer <token>` header.
+3. **Create an invoice** with all required fields (see Invoice model in `/Models/Invoice.cs`).
+4. **Add invoice items** to the invoice using the item endpoints.
+5. **Verify business logic**: VAT, IRPF, and totals are calculated and stored as per Spanish legislation.
+6. **Check role-based access**: Only users with the correct role can access these endpoints.
+
+For more details, see the orchestrator and activity implementations in `/Functions/Orchestrators/` and `/Functions/Activities/`.
+
 ## 📊 **Data Models**
 
 ### **User Entity**
