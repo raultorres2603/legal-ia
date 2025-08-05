@@ -1,9 +1,7 @@
 using Legal_IA.DTOs;
 using Legal_IA.Interfaces.Services;
-using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace Legal_IA.Functions.Activities;
 

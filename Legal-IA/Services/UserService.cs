@@ -1,17 +1,18 @@
+using FluentValidation;
 using Legal_IA.DTOs;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
-using Microsoft.Extensions.Logging;
-using FluentValidation;
 using Legal_IA.Validators;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Services;
 
 /// <summary>
 ///     User service implementation using repository pattern
 /// </summary>
-public class UserService(IUserRepository userRepository, ICacheService cacheService, ILogger<UserService> logger) : IUserService
+public class UserService(IUserRepository userRepository, ICacheService cacheService, ILogger<UserService> logger)
+    : IUserService
 {
     private const string CacheKeyPrefix = "user:";
 
@@ -26,6 +27,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
                 logger.LogInformation("Cache hit for user {UserId}", id);
                 return cachedUser;
             }
+
             logger.LogInformation("Cache miss for user {UserId}, querying repository", id);
             var user = await userRepository.GetByIdAsync(id);
             if (user == null)
@@ -33,6 +35,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
                 logger.LogWarning("User not found for id {UserId}", id);
                 return null;
             }
+
             var userResponse = MapToUserResponse(user);
             await cacheService.SetAsync(cacheKey, userResponse);
             logger.LogInformation("User {UserId} cached successfully", id);
@@ -56,6 +59,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
                 logger.LogInformation("User found for email: {Email}", email);
                 return MapToUserResponse(user);
             }
+
             logger.LogWarning("User not found for email: {Email}", email);
             return null;
         }
@@ -175,14 +179,14 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         return true;
     }
 
-    public async Task<bool> UserExistsByEmailAsync(string email)
-    {
-        return await userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
-    }
-
     public Task<User?> GetUserEntityByEmailAsync(string email)
     {
         return userRepository.GetByEmailAsync(email);
+    }
+
+    public async Task<bool> UserExistsByEmailAsync(string email)
+    {
+        return await userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
     }
 
     private static UserResponse MapToUserResponse(User user)

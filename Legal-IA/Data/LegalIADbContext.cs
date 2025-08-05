@@ -6,6 +6,8 @@ namespace Legal_IA.Data;
 public class LegalIADbContext(DbContextOptions<LegalIADbContext> options) : DbContext(options)
 {
     public DbSet<User> Users { get; set; }
+    public DbSet<Invoice> Invoices { get; set; }
+    public DbSet<InvoiceItem> InvoiceItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +23,41 @@ public class LegalIADbContext(DbContextOptions<LegalIADbContext> options) : DbCo
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.DNI).IsUnique();
             entity.HasIndex(e => e.CIF).IsUnique();
+        });
+        // Invoice configuration
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.InvoiceNumber).IsRequired();
+            entity.Property(e => e.IssueDate).IsRequired();
+            entity.Property(e => e.ClientName).IsRequired();
+            entity.Property(e => e.ClientNIF).IsRequired();
+            entity.Property(e => e.ClientAddress).IsRequired();
+            entity.Property(e => e.Subtotal).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.VAT).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.IRPF).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.Total).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.Notes).IsRequired(false);
+            entity.HasMany(e => e.Items)
+                .WithOne(i => i.Invoice)
+                .HasForeignKey(i => i.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // InvoiceItem configuration
+        modelBuilder.Entity<InvoiceItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.Quantity).IsRequired();
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.VAT).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.IRPF).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.Total).HasColumnType("decimal(18,2)").IsRequired();
+            entity.HasOne(i => i.Invoice)
+                .WithMany(e => e.Items)
+                .HasForeignKey(i => i.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

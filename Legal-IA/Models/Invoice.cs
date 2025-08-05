@@ -1,0 +1,17 @@
+namespace Legal_IA.Models;
+
+public class Invoice
+{
+    public int Id { get; set; }
+    public string InvoiceNumber { get; set; }
+    public DateTime IssueDate { get; set; }
+    public string ClientName { get; set; }
+    public string ClientNIF { get; set; }
+    public string ClientAddress { get; set; }
+    public decimal Subtotal { get; set; }
+    public decimal VAT { get; set; } // IVA
+    public decimal IRPF { get; set; } // Retención
+    public decimal Total { get; set; }
+    public string Notes { get; set; }
+    public List<InvoiceItem> Items { get; set; }
+}

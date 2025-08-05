@@ -1,4 +1,5 @@
 using Legal_IA.DTOs;
+using Legal_IA.Enums;
 using Legal_IA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -7,33 +8,19 @@ using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Security.Claims;
 
 namespace Legal_IA.Functions;
 
 public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration configuration)
 {
-    private async Task<JwtValidationResult> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
-    {
-        if (!req.Headers.TryGetValues("Authorization", out var authHeaders))
-            return new JwtValidationResult { IsValid = false };
-        var bearer = authHeaders.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(bearer) || !bearer.StartsWith("Bearer "))
-            return new JwtValidationResult { IsValid = false };
-        var token = bearer.Substring("Bearer ".Length);
-        var instance = await client.ScheduleNewOrchestrationInstanceAsync("JwtValidationOrchestrator", token);
-        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
-        return response.ReadOutputAs<JwtValidationResult>()!;
-    }
-
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users")]
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await ValidateJwtAsync(req, client);
-        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
             return new UnauthorizedResult();
         try
         {
@@ -56,15 +43,12 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         string id,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await ValidateJwtAsync(req, client);
-        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
             return new UnauthorizedResult();
         try
         {
-            if (!Guid.TryParse(id, out var userId))
-            {
-                return new BadRequestObjectResult("Invalid user ID format");
-            }
+            if (!Guid.TryParse(id, out var userId)) return new BadRequestObjectResult("Invalid user ID format");
             var orchestrationId = await client.ScheduleNewOrchestrationInstanceAsync(
                 "UserGetByIdOrchestrator", userId);
             var response = await client.WaitForInstanceCompletionAsync(orchestrationId, true, CancellationToken.None);
@@ -73,6 +57,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
                 logger.LogError("Failed to get user {UserId}: {Error}", id, response.FailureDetails);
                 return new StatusCodeResult(500);
             }
+
             if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             {
                 // Use GetOutput<T>() to deserialize output to UserResponse
@@ -82,8 +67,10 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
                     logger.LogWarning("User not found for id {UserId}", id);
                     return new NotFoundResult();
                 }
+
                 return new OkObjectResult(userResponse);
             }
+
             return new StatusCodeResult(500);
         }
         catch (Exception ex)
@@ -99,8 +86,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await ValidateJwtAsync(req, client);
-        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
             return new UnauthorizedResult();
         try
         {
@@ -118,18 +105,19 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
                 if (response.SerializedOutput == null && response.FailureDetails != null)
                 {
                     logger.LogError("User creation failed: {Error}", response.FailureDetails);
-                    return new ConflictObjectResult(response.SerializedOutput ?? "User creation failed due to a conflict or error.");
+                    return new ConflictObjectResult(response.SerializedOutput ??
+                                                    "User creation failed due to a conflict or error.");
                 }
+
                 return new OkObjectResult(new
                 {
                     message = "User created successfully",
                     instanceId = response.ReadOutputAs<UserResponse>()
                 });
             }
+
             if (response.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
-            {
                 return new ConflictObjectResult("User creation failed due to a conflict or error.");
-            }
             return new StatusCodeResult(500);
         }
         catch (Exception ex)
@@ -146,8 +134,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         string id,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await ValidateJwtAsync(req, client);
-        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
             return new UnauthorizedResult();
         try
         {
@@ -169,6 +157,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
                 logger.LogError("Failed to update user {UserId}: {Error}", id, response.FailureDetails);
                 return new StatusCodeResult(500);
             }
+
             if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             {
                 if (response.ReadOutputAs<UserResponse>() == null)
@@ -176,9 +165,10 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
                 return new OkObjectResult(new
                 {
                     message = "User updated successfully",
-                    userUpdated = response.ReadOutputAs<UserResponse>(),
+                    userUpdated = response.ReadOutputAs<UserResponse>()
                 });
             }
+
             return new StatusCodeResult(500);
         }
         catch (Exception ex)
@@ -195,8 +185,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         string id,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await ValidateJwtAsync(req, client);
-        if (!jwtResult.IsValid || jwtResult.Claims == null || jwtResult.Claims["role"] != "Admin")
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
             return new UnauthorizedResult();
         try
         {
@@ -251,11 +241,10 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         {
             var authResponse = response.ReadOutputAs<AuthResponse>();
             if (authResponse == null || !authResponse.Success)
-            {
                 return new UnauthorizedObjectResult(new { message = authResponse?.Message ?? "Unauthorized" });
-            }
             return new OkObjectResult(authResponse.Data);
         }
+
         return new UnauthorizedResult();
     }
 }

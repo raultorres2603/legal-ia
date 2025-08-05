@@ -9,7 +9,8 @@ namespace Legal_IA.Repositories;
 /// <summary>
 ///     User repository implementation with specific user operations
 /// </summary>
-public class UserRepository(LegalIADbContext context, ILogger<UserRepository> logger) : Repository<User>(context), IUserRepository
+public class UserRepository(LegalIADbContext context, ILogger<UserRepository> logger)
+    : Repository<User>(context), IUserRepository
 {
     public async Task<User?> GetByEmailAsync(string email)
     {
