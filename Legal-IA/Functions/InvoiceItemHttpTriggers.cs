@@ -10,14 +10,9 @@ using Microsoft.DurableTask.Client;
 
 namespace Legal_IA.Functions;
 
-public class InvoiceItemHttpTriggers
+public class InvoiceItemHttpTriggers(IInvoiceItemRepository invoiceItemRepository)
 {
-    private readonly IInvoiceItemRepository _invoiceItemRepository;
-
-    public InvoiceItemHttpTriggers(IInvoiceItemRepository invoiceItemRepository)
-    {
-        _invoiceItemRepository = invoiceItemRepository;
-    }
+    private readonly IInvoiceItemRepository _invoiceItemRepository = invoiceItemRepository;
 
     [Function("GetInvoiceItems")]
     public async Task<IActionResult> GetInvoiceItems(
