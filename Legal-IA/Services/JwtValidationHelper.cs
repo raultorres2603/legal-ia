@@ -6,7 +6,7 @@ namespace Legal_IA.Services;
 
 public static class JwtValidationHelper
 {
-    public static async Task<JwtValidationResult> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
+    public static async Task<JwtValidationResult?> ValidateJwtAsync(HttpRequestData req, DurableTaskClient client)
     {
         if (!req.Headers.TryGetValues("Authorization", out var authHeaders))
             return new JwtValidationResult { IsValid = false };
@@ -19,12 +19,11 @@ public static class JwtValidationHelper
         return response.ReadOutputAs<JwtValidationResult>()!;
     }
 
-    public static bool HasRequiredRole(JwtValidationResult jwtResult, params string[] requiredRoles)
+    public static bool HasRequiredRole(JwtValidationResult? jwtResult, params string[] requiredRoles)
     {
         if (jwtResult == null || !jwtResult.IsValid || jwtResult.Claims == null ||
-            !jwtResult.Claims.ContainsKey("role"))
+            !jwtResult.Claims.TryGetValue("role", out string? userRole))
             return false;
-        var userRole = jwtResult.Claims["role"];
         return requiredRoles.Any(r => string.Equals(r, userRole, StringComparison.OrdinalIgnoreCase));
     }
 }

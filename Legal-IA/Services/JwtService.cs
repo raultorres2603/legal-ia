@@ -35,8 +35,9 @@ public class JwtService(IConfiguration configuration)
             var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
             return principal;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"JWT validation error: {ex.Message}");
             return null;
         }
     }

@@ -19,7 +19,7 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
             jwt != null ? jwt.Substring(0, Math.Min(jwt.Length, 10)) + "..." : "null");
         try
         {
-            var principal = _jwtService.ValidateToken(jwt);
+            var principal = _jwtService.ValidateToken(jwt!);
             if (principal == null)
             {
                 logger.LogWarning("JWT validation failed. Token: {Token}",
@@ -28,9 +28,11 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
             }
 
             var claims = principal.Claims.ToDictionary(c => c.Type, c => c.Value);
+            logger.LogInformation("Claims extracted from JWT: {Claims}", string.Join(", ", claims.Select(c => c.Key + ":" + c.Value)));
             // Normalize role claim using general function
             var normalizedRole = NormalizeClaim(claims, "role", ClaimTypes.Role,
                 "http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+            logger.LogInformation("Normalized role claim value: {Role}", normalizedRole ?? "null");
             if (normalizedRole != null)
                 claims["role"] = normalizedRole;
             var userId = claims.TryGetValue(JwtRegisteredClaimNames.Sub, out var claim) ? claim : null;
@@ -49,12 +51,17 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
 
     private static string? NormalizeClaim(Dictionary<string, string> claims, params string[] possibleKeys)
     {
+        // Log all claim keys for debugging
+        Console.WriteLine($"Claims available for normalization: {string.Join(", ", claims.Keys)}");
         foreach (var key in possibleKeys)
+        {
             if (claims.TryGetValue(key, out var claim))
                 return claim;
-        // Try to find by suffix (e.g., ends with /role)
+        }
+        // Try to find by suffix (e.g., ends with /role), case-insensitive and trimmed
         var match = claims.Keys.FirstOrDefault(k =>
-            possibleKeys.Any(pk => k.EndsWith(pk, StringComparison.OrdinalIgnoreCase)));
+            possibleKeys.Any(pk => k.Trim().Equals(k.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                   k.Trim().EndsWith(pk.Trim(), StringComparison.OrdinalIgnoreCase)));
         return match != null ? claims[match] : null;
     }
 }

@@ -53,6 +53,8 @@ builder.Services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServ
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceItemRepository, InvoiceItemRepository>();
 
 // Register services
 builder.Services.AddScoped<ICacheService, CacheService>();
@@ -67,6 +69,7 @@ builder.Services.AddLogging();
 
 // Register JwtService
 builder.Services.AddSingleton<JwtService>();
+
 
 var app = builder.Build();
 

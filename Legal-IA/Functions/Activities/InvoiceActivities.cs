@@ -1,46 +1,57 @@
 using Legal_IA.Interfaces.Repositories;
+using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Legal_IA.Functions.Activities;
 
-public class InvoiceActivities
+public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheService cacheService)
 {
-    private readonly IInvoiceRepository _invoiceRepository;
-
-    public InvoiceActivities(IInvoiceRepository invoiceRepository)
-    {
-        _invoiceRepository = invoiceRepository;
-    }
-
     [Function(nameof(InvoiceGetAllActivity))]
     public async Task<List<Invoice>> InvoiceGetAllActivity([ActivityTrigger] object input)
     {
-        var invoices = await _invoiceRepository.GetAllAsync();
-        return invoices.ToList();
+        const string cacheKey = "invoices:all";
+        var cached = await cacheService.GetAsync<List<Invoice>>(cacheKey);
+        if (cached != null) return cached;
+        var invoices = (await invoiceRepository.GetAllAsync()).ToList();
+        await cacheService.SetAsync(cacheKey, invoices);
+        return invoices;
     }
 
     [Function(nameof(InvoiceGetByIdActivity))]
     public async Task<Invoice?> InvoiceGetByIdActivity([ActivityTrigger] Guid id)
     {
-        return await _invoiceRepository.GetByIdAsync(id);
+        var cacheKey = $"invoices:{id}";
+        var cached = await cacheService.GetAsync<Invoice>(cacheKey);
+        if (cached != null) return cached;
+        var invoice = await invoiceRepository.GetByIdAsync(id);
+        if (invoice != null) await cacheService.SetAsync(cacheKey, invoice);
+        return invoice;
     }
 
     [Function(nameof(InvoiceCreateActivity))]
     public async Task<Invoice> InvoiceCreateActivity([ActivityTrigger] Invoice invoice)
     {
-        return await _invoiceRepository.AddAsync(invoice);
+        var created = await invoiceRepository.AddAsync(invoice);
+        await cacheService.RemoveAsync("invoices:all");
+        return created;
     }
 
     [Function(nameof(InvoiceUpdateActivity))]
     public async Task<Invoice> InvoiceUpdateActivity([ActivityTrigger] Invoice invoice)
     {
-        return await _invoiceRepository.UpdateAsync(invoice);
+        var updated = await invoiceRepository.UpdateAsync(invoice);
+        await cacheService.RemoveAsync("invoices:all");
+        await cacheService.RemoveAsync($"invoices:{invoice.Id}");
+        return updated;
     }
 
     [Function(nameof(InvoiceDeleteActivity))]
     public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id)
     {
-        return await _invoiceRepository.DeleteAsync(id);
+        var deleted = await invoiceRepository.DeleteAsync(id);
+        await cacheService.RemoveAsync("invoices:all");
+        await cacheService.RemoveAsync($"invoices:{id}");
+        return deleted;
     }
 }

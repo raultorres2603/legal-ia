@@ -1,3 +1,4 @@
+using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Models;
 using Legal_IA.Services;
