@@ -155,7 +155,7 @@ Spanish autonomous professionals ("autónomos") are required by law to issue inv
 
 ## Endpoints
 
-All endpoints are protected by JWT. Admin-only endpoints for invoices:
+All endpoints are protected by JWT. Admin-only endpoints for invoices and invoice items:
 
 ### Invoice Endpoints (Admin only)
 - `GET /invoices` — List all invoices
@@ -168,12 +168,14 @@ All endpoints are protected by JWT. Admin-only endpoints for invoices:
 - `GET /invoices/user` — List invoices for current user
 - `POST /invoices/user` — Create invoice for current user
 
+### Invoice Item Endpoints (Admin only)
+- `GET /invoice-items` — List all invoice items
+- `GET /invoice-items/{id}` — Get invoice item by ID
+- `POST /invoice-items` — Create a new invoice item
+- `PUT /invoice-items/{id}` — Update an invoice item
+- `DELETE /invoice-items/{id}` — Delete an invoice item
+
 ### Invoice Item Endpoints (User)
-- `GET /invoice-items` — List all invoice items (User)
-- `GET /invoice-items/{id}` — Get invoice item by ID (User)
-- `POST /invoice-items` — Create a new invoice item (User)
-- `PUT /invoice-items/{id}` — Update an invoice item (User)
-- `DELETE /invoice-items/{id}` — Delete an invoice item (User)
 - `GET /invoice-items/user` — List invoice items for current user
 - `POST /invoice-items/user` — Create invoice item for current user
 
@@ -187,6 +189,8 @@ All endpoints are protected by JWT. Admin-only endpoints for invoices:
 6. **Check role-based access**: Only users with the correct role can access these endpoints.
 
 For more details, see the orchestrator and activity implementations in `/Functions/Orchestrators/` and `/Functions/Activities/`.
+
+---
 
 ## 📊 **Data Models**
 
@@ -271,7 +275,7 @@ Legal-IA/
 ├── 📂 DTOs/                    # Data Transfer Objects
 ├── 📂 Functions/               # Azure Functions (HTTP triggers)
 │   ├── 📂 Activities/          # Durable Functions activities
-│   └── 📂 Orchestrators/       # Workflow orchestrators
+│   ���── 📂 Orchestrators/       # Workflow orchestrators
 ├── 📂 Interfaces/              # Service and repository contracts
 │   ├── 📂 Repositories/        # Data access interfaces
 │   └── 📂 Services/            # Business logic interfaces

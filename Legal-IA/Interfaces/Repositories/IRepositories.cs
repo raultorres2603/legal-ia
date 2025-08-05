@@ -36,7 +36,7 @@ public interface IUserRepository : IRepository<User>
 /// </summary>
 public interface IInvoiceRepository : IRepository<Invoice>
 {
-    Task<IEnumerable<Invoice>> GetInvoicesByClientNIFAsync(string clientNIF);
+    Task<List<Invoice>> GetInvoicesByUserIdAsync(Guid userId);
 }
 
 /// <summary>
