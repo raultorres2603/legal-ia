@@ -14,4 +14,6 @@ public class Invoice
     public decimal Total { get; set; }
     public string Notes { get; set; }
     public List<InvoiceItem> Items { get; set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; }
 }
