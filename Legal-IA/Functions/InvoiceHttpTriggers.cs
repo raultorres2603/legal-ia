@@ -19,7 +19,7 @@ public class InvoiceHttpTriggers
         [DurableClient] DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetAllOrchestrator", null);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
@@ -36,7 +36,7 @@ public class InvoiceHttpTriggers
         string id)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", guid);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
@@ -57,7 +57,7 @@ public class InvoiceHttpTriggers
         [DurableClient] DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         var invoice = await req.ReadFromJsonAsync<Invoice>();
         if (invoice == null) return new BadRequestResult();
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceCreateOrchestrator", invoice);
@@ -76,7 +76,7 @@ public class InvoiceHttpTriggers
         string id)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
         var invoice = await req.ReadFromJsonAsync<Invoice>();
         if (invoice == null) return new BadRequestResult();
@@ -96,12 +96,51 @@ public class InvoiceHttpTriggers
         string id)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteOrchestrator", guid);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkResult();
+        return new StatusCodeResult(500);
+    }
+
+    [Function("GetInvoicesByCurrentUser")]
+    public async Task<IActionResult> GetInvoicesByCurrentUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/user")] HttpRequestData req,
+        FunctionContext context,
+        [DurableClient] DurableTaskClient client)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
+            return new UnauthorizedResult();
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByUserIdOrchestrator", userId);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, System.Threading.CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<List<Invoice>>());
+        return new StatusCodeResult(500);
+    }
+
+    [Function("CreateInvoiceByCurrentUser")]
+    public async Task<IActionResult> CreateInvoiceByCurrentUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "invoices/user")]
+        HttpRequestData req,
+        FunctionContext context,
+        [DurableClient] DurableTaskClient client)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        var invoice = await req.ReadFromJsonAsync<Invoice>();
+        if (invoice == null) return new BadRequestResult();
+        if (jwtResult.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
+        invoice.UserId = userId;
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceCreateOrchestrator", invoice);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, System.Threading.CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);
     }
 }

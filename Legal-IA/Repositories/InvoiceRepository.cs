@@ -73,4 +73,9 @@ public class InvoiceRepository(LegalIaDbContext context) : IInvoiceRepository
     {
         return await context.Invoices.Where(i => i.ClientNIF == clientNIF).Include(i => i.Items).ToListAsync();
     }
+
+    public async Task<IEnumerable<Invoice>> GetInvoicesByUserIdAsync(Guid userId)
+    {
+        return await context.Invoices.Where(i => i.UserId == userId).Include(i => i.Items).ToListAsync();
+    }
 }

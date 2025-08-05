@@ -155,28 +155,34 @@ Spanish autonomous professionals ("autónomos") are required by law to issue inv
 
 ## Endpoints
 
-All endpoints are protected by JWT and require the `User` role:
+All endpoints are protected by JWT. Admin-only endpoints for invoices:
 
-### Invoice Endpoints
+### Invoice Endpoints (Admin only)
 - `GET /invoices` — List all invoices
 - `GET /invoices/{id}` — Get invoice by ID
 - `POST /invoices` — Create a new invoice
 - `PUT /invoices/{id}` — Update an invoice
 - `DELETE /invoices/{id}` — Delete an invoice
 
-### Invoice Item Endpoints
-- `GET /invoice-items` — List all invoice items
-- `GET /invoice-items/{id}` — Get invoice item by ID
-- `POST /invoice-items` — Create a new invoice item
-- `PUT /invoice-items/{id}` — Update an invoice item
-- `DELETE /invoice-items/{id}` — Delete an invoice item
+### Invoice Endpoints (User)
+- `GET /invoices/user` — List invoices for current user
+- `POST /invoices/user` — Create invoice for current user
+
+### Invoice Item Endpoints (User)
+- `GET /invoice-items` — List all invoice items (User)
+- `GET /invoice-items/{id}` — Get invoice item by ID (User)
+- `POST /invoice-items` — Create a new invoice item (User)
+- `PUT /invoice-items/{id}` — Update an invoice item (User)
+- `DELETE /invoice-items/{id}` — Delete an invoice item (User)
+- `GET /invoice-items/user` — List invoice items for current user
+- `POST /invoice-items/user` — Create invoice item for current user
 
 ## How to Test
 
-1. **Obtain a JWT token** by logging in as a user with the `User` role.
+1. **Obtain a JWT token** by logging in as a user with the `User` or `Admin` role.
 2. **Use Postman or curl** to call the endpoints above, including the `Authorization: Bearer <token>` header.
-3. **Create an invoice** with all required fields (see Invoice model in `/Models/Invoice.cs`).
-4. **Add invoice items** to the invoice using the item endpoints.
+3. **For user endpoints**, the UserId is automatically extracted from the JWT.
+4. **For admin endpoints**, use a token with the Admin role.
 5. **Verify business logic**: VAT, IRPF, and totals are calculated and stored as per Spanish legislation.
 6. **Check role-based access**: Only users with the correct role can access these endpoints.
 

@@ -29,11 +29,25 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         return invoice;
     }
 
+    [Function("InvoiceGetByUserIdActivity")]
+    public async Task<List<Invoice>> InvoiceGetByUserIdActivity([ActivityTrigger] Guid userId)
+    {
+        var cacheKey = $"invoices:user:{userId}";
+        var cached = await cacheService.GetAsync<List<Invoice>>(cacheKey);
+        if (cached != null) return cached;
+        var invoices = (await invoiceRepository.GetInvoicesByUserIdAsync(userId)).ToList();
+        await cacheService.SetAsync(cacheKey, invoices);
+        return invoices;
+    }
+
     [Function(nameof(InvoiceCreateActivity))]
     public async Task<Invoice> InvoiceCreateActivity([ActivityTrigger] Invoice invoice)
     {
+        if (invoice.UserId == Guid.Empty)
+            throw new ArgumentException("UserId must be set on Invoice");
         var created = await invoiceRepository.AddAsync(invoice);
         await cacheService.RemoveAsync("invoices:all");
+        await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
         return created;
     }
 
@@ -43,15 +57,19 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         var updated = await invoiceRepository.UpdateAsync(invoice);
         await cacheService.RemoveAsync("invoices:all");
         await cacheService.RemoveAsync($"invoices:{invoice.Id}");
+        await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
         return updated;
     }
 
     [Function(nameof(InvoiceDeleteActivity))]
     public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id)
     {
+        var invoice = await invoiceRepository.GetByIdAsync(id);
         var deleted = await invoiceRepository.DeleteAsync(id);
         await cacheService.RemoveAsync("invoices:all");
         await cacheService.RemoveAsync($"invoices:{id}");
+        if (invoice != null)
+            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
         return deleted;
     }
 }
