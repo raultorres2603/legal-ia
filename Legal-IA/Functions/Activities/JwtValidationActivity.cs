@@ -28,8 +28,8 @@ namespace Legal_IA.Functions.Activities
                 var normalizedRole = NormalizeClaim(claims, "role", ClaimTypes.Role, "http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
                 if (normalizedRole != null)
                     claims["role"] = normalizedRole;
-                var userId = claims.ContainsKey(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub) ? claims[System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub] : null;
-                var email = claims.ContainsKey(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email) ? claims[System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email] : null;
+                var userId = claims.TryGetValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub, out var claim) ? claim : null;
+                var email = claims.TryGetValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email, out var claim1) ? claim1 : null;
                 logger.LogInformation("JWT validation succeeded. Claims: {Claims}", string.Join(",", claims.Select(c => c.Key + ":" + c.Value)));
                 return new JwtValidationResult { IsValid = true, UserId = userId, Email = email, Claims = claims };
             }
@@ -44,8 +44,8 @@ namespace Legal_IA.Functions.Activities
         {
             foreach (var key in possibleKeys)
             {
-                if (claims.ContainsKey(key))
-                    return claims[key];
+                if (claims.TryGetValue(key, out var claim))
+                    return claim;
             }
             // Try to find by suffix (e.g., ends with /role)
             var match = claims.Keys.FirstOrDefault(k => possibleKeys.Any(pk => k.EndsWith(pk, StringComparison.OrdinalIgnoreCase)));
