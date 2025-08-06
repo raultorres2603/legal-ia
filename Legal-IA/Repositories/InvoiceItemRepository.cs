@@ -77,7 +77,7 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<InvoiceItem>> GetByUserIdAsync(Guid userId)
+    public async Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId)
     {
         return await context.InvoiceItems
             .Include(ii => ii.Invoice)

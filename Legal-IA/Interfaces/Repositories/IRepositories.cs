@@ -45,5 +45,5 @@ public interface IInvoiceRepository : IRepository<Invoice>
 public interface IInvoiceItemRepository : IRepository<InvoiceItem>
 {
     Task<IEnumerable<InvoiceItem>> GetItemsByInvoiceIdAsync(int invoiceId);
-    Task<IEnumerable<InvoiceItem>> GetByUserIdAsync(Guid userId);
+    Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId);
 }
