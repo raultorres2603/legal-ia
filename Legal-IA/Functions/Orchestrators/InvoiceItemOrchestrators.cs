@@ -44,4 +44,12 @@ public static class InvoiceItemOrchestrators
         var id = context.GetInput<Guid>();
         return await context.CallActivityAsync<bool>("InvoiceItemDeleteActivity", id);
     }
+
+    [Function("InvoiceItemGetByUserIdOrchestrator")]
+    public static async Task<List<InvoiceItem>> InvoiceItemGetByUserIdOrchestrator(
+        [OrchestrationTrigger] TaskOrchestrationContext context)
+    {
+        var userId = context.GetInput<Guid>();
+        return await context.CallActivityAsync<List<InvoiceItem>>("InvoiceItemGetByUserIdActivity", userId);
+    }
 }

@@ -39,14 +39,14 @@ public class LegalIaDbContext(DbContextOptions<LegalIaDbContext> options) : DbCo
             entity.Property(e => e.Total).HasColumnType("decimal(18,2)").IsRequired();
             entity.Property(e => e.Notes).IsRequired(false);
             entity.HasMany(e => e.Items)
-                  .WithOne(i => i.Invoice)
-                  .HasForeignKey(i => i.InvoiceId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithOne(i => i.Invoice)
+                .HasForeignKey(i => i.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.Property(e => e.UserId).IsRequired();
             entity.HasOne(e => e.User)
-                  .WithMany()
-                  .HasForeignKey(e => e.UserId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // InvoiceItem configuration

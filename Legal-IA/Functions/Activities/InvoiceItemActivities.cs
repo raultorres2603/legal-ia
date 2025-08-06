@@ -54,4 +54,15 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
         await cacheService.RemoveAsync($"invoiceitems:{id}");
         return deleted;
     }
+
+    [Function("InvoiceItemGetByUserIdActivity")]
+    public async Task<List<InvoiceItem>> InvoiceItemGetByUserIdActivity([ActivityTrigger] Guid userId)
+    {
+        var cacheKey = $"invoiceitems:user:{userId}";
+        var cached = await cacheService.GetAsync<List<InvoiceItem>>(cacheKey);
+        if (cached != null) return cached;
+        var items = (await invoiceItemRepository.GetByUserIdAsync(userId)).ToList();
+        await cacheService.SetAsync(cacheKey, items);
+        return items;
+    }
 }

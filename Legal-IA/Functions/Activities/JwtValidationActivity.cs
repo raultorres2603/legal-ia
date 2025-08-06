@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Legal_IA.DTOs;
 using Legal_IA.Services;
@@ -28,7 +27,8 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
             }
 
             var claims = principal.Claims.ToDictionary(c => c.Type, c => c.Value);
-            logger.LogInformation("Claims extracted from JWT: {Claims}", string.Join(", ", claims.Select(c => c.Key + ":" + c.Value)));
+            logger.LogInformation("Claims extracted from JWT: {Claims}",
+                string.Join(", ", claims.Select(c => c.Key + ":" + c.Value)));
             // Normalize role claim using general function
             var normalizedRole = NormalizeClaim(claims, "role", ClaimTypes.Role,
                 "http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
@@ -48,7 +48,8 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
                 Email = email,
                 Claims = claims
             };
-            logger.LogInformation($"JWT validation result: {jsonResult.IsValid}, UserId: {jsonResult.UserId}, Email: {jsonResult.Email}");
+            logger.LogInformation(
+                $"JWT validation result: {jsonResult.IsValid}, UserId: {jsonResult.UserId}, Email: {jsonResult.Email}");
             // Return the result with claims, userId, and email
             return new JwtValidationResult { IsValid = true, UserId = userId, Email = email, Claims = claims };
         }
@@ -65,10 +66,8 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
         // Log all claim keys for debugging
         Console.WriteLine($"Claims available for normalization: {string.Join(", ", claims.Keys)}");
         foreach (var key in possibleKeys)
-        {
             if (claims.TryGetValue(key, out var claim))
                 return claim;
-        }
         // Try to find by suffix (e.g., ends with /role), case-insensitive and trimmed
         var match = claims.Keys.FirstOrDefault(k =>
             possibleKeys.Any(pk => k.Trim().Equals(k.Trim(), StringComparison.OrdinalIgnoreCase) ||

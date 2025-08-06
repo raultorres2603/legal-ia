@@ -1,4 +1,3 @@
-using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Models;
 using Legal_IA.Services;
@@ -6,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
-using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions;
 
@@ -108,16 +106,13 @@ public class InvoiceHttpTriggers
 
     [Function("GetInvoicesByCurrentUser")]
     public async Task<IActionResult> GetInvoicesByCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/user")] 
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/user")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
-        {
-            return new UnauthorizedResult();
-        }
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
         if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByUserIdOrchestrator", userId);
@@ -142,7 +137,7 @@ public class InvoiceHttpTriggers
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");
         invoice.UserId = userId;
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceCreateOrchestrator", invoice);
-        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, System.Threading.CancellationToken.None);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);

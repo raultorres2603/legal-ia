@@ -22,7 +22,7 @@ public static class JwtValidationHelper
     public static bool HasRequiredRole(JwtValidationResult? jwtResult, params string[] requiredRoles)
     {
         if (jwtResult == null || !jwtResult.IsValid || jwtResult.Claims == null ||
-            !jwtResult.Claims.TryGetValue("role", out string? userRole))
+            !jwtResult.Claims.TryGetValue("role", out var userRole))
             return false;
         return requiredRoles.Any(r => string.Equals(r, userRole, StringComparison.OrdinalIgnoreCase));
     }

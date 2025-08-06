@@ -69,13 +69,13 @@ public class InvoiceRepository(LegalIaDbContext context) : IInvoiceRepository
         return await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
     }
 
-    public async Task<IEnumerable<Invoice>> GetInvoicesByClientNifAsync(string clientNIF)
-    {
-        return await context.Invoices.Where(i => i.ClientNIF == clientNIF).Include(i => i.Items).ToListAsync();
-    }
-
     public async Task<List<Invoice>> GetInvoicesByUserIdAsync(Guid userId)
     {
         return await context.Invoices.Where(i => i.UserId == userId).Include(i => i.Items).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Invoice>> GetInvoicesByClientNifAsync(string clientNIF)
+    {
+        return await context.Invoices.Where(i => i.ClientNIF == clientNIF).Include(i => i.Items).ToListAsync();
     }
 }
