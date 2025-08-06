@@ -1,0 +1,35 @@
+meta {
+  name: Register User
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "dni": "12345678A",
+    "password": "yourPassword"
+  }
+}
+
+script:post-response {
+  // Get the token response
+  const token = res.getBody().token;
+  bru.setGlobalEnvVar("jwt", token);
+}
+
+settings {
+  encodeUrl: true
+}

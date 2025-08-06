@@ -1,0 +1,31 @@
+meta {
+  name: Create Invoice Item
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/invoice-items
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "invoiceId": "{{invoiceId}}",
+    "description": "Consulting service",
+    "quantity": 1,
+    "unitPrice": 1000.00,
+    "VAT": 210.00,
+    "IRPF": 150.00,
+    "total": 1060.00
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Update Invoice Item
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/invoice-items/{{invoiceItemId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": "{{invoiceItemId}}",
+    "invoiceId": "{{invoiceId}}",
+    "description": "Consulting service updated",
+    "quantity": 2,
+    "unitPrice": 500.00,
+    "VAT": 210.00,
+    "IRPF": 150.00,
+    "total": 1060.00
+  }
+}
+
+settings {
+  encodeUrl: true
+}

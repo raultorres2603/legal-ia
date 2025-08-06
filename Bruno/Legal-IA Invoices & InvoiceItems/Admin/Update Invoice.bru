@@ -1,0 +1,36 @@
+meta {
+  name: Update Invoice
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/invoices/{{invoiceId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": "{{invoiceId}}",
+    "invoiceNumber": "INV-2025-001",
+    "issueDate": "2025-08-05T00:00:00Z",
+    "clientName": "Juan Pérez",
+    "clientNIF": "12345678Z",
+    "clientAddress": "Calle Mayor 1, Madrid",
+    "subtotal": 1000.00,
+    "VAT": 210.00,
+    "IRPF": 150.00,
+    "total": 1060.00,
+    "notes": "Updated notes",
+    "items": []
+  }
+}
+
+settings {
+  encodeUrl: true
+}
