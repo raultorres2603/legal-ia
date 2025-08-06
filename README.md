@@ -155,28 +155,32 @@ Spanish autonomous professionals ("autónomos") are required by law to issue inv
 
 ## Endpoints
 
-All endpoints are protected by JWT. Admin-only endpoints for invoices and invoice items:
+All endpoints are protected by JWT.
 
-### Invoice Endpoints (Admin only)
-- `GET /invoices` — List all invoices
-- `GET /invoices/{id}` — Get invoice by ID
-- `POST /invoices` — Create a new invoice
-- `PUT /invoices/{id}` — Update an invoice
-- `DELETE /invoices/{id}` — Delete an invoice
+### Invoice Endpoints
 
-### Invoice Endpoints (User)
-- `GET /invoices/user` — List invoices for current user
+#### Admin Only
+- `GET /invoices` — Get all invoices
+- `GET /invoices/users/{id}` — Get invoice by user ID
+- `POST /invoices` — Create invoice
+- `PUT /invoices/users/{id}` — Update invoice by user ID
+- `DELETE /invoices/users/{id}` — Delete invoice by user ID
+
+#### User Only
+- `GET /invoices/user` — Get invoices for current user
 - `POST /invoices/user` — Create invoice for current user
 
-### Invoice Item Endpoints (Admin only)
-- `GET /invoice-items` — List all invoice items
-- `GET /invoice-items/{id}` — Get invoice item by ID
-- `POST /invoice-items` — Create a new invoice item
-- `PUT /invoice-items/{id}` — Update an invoice item
-- `DELETE /invoice-items/{id}` — Delete an invoice item
+### Invoice Item Endpoints
 
-### Invoice Item Endpoints (User)
-- `GET /invoice-items/user` — List invoice items for current user
+#### Admin Only
+- `GET /invoice-items/users` — Get all invoice items
+- `GET /invoice-items/users/{id}` — Get invoice item by ID
+- `POST /invoice-items` — Create invoice item
+- `PUT /invoice-items/users/{id}` �� Update invoice item by ID
+- `DELETE /invoice-items/users/{id}` — Delete invoice item by ID
+
+#### User Only
+- `GET /invoice-items/user` — Get invoice items for current user
 - `POST /invoice-items/user` — Create invoice item for current user
 
 ## How to Test
