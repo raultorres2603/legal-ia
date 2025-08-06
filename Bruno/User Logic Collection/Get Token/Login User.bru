@@ -16,9 +16,15 @@ headers {
 
 body:json {
   {
-    "email": "john@example.com",
-    "password": "yourPassword"
+    "email": "admin@example.com",
+    "password": "admin"
   }
+}
+
+script:post-response {
+  // Get the token response
+  const token = res.getBody().token;
+  bru.setGlobalEnvVar("jwt", token);
 }
 
 settings {
