@@ -35,10 +35,21 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
             logger.LogInformation("Normalized role claim value: {Role}", normalizedRole ?? "null");
             if (normalizedRole != null)
                 claims["role"] = normalizedRole;
-            var userId = claims.TryGetValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", out var claim) ? claim : null;
-            var email = claims.TryGetValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", out var claim1) ? claim1 : null;
+            var userId = NormalizeClaim(claims, "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+            var email = NormalizeClaim(claims, "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+            logger.LogInformation("Email claim value: {Email}", email ?? "null");
+            logger.LogInformation("UserId claim value: {UserId}", userId ?? "null");
             logger.LogInformation("JWT validation succeeded. Claims: {Claims}",
                 string.Join(",", claims.Select(c => c.Key + ":" + c.Value)));
+            var jsonResult = new JwtValidationResult
+            {
+                IsValid = true,
+                UserId = userId,
+                Email = email,
+                Claims = claims
+            };
+            logger.LogInformation($"JWT validation result: {jsonResult.IsValid}, UserId: {jsonResult.UserId}, Email: {jsonResult.Email}");
+            // Return the result with claims, userId, and email
             return new JwtValidationResult { IsValid = true, UserId = userId, Email = email, Claims = claims };
         }
         catch (Exception ex)

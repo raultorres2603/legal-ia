@@ -13,7 +13,8 @@ public class InvoiceItemHttpTriggers()
 {
     [Function("GetInvoiceItems")]
     public async Task<IActionResult> GetInvoiceItems(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/users")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
@@ -28,7 +29,8 @@ public class InvoiceItemHttpTriggers()
 
     [Function("GetInvoiceItemById")]
     public async Task<IActionResult> GetInvoiceItemById(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/{id}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/users/{id}")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
         string id)
@@ -49,7 +51,8 @@ public class InvoiceItemHttpTriggers()
 
     [Function("CreateInvoiceItem")]
     public async Task<IActionResult> CreateInvoiceItem(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "invoice-items")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "invoice-items")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
@@ -66,7 +69,8 @@ public class InvoiceItemHttpTriggers()
 
     [Function("UpdateInvoiceItem")]
     public async Task<IActionResult> UpdateInvoiceItem(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoice-items/{id}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoice-items/users/{id}")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
         string id)
@@ -85,7 +89,8 @@ public class InvoiceItemHttpTriggers()
 
     [Function("DeleteInvoiceItem")]
     public async Task<IActionResult> DeleteInvoiceItem(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoice-items/{id}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoice-items/users/{id}")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
         string id)
@@ -102,7 +107,8 @@ public class InvoiceItemHttpTriggers()
 
     [Function("GetInvoiceItemsByCurrentUser")]
     public async Task<IActionResult> GetInvoiceItemsByCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/user")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/user")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
@@ -120,7 +126,8 @@ public class InvoiceItemHttpTriggers()
 
     [Function("CreateInvoiceItemByCurrentUser")]
     public async Task<IActionResult> CreateInvoiceItemByCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "invoice-items/user")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "invoice-items/user")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {

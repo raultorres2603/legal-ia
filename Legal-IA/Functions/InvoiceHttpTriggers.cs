@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions;
 
@@ -29,7 +30,7 @@ public class InvoiceHttpTriggers
 
     [Function("GetInvoiceById")]
     public async Task<IActionResult> GetInvoiceById(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/users/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
@@ -69,7 +70,7 @@ public class InvoiceHttpTriggers
 
     [Function("UpdateInvoice")]
     public async Task<IActionResult> UpdateInvoice(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoices/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoices/users/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
@@ -89,7 +90,7 @@ public class InvoiceHttpTriggers
 
     [Function("DeleteInvoice")]
     public async Task<IActionResult> DeleteInvoice(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoices/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoices/users/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
@@ -107,17 +108,20 @@ public class InvoiceHttpTriggers
 
     [Function("GetInvoicesByCurrentUser")]
     public async Task<IActionResult> GetInvoicesByCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/user")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/user")] 
+        HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
+        {
             return new UnauthorizedResult();
+        }
         if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByUserIdOrchestrator", userId);
-        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, System.Threading.CancellationToken.None);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<List<Invoice>>());
         return new StatusCodeResult(500);
