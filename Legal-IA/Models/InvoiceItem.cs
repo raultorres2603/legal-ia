@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace Legal_IA.Models;
 
 public class InvoiceItem
@@ -10,5 +12,6 @@ public class InvoiceItem
     public decimal VAT { get; set; } // IVA
     public decimal IRPF { get; set; } // Retención
     public decimal Total { get; set; }
+    [JsonIgnore]
     public Invoice Invoice { get; set; }
 }
