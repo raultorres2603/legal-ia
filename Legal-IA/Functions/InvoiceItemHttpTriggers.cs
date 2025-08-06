@@ -111,6 +111,7 @@ public class InvoiceItemHttpTriggers
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
+        if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemDeleteOrchestrator", id);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
