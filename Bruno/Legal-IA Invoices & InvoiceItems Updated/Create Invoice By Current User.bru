@@ -31,9 +31,9 @@ body:json {
 }
 
 script:post-response {
-  let invoiceId = res.getBody().id
-  console.log("Setting invoiceId...")
-  bru.setGlobalEnvVar("invoiceId", invoiceId)
+  let invoiceId = res.getBody().id;
+  console.log("Setting invoiceId...");
+  bru.setGlobalEnvVar("invoiceId", invoiceId);
 }
 
 settings {
