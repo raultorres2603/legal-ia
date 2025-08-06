@@ -23,8 +23,12 @@ body:json {
 
 script:post-response {
   // Get the token response
+  console.log("Getting token...");
   let token = res.getBody().token;
+  console.log("Received token: " + token);
+  console.log("Setting token to env var...");
   bru.setGlobalEnvVar("jwt", token);
+  console.log("Updated token.");
 }
 
 settings {
