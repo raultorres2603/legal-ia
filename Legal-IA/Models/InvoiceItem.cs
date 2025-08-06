@@ -4,7 +4,7 @@ namespace Legal_IA.Models;
 
 public class InvoiceItem
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     public int InvoiceId { get; set; }
     public string Description { get; set; }
     public int Quantity { get; set; }
