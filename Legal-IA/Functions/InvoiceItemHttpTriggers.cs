@@ -166,7 +166,12 @@ public class InvoiceItemHttpTriggers
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemCreateOrchestrator", item);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var created = response.ReadOutputAs<InvoiceItem>();
+            if (created == null) return new StatusCodeResult(500);
+            // Optionally, set UserId on created item if not already set
             return new OkObjectResult(response.ReadOutputAs<InvoiceItem>());
+        }
         return new StatusCodeResult(500);
     }
 }
