@@ -7,7 +7,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Legal_IA.Functions;
 
@@ -92,7 +92,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         try
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var createRequest = JsonConvert.DeserializeObject<CreateUserRequest>(requestBody);
+            var createRequest = JsonSerializer.Deserialize<CreateUserRequest>(requestBody);
 
             if (createRequest == null)
                 return new BadRequestObjectResult("Invalid request body");
@@ -143,7 +143,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
                 return new BadRequestObjectResult("Invalid user ID format");
 
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var updateRequest = JsonConvert.DeserializeObject<UpdateUserRequest>(requestBody);
+            var updateRequest = JsonSerializer.Deserialize<UpdateUserRequest>(requestBody);
 
             if (updateRequest == null)
                 return new BadRequestObjectResult("Invalid request body");
@@ -214,7 +214,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
     {
         // Extract registration data from request
         var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        var registerRequest = JsonConvert.DeserializeObject<RegisterUserRequest>(requestBody);
+        var registerRequest = JsonSerializer.Deserialize<RegisterUserRequest>(requestBody);
         if (registerRequest == null)
             return new BadRequestObjectResult("Invalid registration data");
         var instance = await client.ScheduleNewOrchestrationInstanceAsync("RegisterUserOrchestrator", registerRequest);
@@ -232,7 +232,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
     {
         // Extract login data from request
         var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        var loginRequest = JsonConvert.DeserializeObject<LoginUserRequest>(requestBody);
+        var loginRequest = JsonSerializer.Deserialize<LoginUserRequest>(requestBody);
         if (loginRequest == null)
             return new BadRequestObjectResult("Invalid login data");
         var instance = await client.ScheduleNewOrchestrationInstanceAsync("LoginUserOrchestrator", loginRequest);

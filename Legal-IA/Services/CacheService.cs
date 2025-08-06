@@ -1,6 +1,6 @@
 using Legal_IA.Interfaces.Services;
 using Microsoft.Extensions.Caching.Distributed;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Legal_IA.Services;
 
@@ -16,12 +16,12 @@ public class CacheService(IDistributedCache cache) : ICacheService
         var cachedValue = await cache.GetStringAsync(key);
         return string.IsNullOrEmpty(cachedValue)
             ? null
-            : JsonConvert.DeserializeObject<T>(cachedValue);
+            : JsonSerializer.Deserialize<T>(cachedValue);
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null) where T : class
     {
-        var serializedValue = JsonConvert.SerializeObject(value);
+        var serializedValue = JsonSerializer.Serialize(value);
         var options = new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = expiry ?? _defaultExpiry
