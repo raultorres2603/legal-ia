@@ -46,6 +46,8 @@ public class JwtService(IConfiguration configuration)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_secret);
+        var expiration = DateTime.UtcNow.AddHours(2);
+        var issuedAt = DateTime.UtcNow;
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -56,7 +58,9 @@ public class JwtService(IConfiguration configuration)
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(2),
+            Expires = expiration,
+            NotBefore = issuedAt.AddSeconds(-2),
+            IssuedAt = issuedAt,
             Issuer = _issuer,
             Audience = _audience,
             SigningCredentials =
