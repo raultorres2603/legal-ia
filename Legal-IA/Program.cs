@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -42,6 +43,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = redisConnectionString;
     options.InstanceName = "LegalIA";
 });
+
+// Register IConnectionMultiplexer for StackExchange.Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(redisConnectionString));
 
 // Configure Azure Blob Storage (Azurite)
 var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")

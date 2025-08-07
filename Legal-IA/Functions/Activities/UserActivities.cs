@@ -51,7 +51,7 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
     }
 }
 
-public class CreateUserActivity(IUserService userService, ILogger<CreateUserActivity> logger)
+public class CreateUserActivity(IUserService userService, ICacheService cacheService, ILogger<CreateUserActivity> logger)
 {
     [Function("CreateUserActivity")]
     public async Task<UserResponse> Run([ActivityTrigger] CreateUserRequest request)
@@ -60,6 +60,7 @@ public class CreateUserActivity(IUserService userService, ILogger<CreateUserActi
         try
         {
             var result = await userService.CreateUserAsync(request);
+            await cacheService.RemoveByPatternAsync("users");
             logger.LogInformation("CreateUserActivity succeeded for Email: {Email}", request.Email);
             return result;
         }
@@ -71,7 +72,7 @@ public class CreateUserActivity(IUserService userService, ILogger<CreateUserActi
     }
 }
 
-public class UpdateUserActivity(IUserService userService, ILogger<UpdateUserActivity> logger)
+public class UpdateUserActivity(IUserService userService, ICacheService cacheService, ILogger<UpdateUserActivity> logger)
 {
     [Function("UpdateUserActivity")]
     public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
@@ -85,7 +86,7 @@ public class UpdateUserActivity(IUserService userService, ILogger<UpdateUserActi
                 logger.LogWarning($"User not found for UserId: {updateData.UserId}");
                 return null;
             }
-
+            await cacheService.RemoveByPatternAsync("users");
             logger.LogInformation($"User updated successfully for UserId: {updateData.UserId}");
             return result;
         }
@@ -97,7 +98,7 @@ public class UpdateUserActivity(IUserService userService, ILogger<UpdateUserActi
     }
 }
 
-public class DeleteUserActivity(IUserService userService, ILogger<DeleteUserActivity> logger)
+public class DeleteUserActivity(IUserService userService, ICacheService cacheService, ILogger<DeleteUserActivity> logger)
 {
     [Function("DeleteUserActivity")]
     public async Task<bool> Run([ActivityTrigger] Guid userId)
@@ -106,6 +107,7 @@ public class DeleteUserActivity(IUserService userService, ILogger<DeleteUserActi
         try
         {
             var result = await userService.DeleteUserAsync(userId);
+            await cacheService.RemoveByPatternAsync("users");
             logger.LogInformation("DeleteUserActivity succeeded for UserId: {UserId}", userId);
             return result;
         }

@@ -46,8 +46,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         if (invoice.UserId == Guid.Empty)
             throw new ArgumentException("UserId must be set on Invoice");
         var created = await invoiceRepository.AddAsync(invoice);
-        await cacheService.RemoveAsync("invoices:all");
-        await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
+        await cacheService.RemoveByPatternAsync("invoices");
         return created;
     }
 
@@ -55,9 +54,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     public async Task<Invoice> InvoiceUpdateActivity([ActivityTrigger] Invoice invoice)
     {
         var updated = await invoiceRepository.UpdateAsync(invoice);
-        await cacheService.RemoveAsync("invoices:all");
-        await cacheService.RemoveAsync($"invoices:{invoice.Id}");
-        await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
+        await cacheService.RemoveByPatternAsync("invoices");
         return updated;
     }
 

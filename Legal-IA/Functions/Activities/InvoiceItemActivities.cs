@@ -33,7 +33,7 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
     public async Task<InvoiceItem> InvoiceItemCreateActivity([ActivityTrigger] InvoiceItem item)
     {
         var created = await invoiceItemRepository.AddAsync(item);
-        await cacheService.RemoveAsync("invoiceitems:all");
+        await cacheService.RemoveByPatternAsync("invoiceitems");
         return created;
     }
 
@@ -41,8 +41,7 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
     public async Task<InvoiceItem> InvoiceItemUpdateActivity([ActivityTrigger] InvoiceItem item)
     {
         var updated = await invoiceItemRepository.UpdateAsync(item);
-        await cacheService.RemoveAsync("invoiceitems:all");
-        await cacheService.RemoveAsync($"invoiceitems:{item.Id}");
+        await cacheService.RemoveByPatternAsync("invoiceitems");
         return updated;
     }
 
@@ -50,12 +49,11 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
     public async Task<bool> InvoiceItemDeleteActivity([ActivityTrigger] Guid id)
     {
         var deleted = await invoiceItemRepository.DeleteAsync(id);
-        await cacheService.RemoveAsync("invoiceitems:all");
-        await cacheService.RemoveAsync($"invoiceitems:{id}");
+        await cacheService.RemoveByPatternAsync("invoiceitems");
         return deleted;
     }
 
-    [Function("InvoiceItemGetByUserIdActivity")]
+    [Function(nameof(InvoiceItemGetByUserIdActivity))]
     public async Task<List<InvoiceItem>> InvoiceItemGetByUserIdActivity([ActivityTrigger] Guid userId)
     {
         var cacheKey = $"invoiceitems:user:{userId}";
