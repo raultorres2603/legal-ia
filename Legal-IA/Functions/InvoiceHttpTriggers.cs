@@ -263,4 +263,5 @@ public class InvoiceHttpTriggers
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);
     }
+    // TODO: Implement DeleteInvoiceByCurrentUser that will delete the invoice only if it belongs to the current user and Status is Pending
 }

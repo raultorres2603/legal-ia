@@ -174,4 +174,6 @@ public class InvoiceItemHttpTriggers
         }
         return new StatusCodeResult(500);
     }
+    
+    // TODO: Implement Update and Delete for current user if invoice is owned by them and Invoice.Status is Pending
 }
