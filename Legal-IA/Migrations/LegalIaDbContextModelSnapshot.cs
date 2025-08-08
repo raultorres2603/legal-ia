@@ -3,7 +3,6 @@ using System;
 using Legal_IA.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,11 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Legal_IA.Migrations
 {
     [DbContext(typeof(LegalIaDbContext))]
-    [Migration("20250805143032_invoices-and-items-tables")]
-    partial class invoicesanditemstables
+    partial class LegalIaDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,11 +24,9 @@ namespace Legal_IA.Migrations
 
             modelBuilder.Entity("Legal_IA.Models.Invoice", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ClientAddress")
                         .IsRequired()
@@ -58,27 +53,33 @@ namespace Legal_IA.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("VAT")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("Legal_IA.Models.InvoiceItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -87,8 +88,8 @@ namespace Legal_IA.Migrations
                     b.Property<decimal>("IRPF")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
@@ -199,6 +200,17 @@ namespace Legal_IA.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Legal_IA.Models.Invoice", b =>
+                {
+                    b.HasOne("Legal_IA.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Legal_IA.Models.InvoiceItem", b =>

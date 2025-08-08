@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Legal_IA.Migrations
 {
     [DbContext(typeof(LegalIaDbContext))]
-    [Migration("20250808143809_AddInvoiceStatusToInvoice")]
-    partial class AddInvoiceStatusToInvoice
+    [Migration("20250808152908_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
