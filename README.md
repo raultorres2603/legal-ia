@@ -201,6 +201,12 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
+- `PUT /invoices/user/{id}` — Update invoice for current user
+  - ✅ **200 OK**: Returns the updated invoice
+  - ❗ **400 Bad Request**: Invalid ID, request body, or missing UserId in JWT
+  - 🚫 **404 Not Found**: Invoice not found or does not belong to user
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
 
 ### Invoice Item Endpoints
 

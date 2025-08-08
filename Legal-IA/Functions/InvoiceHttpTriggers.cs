@@ -1,3 +1,4 @@
+using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Models;
 using Legal_IA.Services;
@@ -19,7 +20,7 @@ public class InvoiceHttpTriggers
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetAllOrchestrator", null);
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetAllOrchestrator", null!);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<List<Invoice>>());
@@ -57,8 +58,32 @@ public class InvoiceHttpTriggers
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
-        var invoice = await req.ReadFromJsonAsync<Invoice>();
-        if (invoice == null) return new BadRequestResult();
+        var dto = await req.ReadFromJsonAsync<CreateInvoiceRequest>();
+        if (dto == null) return new BadRequestResult();
+        var invoice = new Invoice
+        {
+            InvoiceNumber = dto.InvoiceNumber,
+            IssueDate = dto.IssueDate,
+            ClientName = dto.ClientName,
+            ClientNIF = dto.ClientNIF,
+            ClientAddress = dto.ClientAddress,
+            Subtotal = dto.Subtotal,
+            VAT = dto.VAT,
+            IRPF = dto.IRPF,
+            Total = dto.Total,
+            Notes = dto.Notes,
+            Status = dto.Status,
+            UserId = dto.UserId,
+            Items = (dto.Items ?? new List<CreateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            {
+                Description = i.Description,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                VAT = i.VAT,
+                IRPF = i.IRPF,
+                Total = i.Total
+            })
+        };
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceCreateOrchestrator", invoice);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
@@ -77,8 +102,33 @@ public class InvoiceHttpTriggers
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
-        var invoice = await req.ReadFromJsonAsync<Invoice>();
-        if (invoice == null) return new BadRequestResult();
+        var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
+        if (dto == null) return new BadRequestResult();
+        var invoice = new Invoice
+        {
+            Id = guid,
+            InvoiceNumber = dto.InvoiceNumber,
+            IssueDate = dto.IssueDate,
+            ClientName = dto.ClientName,
+            ClientNIF = dto.ClientNIF,
+            ClientAddress = dto.ClientAddress,
+            Subtotal = dto.Subtotal,
+            VAT = dto.VAT,
+            IRPF = dto.IRPF,
+            Total = dto.Total,
+            Notes = dto.Notes,
+            Status = dto.Status,
+            UserId = dto.UserId,
+            Items = (dto.Items ?? new List<UpdateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            {
+                Description = i.Description,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                VAT = i.VAT,
+                IRPF = i.IRPF,
+                Total = i.Total
+            })
+        };
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateOrchestrator", invoice);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
@@ -131,12 +181,83 @@ public class InvoiceHttpTriggers
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
-        var invoice = await req.ReadFromJsonAsync<Invoice>();
-        if (invoice == null) return new BadRequestResult();
-        if (jwtResult.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+        var dto = await req.ReadFromJsonAsync<CreateInvoiceRequest>();
+        if (dto == null) return new BadRequestResult();
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");
-        invoice.UserId = userId;
+        var invoice = new Invoice
+        {
+            InvoiceNumber = dto.InvoiceNumber,
+            IssueDate = dto.IssueDate,
+            ClientName = dto.ClientName,
+            ClientNIF = dto.ClientNIF,
+            ClientAddress = dto.ClientAddress,
+            Subtotal = dto.Subtotal,
+            VAT = dto.VAT,
+            IRPF = dto.IRPF,
+            Total = dto.Total,
+            Notes = dto.Notes,
+            Status = dto.Status,
+            UserId = userId,
+            Items = (dto.Items ?? new List<CreateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            {
+                Description = i.Description,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                VAT = i.VAT,
+                IRPF = i.IRPF,
+                Total = i.Total
+            })
+        };
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceCreateOrchestrator", invoice);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<Invoice>());
+        return new StatusCodeResult(500);
+    }
+
+    [Function("UpdateInvoiceByCurrentUser")]
+    public async Task<IActionResult> UpdateInvoiceByCurrentUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoices/user/{id}")]
+        HttpRequestData req,
+        FunctionContext context,
+        [DurableClient] DurableTaskClient client,
+        string id)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
+        if (!Guid.TryParse(id, out var invoiceId)) return new BadRequestResult();
+        var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
+        if (dto == null) return new BadRequestResult();
+        var invoice = new Invoice
+        {
+            Id = invoiceId,
+            InvoiceNumber = dto.InvoiceNumber,
+            IssueDate = dto.IssueDate,
+            ClientName = dto.ClientName,
+            ClientNIF = dto.ClientNIF,
+            ClientAddress = dto.ClientAddress,
+            Subtotal = dto.Subtotal,
+            VAT = dto.VAT,
+            IRPF = dto.IRPF,
+            Total = dto.Total,
+            Notes = dto.Notes,
+            Status = dto.Status,
+            UserId = userId,
+            Items = (dto.Items ?? new List<UpdateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            {
+                Description = i.Description,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                VAT = i.VAT,
+                IRPF = i.IRPF,
+                Total = i.Total
+            })
+        };
+        var orchestratorInput = new { Invoice = invoice, UserId = userId };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateByCurrentUserOrchestrator", orchestratorInput);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());

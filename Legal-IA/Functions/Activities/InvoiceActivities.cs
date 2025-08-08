@@ -69,4 +69,19 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
             await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
         return deleted;
     }
+
+    [Function("UpdateInvoiceByCurrentUserActivity")]
+    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] dynamic input)
+    {
+        Invoice invoice = input.Invoice.ToObject<Invoice>();
+        Guid userId = (Guid)input.UserId;
+        var existing = await invoiceRepository.GetByIdAsync(invoice.Id);
+        if (existing == null || existing.UserId != userId)
+            throw new UnauthorizedAccessException("Invoice not found or does not belong to user");
+        invoice.UserId = userId; // Ensure user cannot change owner
+        var updated = await invoiceRepository.UpdateAsync(invoice);
+        await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
+        await cacheService.RemoveAsync($"invoices:{invoice.Id}");
+        return updated;
+    }
 }

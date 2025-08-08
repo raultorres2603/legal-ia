@@ -49,4 +49,15 @@ public static class InvoiceOrchestrators
         var userId = context.GetInput<Guid>();
         return await context.CallActivityAsync<List<Invoice>>("InvoiceGetByUserIdActivity", userId);
     }
+
+    [Function("InvoiceUpdateByCurrentUserOrchestrator")]
+    public static async Task<Invoice> InvoiceUpdateByCurrentUserOrchestrator(
+        [OrchestrationTrigger] TaskOrchestrationContext context)
+    {
+        var input = context.GetInput<dynamic>();
+        var invoice = input.Invoice.ToObject<Invoice>();
+        var userId = (Guid)input.UserId;
+        var activityInput = new { Invoice = invoice, UserId = userId };
+        return await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
+    }
 }

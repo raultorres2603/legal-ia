@@ -1,3 +1,5 @@
+using Legal_IA.Enums;
+
 namespace Legal_IA.Models;
 
 public class Invoice
@@ -16,4 +18,5 @@ public class Invoice
     public List<InvoiceItem> Items { get; set; }
     public Guid UserId { get; set; }
     public User User { get; set; }
+    public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
 }
