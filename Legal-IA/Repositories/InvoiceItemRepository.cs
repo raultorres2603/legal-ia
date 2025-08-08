@@ -30,6 +30,11 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
 
     public async Task<InvoiceItem> AddAsync(InvoiceItem entity)
     {
+        var invoice = await context.Invoices.FindAsync(entity.InvoiceId);
+        if (invoice == null)
+            throw new ArgumentException($"Invoice with ID {entity.InvoiceId} does not exist.");
+        invoice.Total += entity.Total; // Assuming Total is the cost of the item
+        context.Invoices.Update(invoice);
         context.InvoiceItems.Add(entity);
         await context.SaveChangesAsync();
         return entity;
