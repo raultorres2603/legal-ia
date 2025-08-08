@@ -74,7 +74,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = dto.UserId,
-            Items = (dto.Items ?? new List<CreateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            Items = (dto.Items).ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
@@ -119,7 +119,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = dto.UserId,
-            Items = (dto.Items ?? new List<UpdateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            Items = (dto.Items).ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
@@ -199,7 +199,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = userId,
-            Items = (dto.Items ?? new List<CreateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            Items = (dto.Items).ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
@@ -246,7 +246,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = userId,
-            Items = (dto.Items ?? new List<UpdateInvoiceItemRequest>()).ConvertAll(i => new InvoiceItem
+            Items = (dto.Items).ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
