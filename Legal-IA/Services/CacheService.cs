@@ -8,21 +8,13 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     Cache service implementation using Redis
 /// </summary>
-public class CacheService : ICacheService
+public class CacheService(IDistributedCache cache, IConnectionMultiplexer redis) : ICacheService
 {
-    private readonly IDistributedCache _cache;
-    private readonly IConnectionMultiplexer _redis;
     private readonly TimeSpan _defaultExpiry = TimeSpan.FromMinutes(30);
-
-    public CacheService(IDistributedCache cache, IConnectionMultiplexer redis)
-    {
-        _cache = cache;
-        _redis = redis;
-    }
 
     public async Task<T?> GetAsync<T>(string key) where T : class
     {
-        var cachedValue = await _cache.GetStringAsync(key);
+        var cachedValue = await cache.GetStringAsync(key);
         return string.IsNullOrEmpty(cachedValue)
             ? null
             : JsonSerializer.Deserialize<T>(cachedValue);
@@ -35,20 +27,20 @@ public class CacheService : ICacheService
         {
             AbsoluteExpirationRelativeToNow = expiry ?? _defaultExpiry
         };
-        await _cache.SetStringAsync(key, serializedValue, options);
+        await cache.SetStringAsync(key, serializedValue, options);
     }
 
     public async Task RemoveAsync(string key)
     {
-        await _cache.RemoveAsync(key);
+        await cache.RemoveAsync(key);
     }
 
     public async Task RemoveByPatternAsync(string pattern)
     {
-        var endpoints = _redis.GetEndPoints();
-        var server = _redis.GetServer(endpoints.First());
+        var endpoints = redis.GetEndPoints();
+        var server = redis.GetServer(endpoints.First());
         var keys = server.Keys(pattern: pattern + "*");
-        var tasks = keys.Select(key => _cache.RemoveAsync(key));
+        var tasks = keys.Select(key => cache.RemoveAsync(key));
         await Task.WhenAll(tasks);
     }
 }
