@@ -158,7 +158,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
 
         // Invalidate cache
         var cacheKey = $"{CacheKeyPrefix}{id}";
-        await cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveByPatternAsync(cacheKey);
 
         return MapToUserResponse(updatedUser);
     }
@@ -174,7 +174,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
 
         // Invalidate cache
         var cacheKey = $"{CacheKeyPrefix}{id}";
-        await cacheService.RemoveAsync(cacheKey);
+        await cacheService.RemoveByPatternAsync(cacheKey);
 
         return true;
     }

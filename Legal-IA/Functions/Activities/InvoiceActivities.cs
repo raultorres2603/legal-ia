@@ -2,77 +2,98 @@ using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
 public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheService cacheService)
 {
     [Function(nameof(InvoiceGetAllActivity))]
-    public async Task<List<Invoice>> InvoiceGetAllActivity([ActivityTrigger] object input)
+    public async Task<List<Invoice>> InvoiceGetAllActivity([ActivityTrigger] object input, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceGetAllActivity");
         const string cacheKey = "invoices:all";
         var cached = await cacheService.GetAsync<List<Invoice>>(cacheKey);
-        if (cached != null) return cached;
+        if (cached != null)
+        {
+            log.LogInformation("[InvoiceGetAllActivity] Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
         var invoices = (await invoiceRepository.GetAllAsync()).ToList();
         await cacheService.SetAsync(cacheKey, invoices);
         return invoices;
     }
 
     [Function(nameof(InvoiceGetByIdActivity))]
-    public async Task<Invoice?> InvoiceGetByIdActivity([ActivityTrigger] Guid id)
+    public async Task<Invoice?> InvoiceGetByIdActivity([ActivityTrigger] Guid id, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceGetByIdActivity");
         var cacheKey = $"invoices:{id}";
         var cached = await cacheService.GetAsync<Invoice>(cacheKey);
-        if (cached != null) return cached;
+        if (cached != null)
+        {
+            log.LogInformation("[InvoiceGetByIdActivity] Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
         var invoice = await invoiceRepository.GetByIdAsync(id);
         if (invoice != null) await cacheService.SetAsync(cacheKey, invoice);
         return invoice;
     }
 
     [Function("InvoiceGetByUserIdActivity")]
-    public async Task<List<Invoice>> InvoiceGetByUserIdActivity([ActivityTrigger] Guid userId)
+    public async Task<List<Invoice>> InvoiceGetByUserIdActivity([ActivityTrigger] Guid userId, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceGetByUserIdActivity");
         var cacheKey = $"invoices:user:{userId}";
         var cached = await cacheService.GetAsync<List<Invoice>>(cacheKey);
-        if (cached != null) return cached;
-        var invoices = (await invoiceRepository.GetInvoicesByUserIdAsync(userId)).ToList();
+        if (cached != null)
+        {
+            log.LogInformation("[InvoiceGetByUserIdActivity] Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
+        log.LogInformation("Fetching invoices for user {UserId} from repository", userId);
+        var invoices = (await invoiceRepository.GetInvoicesByUserIdAsync(userId));
         await cacheService.SetAsync(cacheKey, invoices);
         return invoices;
     }
 
     [Function(nameof(InvoiceCreateActivity))]
-    public async Task<Invoice> InvoiceCreateActivity([ActivityTrigger] Invoice invoice)
+    public async Task<Invoice> InvoiceCreateActivity([ActivityTrigger] Invoice invoice, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceCreateActivity");
         if (invoice.UserId == Guid.Empty)
             throw new ArgumentException("UserId must be set on Invoice");
         var created = await invoiceRepository.AddAsync(invoice);
         await cacheService.RemoveByPatternAsync("invoices");
+        log.LogInformation("Invoice created and cache invalidated for pattern 'invoices'");
         return created;
     }
 
     [Function(nameof(InvoiceUpdateActivity))]
-    public async Task<Invoice> InvoiceUpdateActivity([ActivityTrigger] Invoice invoice)
+    public async Task<Invoice> InvoiceUpdateActivity([ActivityTrigger] Invoice invoice, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceUpdateActivity");
         var updated = await invoiceRepository.UpdateAsync(invoice);
         await cacheService.RemoveByPatternAsync("invoices");
+        log.LogInformation("Invoice updated and cache invalidated for pattern 'invoices'");
         return updated;
     }
 
     [Function(nameof(InvoiceDeleteActivity))]
-    public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id)
+    public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceDeleteActivity");
         var invoice = await invoiceRepository.GetByIdAsync(id);
         var deleted = await invoiceRepository.DeleteAsync(id);
-        await cacheService.RemoveAsync("invoices:all");
-        await cacheService.RemoveAsync($"invoices:{id}");
-        if (invoice != null)
-            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
+        await cacheService.RemoveByPatternAsync("invoices");
+        log.LogInformation("Invoice deleted and related cache keys invalidated");
         return deleted;
     }
 
     [Function("UpdateInvoiceByCurrentUserActivity")]
-    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] dynamic input)
+    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] dynamic input, FunctionContext context)
     {
+        var log = context.GetLogger("UpdateInvoiceByCurrentUserActivity");
         Invoice invoice = input.Invoice.ToObject<Invoice>();
         Guid userId = (Guid)input.UserId;
         var existing = await invoiceRepository.GetByIdAsync(invoice.Id);
@@ -81,7 +102,8 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         invoice.UserId = userId; // Ensure user cannot change owner
         var updated = await invoiceRepository.UpdateAsync(invoice);
         await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
-        await cacheService.RemoveAsync($"invoices:{invoice.Id}");
+        await cacheService.RemoveByPatternAsync($"invoices:{invoice.Id}");
+        log.LogInformation("Invoice updated by current user and related cache keys invalidated");
         return updated;
     }
 }

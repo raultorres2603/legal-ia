@@ -2,28 +2,39 @@ using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
 public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository, ICacheService cacheService)
 {
     [Function(nameof(InvoiceItemGetAllActivity))]
-    public async Task<List<InvoiceItem>> InvoiceItemGetAllActivity([ActivityTrigger] object input)
+    public async Task<List<InvoiceItem>> InvoiceItemGetAllActivity([ActivityTrigger] object input, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceItemGetAllActivity");
         const string cacheKey = "invoiceitems:all";
         var cached = await cacheService.GetAsync<List<InvoiceItem>>(cacheKey);
-        if (cached != null) return cached;
+        if (cached != null)
+        {
+            log.LogInformation("[InvoiceItemGetAllActivity] Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
         var items = (await invoiceItemRepository.GetAllAsync()).ToList();
         await cacheService.SetAsync(cacheKey, items);
         return items;
     }
 
     [Function(nameof(InvoiceItemGetByIdActivity))]
-    public async Task<InvoiceItem?> InvoiceItemGetByIdActivity([ActivityTrigger] Guid id)
+    public async Task<InvoiceItem?> InvoiceItemGetByIdActivity([ActivityTrigger] Guid id, FunctionContext context)
     {
+        var log = context.GetLogger("InvoiceItemGetByIdActivity");
         var cacheKey = $"invoiceitems:{id}";
         var cached = await cacheService.GetAsync<InvoiceItem>(cacheKey);
-        if (cached != null) return cached;
+        if (cached != null)
+        {
+            log.LogInformation("[InvoiceItemGetByIdActivity] Cache hit for key: {CacheKey}", cacheKey);
+            return cached;
+        }
         var item = await invoiceItemRepository.GetByIdAsync(id);
         if (item != null) await cacheService.SetAsync(cacheKey, item);
         return item;
