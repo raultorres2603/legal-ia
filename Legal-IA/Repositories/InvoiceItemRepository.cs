@@ -42,6 +42,14 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
 
     public async Task<InvoiceItem> UpdateAsync(InvoiceItem entity)
     {
+        var existingItem = await context.InvoiceItems.FindAsync(entity.Id);
+        if (existingItem == null)
+            throw new ArgumentException($"InvoiceItem with ID {entity.Id} does not exist.");
+        var invoice = await context.Invoices.FindAsync(entity.InvoiceId);
+        if (invoice == null)
+            throw new ArgumentException($"Invoice with ID {entity.InvoiceId} does not exist.");
+        invoice.Total += entity.Total - existingItem.Total; // Adjust total based on the update
+        context.Invoices.Update(invoice);
         context.InvoiceItems.Update(entity);
         await context.SaveChangesAsync();
         return entity;
@@ -51,6 +59,11 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
     {
         var item = await context.InvoiceItems.FindAsync(id);
         if (item == null) return false;
+        var invoice = await context.Invoices.FindAsync(item.InvoiceId);
+        if (invoice == null)
+            throw new ArgumentException($"Invoice with ID {item.InvoiceId} does not exist.");
+        invoice.Total -= item.Total; // Adjust total based on the deleted item
+        context.Invoices.Update(invoice);
         context.InvoiceItems.Remove(item);
         await context.SaveChangesAsync();
         return true;
