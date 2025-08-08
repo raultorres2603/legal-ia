@@ -1,3 +1,4 @@
+using Legal_IA.Enums;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
@@ -83,7 +84,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
     {
         var log = context.GetLogger("InvoiceDeleteActivity");
-        var invoice = await invoiceRepository.GetByIdAsync(id);
+        await invoiceRepository.GetByIdAsync(id);
         var deleted = await invoiceRepository.DeleteAsync(id);
         await cacheService.RemoveByPatternAsync("invoices");
         log.LogInformation("Invoice deleted and related cache keys invalidated");
@@ -100,6 +101,8 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         if (existing == null || existing.UserId != userId)
             throw new UnauthorizedAccessException("Invoice not found or does not belong to user");
         invoice.UserId = userId; // Ensure user cannot change owner
+        if (existing.Status != InvoiceStatus.Pending)
+            throw new InvalidOperationException("Only pending invoices can be updated");
         var updated = await invoiceRepository.UpdateAsync(invoice);
         await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
         await cacheService.RemoveByPatternAsync($"invoices:{invoice.Id}");
