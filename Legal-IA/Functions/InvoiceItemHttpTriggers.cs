@@ -204,7 +204,7 @@ public class InvoiceItemHttpTriggers
 
     [Function("DeleteInvoiceItemByUser")]
     public async Task<IActionResult> DeleteInvoiceItemByUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoice-items/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoice-items/user/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
