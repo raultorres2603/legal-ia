@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
@@ -106,13 +107,26 @@ public static class InvoiceOrchestrators
         var input = context.GetInput<dynamic>();
         if (input != null)
         {
-            var invoice = input.Invoice.ToObject<Invoice>();
-            var userId = (Guid)input.UserId;
-            logger.LogInformation($"Orchestrator started: InvoiceUpdateByCurrentUserOrchestrator for invoice {invoice.Id} and user {userId}");
-            var activityInput = new { Invoice = invoice, UserId = userId };
-            var updated = await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
-            logger.LogInformation("Orchestrator completed: InvoiceUpdateByCurrentUserOrchestrator for invoice {InvoiceId}", updated.Id);
-            return updated;
+            // Fix: Properly handle System.Text.Json.JsonElement
+            var inputElement = (JsonElement)input;
+            var invoiceElement = inputElement.GetProperty("Invoice");
+            var invoice = JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
+            var userId = inputElement.GetProperty("UserId").GetGuid();
+            if (invoice != null)
+            {
+                logger.LogInformation(
+                    $"Orchestrator started: InvoiceUpdateByCurrentUserOrchestrator for invoice {invoice.Id} and user {userId}");
+                var activityInput = new { Invoice = invoice, UserId = userId };
+                var updated =
+                    await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
+                logger.LogInformation(
+                    "Orchestrator completed: InvoiceUpdateByCurrentUserOrchestrator for invoice {InvoiceId}",
+                    updated.Id);
+                return updated;
+            }
+            logger.LogError(
+                "Orchestrator failed: InvoiceUpdateByCurrentUserOrchestrator received null invoice input");
+            throw new ArgumentNullException(nameof(invoice), "Invoice cannot be null");
         }
         logger.LogError("Orchestrator failed: InvoiceUpdateByCurrentUserOrchestrator received null input");
         throw new ArgumentNullException(nameof(input), "Input cannot be null");
