@@ -11,9 +11,10 @@ public class RegisterUserActivity(IUserService userService, ILogger<RegisterUser
     [Function("RegisterUserActivity")]
     public async Task<AuthResponse> Run([ActivityTrigger] RegisterUserRequest request)
     {
-        logger.LogInformation("RegisterUserActivity started for email: {Email}", request.Email);
+        logger.LogInformation($"[RegisterUserActivity] Activity started for email: {request.Email}");
         try
         {
+            logger.LogInformation("RegisterUserActivity started for email: {Email}", request.Email);
             // Check if user already exists
             var existingUser = await userService.GetUserByEmailAsync(request.Email);
             if (existingUser != null)
@@ -44,6 +45,7 @@ public class RegisterUserActivity(IUserService userService, ILogger<RegisterUser
             };
             var createdUser = await userService.CreateUserAsync(user);
             logger.LogInformation("User registered successfully: {Email}", user.Email);
+            logger.LogInformation($"[RegisterUserActivity] Activity completed for email: {request.Email}");
             return new AuthResponse { Success = true, Data = new { userId = createdUser.Id } };
         }
         catch (Exception ex)
@@ -59,9 +61,10 @@ public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivi
     [Function("LoginUserActivity")]
     public async Task<AuthResponse> Run([ActivityTrigger] LoginUserRequest request)
     {
-        logger.LogInformation("LoginUserActivity started for email: {Email}", request.Email);
+        logger.LogInformation($"[LoginUserActivity] Activity started for email: {request.Email}");
         try
         {
+            logger.LogInformation("LoginUserActivity started for email: {Email}", request.Email);
             var user = await userService.GetUserEntityByEmailAsync(request.Email);
             if (user == null || string.IsNullOrWhiteSpace(user.Password))
             {
@@ -79,6 +82,7 @@ public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivi
             // Generate JWT
             var token = jwtService.GenerateToken(user);
             logger.LogInformation("Login successful for email: {Email}", request.Email);
+            logger.LogInformation($"[LoginUserActivity] Activity completed for email: {request.Email}");
             return new AuthResponse { Success = true, Data = new { token } };
         }
         catch (Exception ex)

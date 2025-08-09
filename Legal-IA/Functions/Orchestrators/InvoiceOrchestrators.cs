@@ -12,10 +12,10 @@ public static class InvoiceOrchestrators
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceGetAllOrchestrator");
-        logger.LogInformation("Orchestrator started: InvoiceGetAllOrchestrator");
-        var invoices = await context.CallActivityAsync<List<Invoice>>("InvoiceGetAllActivity", null);
-        logger.LogInformation("Orchestrator completed: InvoiceGetAllOrchestrator with {Count} invoices", invoices?.Count ?? 0);
-        return invoices;
+        logger.LogInformation("[InvoiceGetAllOrchestrator] Orchestrator started");
+        var invoices = await context.CallActivityAsync<List<Invoice>>("InvoiceGetAllActivity", null!);
+        logger.LogInformation($"[InvoiceGetAllOrchestrator] Orchestrator completed with {invoices?.Count ?? 0} invoices");
+        return invoices ?? throw new InvalidOperationException();
     }
 
     [Function(nameof(InvoiceGetByIdOrchestrator))]
@@ -24,12 +24,12 @@ public static class InvoiceOrchestrators
     {
         var logger = context.CreateReplaySafeLogger("InvoiceGetByIdOrchestrator");
         var id = context.GetInput<Guid>();
-        logger.LogInformation("Orchestrator started: InvoiceGetByIdOrchestrator for id {Id}", id);
+        logger.LogInformation($"[InvoiceGetByIdOrchestrator] Orchestrator started for id {id}");
         var invoice = await context.CallActivityAsync<Invoice?>("InvoiceGetByIdActivity", id);
         if (invoice == null)
-            logger.LogWarning("No invoice found for id {Id}", id);
+            logger.LogInformation($"[InvoiceGetByIdOrchestrator] No invoice found for id {id}");
         else
-            logger.LogInformation("Orchestrator completed: InvoiceGetByIdOrchestrator for id {Id}", id);
+            logger.LogInformation($"[InvoiceGetByIdOrchestrator] Orchestrator completed for id {id}");
         return invoice;
     }
 
@@ -38,10 +38,16 @@ public static class InvoiceOrchestrators
     {
         var logger = context.CreateReplaySafeLogger("InvoiceCreateOrchestrator");
         var invoice = context.GetInput<Invoice>();
-        logger.LogInformation("Orchestrator started: InvoiceCreateOrchestrator for user {UserId}", invoice.UserId);
-        var created = await context.CallActivityAsync<Invoice>("InvoiceCreateActivity", invoice);
-        logger.LogInformation("Orchestrator completed: InvoiceCreateOrchestrator for invoice {InvoiceId}", created.Id);
-        return created;
+        if (invoice != null)
+        {
+            logger.LogInformation("Orchestrator started: InvoiceCreateOrchestrator for user {UserId}", invoice.UserId);
+            var created = await context.CallActivityAsync<Invoice>("InvoiceCreateActivity", invoice);
+            logger.LogInformation("Orchestrator completed: InvoiceCreateOrchestrator for invoice {InvoiceId}",
+                created.Id);
+            return created;
+        }
+        logger.LogError("Orchestrator failed: InvoiceCreateOrchestrator received null invoice input");
+        throw new ArgumentNullException(nameof(invoice), "Invoice input cannot be null");
     }
 
     [Function(nameof(InvoiceUpdateOrchestrator))]
@@ -49,10 +55,17 @@ public static class InvoiceOrchestrators
     {
         var logger = context.CreateReplaySafeLogger("InvoiceUpdateOrchestrator");
         var invoice = context.GetInput<Invoice>();
-        logger.LogInformation("Orchestrator started: InvoiceUpdateOrchestrator for invoice {InvoiceId}", invoice.Id);
-        var updated = await context.CallActivityAsync<Invoice>("InvoiceUpdateActivity", invoice);
-        logger.LogInformation("Orchestrator completed: InvoiceUpdateOrchestrator for invoice {InvoiceId}", updated.Id);
-        return updated;
+        if (invoice != null)
+        {
+            logger.LogInformation("Orchestrator started: InvoiceUpdateOrchestrator for invoice {InvoiceId}",
+                invoice.Id);
+            var updated = await context.CallActivityAsync<Invoice>("InvoiceUpdateActivity", invoice);
+            logger.LogInformation("Orchestrator completed: InvoiceUpdateOrchestrator for invoice {InvoiceId}",
+                updated.Id);
+            return updated;
+        }
+        logger.LogError("Orchestrator failed: InvoiceUpdateOrchestrator received null invoice input");
+        throw new ArgumentNullException(nameof(invoice), "Invoice input cannot be null");
     }
 
     [Function(nameof(InvoiceDeleteOrchestrator))]
@@ -91,12 +104,42 @@ public static class InvoiceOrchestrators
     {
         var logger = context.CreateReplaySafeLogger("InvoiceUpdateByCurrentUserOrchestrator");
         var input = context.GetInput<dynamic>();
-        var invoice = input.Invoice.ToObject<Invoice>();
-        var userId = (Guid)input.UserId;
-        logger.LogInformation($"Orchestrator started: InvoiceUpdateByCurrentUserOrchestrator for invoice {invoice.Id} and user {userId}");
-        var activityInput = new { Invoice = invoice, UserId = userId };
-        var updated = await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
-        logger.LogInformation("Orchestrator completed: InvoiceUpdateByCurrentUserOrchestrator for invoice {InvoiceId}", updated.Id);
-        return updated;
+        if (input != null)
+        {
+            var invoice = input.Invoice.ToObject<Invoice>();
+            var userId = (Guid)input.UserId;
+            logger.LogInformation($"Orchestrator started: InvoiceUpdateByCurrentUserOrchestrator for invoice {invoice.Id} and user {userId}");
+            var activityInput = new { Invoice = invoice, UserId = userId };
+            var updated = await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
+            logger.LogInformation("Orchestrator completed: InvoiceUpdateByCurrentUserOrchestrator for invoice {InvoiceId}", updated.Id);
+            return updated;
+        }
+        logger.LogError("Orchestrator failed: InvoiceUpdateByCurrentUserOrchestrator received null input");
+        throw new ArgumentNullException(nameof(input), "Input cannot be null");
+    }
+
+    [Function("InvoiceDeleteByCurrentUserOrchestrator")]
+    public static async Task<bool> InvoiceDeleteByCurrentUserOrchestrator(
+        [OrchestrationTrigger] TaskOrchestrationContext context)
+    {
+        var logger = context.CreateReplaySafeLogger("InvoiceDeleteByCurrentUserOrchestrator");
+        var input = context.GetInput<dynamic>();
+        if (input != null)
+        {
+            var invoiceId = (Guid)input.InvoiceId;
+            var userId = (Guid)input.UserId;
+            logger.LogInformation($"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
+            var activityInput = new { InvoiceId = invoiceId, UserId = userId };
+            var invoice = await context.CallActivityAsync<Invoice>("InvoiceGetByIdAndUserIdActivity", activityInput);
+            if (invoice.Status == Enums.InvoiceStatus.Pending)
+            {
+                var deleted = await context.CallActivityAsync<bool>("InvoiceDeleteActivity", invoiceId);
+                logger.LogInformation($"Invoice {invoiceId} deleted by user {userId}: {deleted}");
+                return deleted;
+            }
+            logger.LogWarning($"Invoice {invoiceId} not deleted. Either not found, not owned by user, or not pending.");
+        }
+        logger.LogError("Orchestrator failed: InvoiceDeleteByCurrentUserOrchestrator received null input");
+        return false;
     }
 }

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Legal_IA.DTOs;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Orchestrators;
 
@@ -10,110 +11,95 @@ public static class UserOrchestrators
     [Function("UserGetAllOrchestrator")]
     public static async Task<List<UserResponse>> RunGetAll([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        Trace.TraceInformation("Orchestration started: UserGetAllOrchestrator");
+        var logger = context.CreateReplaySafeLogger("UserGetAllOrchestrator");
+        logger.LogInformation("[UserGetAllOrchestrator] Orchestrator started");
         try
         {
             var result = await context.CallActivityAsync<List<UserResponse>>("GetAllUsersActivity", null);
-            Trace.TraceInformation($"Orchestration succeeded: UserGetAllOrchestrator, returned {result.Count} users.");
+            logger.LogInformation($"[UserGetAllOrchestrator] Orchestrator completed, returned {result.Count} users");
             return result;
         }
         catch (Exception ex)
         {
-            Trace.TraceError($"Error in UserGetAllOrchestrator: {ex}");
+            logger.LogError(ex, "[UserGetAllOrchestrator] Error");
             throw;
-        }
-        finally
-        {
-            Trace.TraceInformation("Orchestration finished: UserGetAllOrchestrator");
         }
     }
 
     [Function("UserGetByIdOrchestrator")]
     public static async Task<UserResponse?> RunGetById([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        Trace.TraceInformation("Orchestration started: UserGetByIdOrchestrator");
+        var logger = context.CreateReplaySafeLogger("UserGetByIdOrchestrator");
         var userId = context.GetInput<Guid>();
+        logger.LogInformation($"[UserGetByIdOrchestrator] Orchestrator started for id {userId}");
         try
         {
             var result = await context.CallActivityAsync<UserResponse?>("GetUserByIdActivity", userId);
-            Trace.TraceInformation($"Orchestration succeeded: UserGetByIdOrchestrator, returned user: {result?.Id}");
+            logger.LogInformation($"[UserGetByIdOrchestrator] Orchestrator completed, returned user: {result?.Id}");
             return result;
         }
         catch (Exception ex)
         {
-            Trace.TraceError($"Error in UserGetByIdOrchestrator: {ex}");
+            logger.LogError(ex, "[UserGetByIdOrchestrator] Error");
             throw;
-        }
-        finally
-        {
-            Trace.TraceInformation("Orchestration finished: UserGetByIdOrchestrator");
         }
     }
 
     [Function("UserCreateOrchestrator")]
     public static async Task<UserResponse?> RunCreate([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        Trace.TraceInformation("Orchestration started: UserCreateOrchestrator");
+        var logger = context.CreateReplaySafeLogger("UserCreateOrchestrator");
         var createRequest = context.GetInput<CreateUserRequest>();
+        logger.LogInformation("[UserCreateOrchestrator] Orchestrator started");
         try
         {
             var result = await context.CallActivityAsync<UserResponse?>("CreateUserActivity", createRequest);
-            Trace.TraceInformation($"Orchestration succeeded: UserCreateOrchestrator, created user: {result?.Id}");
+            logger.LogInformation($"[UserCreateOrchestrator] Orchestrator completed, created user: {result?.Id}");
             return result;
         }
         catch (Exception ex)
         {
-            Trace.TraceError($"Error in UserCreateOrchestrator: {ex}");
+            logger.LogError(ex, "[UserCreateOrchestrator] Error");
             throw;
-        }
-        finally
-        {
-            Trace.TraceInformation("Orchestration finished: UserCreateOrchestrator");
         }
     }
 
     [Function("UserUpdateOrchestrator")]
     public static async Task<UserResponse?> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        Trace.TraceInformation("Orchestration started: UserUpdateOrchestrator");
+        var logger = context.CreateReplaySafeLogger("UserUpdateOrchestrator");
         var updateData = context.GetInput<dynamic>();
+        logger.LogInformation("[UserUpdateOrchestrator] Orchestrator started");
         try
         {
             var result = await context.CallActivityAsync<UserResponse?>("UpdateUserActivity", updateData);
-            Trace.TraceInformation($"Orchestration succeeded: UserUpdateOrchestrator, updated user: {result?.Id}");
+            logger.LogInformation($"[UserUpdateOrchestrator] Orchestrator completed, updated user: {result?.Id}");
             return result;
         }
         catch (Exception ex)
         {
-            Trace.TraceError($"Error in UserUpdateOrchestrator: {ex}");
+            logger.LogError(ex, "[UserUpdateOrchestrator] Error");
             throw;
-        }
-        finally
-        {
-            Trace.TraceInformation("Orchestration finished: UserUpdateOrchestrator");
         }
     }
 
     [Function("UserDeleteOrchestrator")]
     public static async Task<bool> RunDelete([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        Trace.TraceInformation("Orchestration started: UserDeleteOrchestrator");
+        var logger = context.CreateReplaySafeLogger("UserDeleteOrchestrator");
         var userId = context.GetInput<Guid>();
+        logger.LogInformation("[UserDeleteOrchestrator] Orchestrator started");
         try
         {
             var result = await context.CallActivityAsync<bool>("DeleteUserActivity", userId);
-            Trace.TraceInformation(
-                $"Orchestration succeeded: UserDeleteOrchestrator, deleted user: {userId}, result: {result}");
+            logger.LogInformation(
+                $"[UserDeleteOrchestrator] Orchestrator completed, deleted user: {userId}, result: {result}");
             return result;
         }
         catch (Exception ex)
         {
-            Trace.TraceError($"Error in UserDeleteOrchestrator: {ex}");
+            logger.LogError(ex, "[UserDeleteOrchestrator] Error");
             throw;
-        }
-        finally
-        {
-            Trace.TraceInformation("Orchestration finished: UserDeleteOrchestrator");
         }
     }
 }

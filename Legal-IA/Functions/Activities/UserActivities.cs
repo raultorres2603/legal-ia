@@ -10,11 +10,11 @@ public class GetAllUsersActivity(IUserService userService, ILogger<GetAllUsersAc
     [Function("GetAllUsersActivity")]
     public async Task<List<UserResponse>> Run([ActivityTrigger] object? input)
     {
-        logger.LogInformation("Starting GetAllUsersActivity");
+        logger.LogInformation("[GetAllUsersActivity] Activity started");
         try
         {
             var result = await userService.GetAllUsersAsync();
-            logger.LogInformation("GetAllUsersActivity succeeded. Returned {Count} users.", result.Count);
+            logger.LogInformation($"[GetAllUsersActivity] Activity completed. Returned {result.Count} users.");
             return result;
         }
         catch (Exception ex)
@@ -30,7 +30,7 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
     [Function("GetUserByIdActivity")]
     public async Task<UserResponse?> Run([ActivityTrigger] Guid userId)
     {
-        logger.LogInformation("Starting GetUserByIdActivity for UserId: {UserId}", userId);
+        logger.LogInformation($"[GetUserByIdActivity] Activity started for UserId: {userId}");
         try
         {
             var result = await userService.GetUserByIdAsync(userId);
@@ -39,8 +39,7 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
                 logger.LogWarning("User not found for UserId: {UserId}", userId);
                 return null;
             }
-
-            logger.LogInformation("GetUserByIdActivity succeeded for UserId: {UserId}", userId);
+            logger.LogInformation($"[GetUserByIdActivity] Activity completed for UserId: {userId}");
             return result;
         }
         catch (Exception ex)
@@ -56,12 +55,12 @@ public class CreateUserActivity(IUserService userService, ICacheService cacheSer
     [Function("CreateUserActivity")]
     public async Task<UserResponse> Run([ActivityTrigger] CreateUserRequest request)
     {
-        logger.LogInformation("Starting CreateUserActivity for Email: {Email}", request.Email);
+        logger.LogInformation($"[CreateUserActivity] Activity started for Email: {request.Email}");
         try
         {
             var result = await userService.CreateUserAsync(request);
             await cacheService.RemoveByPatternAsync("users");
-            logger.LogInformation("CreateUserActivity succeeded for Email: {Email}", request.Email);
+            logger.LogInformation($"[CreateUserActivity] Activity completed for Email: {request.Email}");
             return result;
         }
         catch (Exception ex)

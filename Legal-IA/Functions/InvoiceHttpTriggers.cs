@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions;
 
@@ -18,10 +19,17 @@ public class InvoiceHttpTriggers
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
+        var logger = context.GetLogger("InvoiceHttpTriggers");
+        logger.LogInformation("[GetInvoices] HTTP trigger started");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+            logger.LogInformation("[GetInvoices] Unauthorized access attempt");
+            return new UnauthorizedResult();
+        }
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetAllOrchestrator", null!);
+        logger.LogInformation($"[GetInvoices] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        logger.LogInformation($"[GetInvoices] Orchestration completed with status: {response.RuntimeStatus}");
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<List<Invoice>>());
         return new StatusCodeResult(500);
@@ -35,11 +43,21 @@ public class InvoiceHttpTriggers
         [DurableClient] DurableTaskClient client,
         string id)
     {
+        var logger = context.GetLogger("InvoiceHttpTriggers");
+        logger.LogInformation($"[GetInvoiceById] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
-        if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+            logger.LogInformation("[GetInvoiceById] Unauthorized access attempt");
+            return new UnauthorizedResult();
+        }
+        if (!Guid.TryParse(id, out var guid)) {
+            logger.LogInformation("[GetInvoiceById] Invalid GUID format");
+            return new BadRequestResult();
+        }
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", guid);
+        logger.LogInformation($"[GetInvoiceById] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        logger.LogInformation($"[GetInvoiceById] Orchestration completed with status: {response.RuntimeStatus}");
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
             var invoice = response.ReadOutputAs<Invoice>();
@@ -56,10 +74,18 @@ public class InvoiceHttpTriggers
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
+        var logger = context.GetLogger("InvoiceHttpTriggers");
+        logger.LogInformation("[CreateInvoice] HTTP trigger started");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+            logger.LogInformation("[CreateInvoice] Unauthorized access attempt");
+            return new UnauthorizedResult();
+        }
         var dto = await req.ReadFromJsonAsync<CreateInvoiceRequest>();
-        if (dto == null) return new BadRequestResult();
+        if (dto == null) {
+            logger.LogInformation("[CreateInvoice] Invalid request body");
+            return new BadRequestResult();
+        }
         var invoice = new Invoice
         {
             InvoiceNumber = dto.InvoiceNumber,
@@ -85,7 +111,9 @@ public class InvoiceHttpTriggers
             })
         };
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceCreateOrchestrator", invoice);
+        logger.LogInformation($"[CreateInvoice] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        logger.LogInformation($"[CreateInvoice] Orchestration completed with status: {response.RuntimeStatus}");
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);
@@ -99,11 +127,22 @@ public class InvoiceHttpTriggers
         [DurableClient] DurableTaskClient client,
         string id)
     {
+        var logger = context.GetLogger("InvoiceHttpTriggers");
+        logger.LogInformation($"[UpdateInvoice] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
-        if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+            logger.LogInformation("[UpdateInvoice] Unauthorized access attempt");
+            return new UnauthorizedResult();
+        }
+        if (!Guid.TryParse(id, out var guid)) {
+            logger.LogInformation("[UpdateInvoice] Invalid GUID format");
+            return new BadRequestResult();
+        }
         var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
-        if (dto == null) return new BadRequestResult();
+        if (dto == null) {
+            logger.LogInformation("[UpdateInvoice] Invalid request body");
+            return new BadRequestResult();
+        }
         var invoice = new Invoice
         {
             Id = guid,
@@ -130,7 +169,9 @@ public class InvoiceHttpTriggers
             })
         };
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateOrchestrator", invoice);
+        logger.LogInformation($"[UpdateInvoice] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        logger.LogInformation($"[UpdateInvoice] Orchestration completed with status: {response.RuntimeStatus}");
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);
@@ -144,11 +185,21 @@ public class InvoiceHttpTriggers
         [DurableClient] DurableTaskClient client,
         string id)
     {
+        var logger = context.GetLogger("InvoiceHttpTriggers");
+        logger.LogInformation($"[DeleteInvoice] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
-        if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+            logger.LogInformation("[DeleteInvoice] Unauthorized access attempt");
+            return new UnauthorizedResult();
+        }
+        if (!Guid.TryParse(id, out var guid)) {
+            logger.LogInformation("[DeleteInvoice] Invalid GUID format");
+            return new BadRequestResult();
+        }
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteOrchestrator", guid);
+        logger.LogInformation($"[DeleteInvoice] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        logger.LogInformation($"[DeleteInvoice] Orchestration completed with status: {response.RuntimeStatus}");
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkResult();
         return new StatusCodeResult(500);
@@ -263,5 +314,28 @@ public class InvoiceHttpTriggers
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);
     }
-    // TODO: Implement DeleteInvoiceByCurrentUser that will delete the invoice only if it belongs to the current user and Status is Pending
+
+    [Function("DeleteInvoiceByCurrentUser")]
+    public async Task<IActionResult> DeleteInvoiceByCurrentUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoices/user/{id}")]
+        HttpRequestData req,
+        FunctionContext context,
+        [DurableClient] DurableTaskClient client,
+        string id)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
+        if (!Guid.TryParse(id, out var invoiceId)) return new BadRequestResult();
+        var orchestratorInput = new { InvoiceId = invoiceId, UserId = userId };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteByCurrentUserOrchestrator", orchestratorInput);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var result = response.ReadOutputAs<bool>();
+            return result ? new OkResult() : new ForbidResult();
+        }
+        return new StatusCodeResult(500);
+    }
 }

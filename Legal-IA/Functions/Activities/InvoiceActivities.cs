@@ -13,6 +13,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     public async Task<List<Invoice>> InvoiceGetAllActivity([ActivityTrigger] object input, FunctionContext context)
     {
         var log = context.GetLogger("InvoiceGetAllActivity");
+        log.LogInformation("[InvoiceGetAllActivity] Activity started");
         const string cacheKey = "invoices:all";
         var cached = await cacheService.GetAsync<List<Invoice>>(cacheKey);
         if (cached != null)
@@ -22,6 +23,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         }
         var invoices = (await invoiceRepository.GetAllAsync()).ToList();
         await cacheService.SetAsync(cacheKey, invoices);
+        log.LogInformation($"[InvoiceGetAllActivity] Activity completed with {invoices.Count} invoices");
         return invoices;
     }
 
@@ -29,6 +31,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     public async Task<Invoice?> InvoiceGetByIdActivity([ActivityTrigger] Guid id, FunctionContext context)
     {
         var log = context.GetLogger("InvoiceGetByIdActivity");
+        log.LogInformation($"[InvoiceGetByIdActivity] Activity started for id {id}");
         var cacheKey = $"invoices:{id}";
         var cached = await cacheService.GetAsync<Invoice>(cacheKey);
         if (cached != null)
@@ -38,6 +41,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         }
         var invoice = await invoiceRepository.GetByIdAsync(id);
         if (invoice != null) await cacheService.SetAsync(cacheKey, invoice);
+        log.LogInformation($"[InvoiceGetByIdActivity] Activity completed for id {id}");
         return invoice;
     }
 
@@ -108,5 +112,23 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         await cacheService.RemoveByPatternAsync($"invoices:{invoice.Id}");
         log.LogInformation("Invoice updated by current user and related cache keys invalidated");
         return updated;
+    }
+
+    [Function("InvoiceGetByIdAndUserIdActivity")]
+    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] dynamic input, FunctionContext context)
+    {
+        var log = context.GetLogger("InvoiceGetByIdAndUserIdActivity");
+        Guid invoiceId = (Guid)input.InvoiceId;
+        Guid userId = (Guid)input.UserId;
+        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
+        var invoice = await invoiceRepository.GetByIdAsync(invoiceId);
+        if (invoice != null && invoice.UserId == userId)
+        {
+            log.LogInformation($"Invoice {invoiceId} found for user {userId}");
+            return invoice;
+        }
+        log.LogWarning($"Invoice {invoiceId} not found or does not belong to user {userId}");
+        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity completed for invoice {invoiceId} and user {userId}");
+        return null;
     }
 }

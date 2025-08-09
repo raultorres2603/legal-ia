@@ -1,6 +1,7 @@
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
+using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Orchestrators;
 
@@ -10,46 +11,70 @@ public static class InvoiceItemOrchestrators
     public static async Task<List<InvoiceItem>> InvoiceItemGetAllOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        return await context.CallActivityAsync<List<InvoiceItem>>("InvoiceItemGetAllActivity", null);
+        var logger = context.CreateReplaySafeLogger("InvoiceItemGetAllOrchestrator");
+        logger.LogInformation("[InvoiceItemGetAllOrchestrator] Orchestrator started");
+        var result = await context.CallActivityAsync<List<InvoiceItem>>("InvoiceItemGetAllActivity", null);
+        logger.LogInformation($"[InvoiceItemGetAllOrchestrator] Orchestrator completed, returned {result.Count} items");
+        return result;
     }
 
     [Function(nameof(InvoiceItemGetByIdOrchestrator))]
     public static async Task<InvoiceItem?> InvoiceItemGetByIdOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
+        var logger = context.CreateReplaySafeLogger("InvoiceItemGetByIdOrchestrator");
         var id = context.GetInput<Guid>();
-        return await context.CallActivityAsync<InvoiceItem?>("InvoiceItemGetByIdActivity", id);
+        logger.LogInformation($"[InvoiceItemGetByIdOrchestrator] Orchestrator started for id {id}");
+        var result = await context.CallActivityAsync<InvoiceItem?>("InvoiceItemGetByIdActivity", id);
+        logger.LogInformation($"[InvoiceItemGetByIdOrchestrator] Orchestrator completed for id {id}");
+        return result;
     }
 
     [Function(nameof(InvoiceItemCreateOrchestrator))]
     public static async Task<InvoiceItem> InvoiceItemCreateOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
+        var logger = context.CreateReplaySafeLogger("InvoiceItemCreateOrchestrator");
         var item = context.GetInput<InvoiceItem>();
-        return await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item);
+        logger.LogInformation("[InvoiceItemCreateOrchestrator] Orchestrator started");
+        var result = await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item);
+        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created item: {result.Id}");
+        return result;
     }
 
     [Function(nameof(InvoiceItemUpdateOrchestrator))]
     public static async Task<InvoiceItem> InvoiceItemUpdateOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
+        var logger = context.CreateReplaySafeLogger("InvoiceItemUpdateOrchestrator");
         var item = context.GetInput<InvoiceItem>();
-        return await context.CallActivityAsync<InvoiceItem>("InvoiceItemUpdateActivity", item);
+        logger.LogInformation("[InvoiceItemUpdateOrchestrator] Orchestrator started");
+        var result = await context.CallActivityAsync<InvoiceItem>("InvoiceItemUpdateActivity", item);
+        logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Orchestrator completed, updated item: {result.Id}");
+        return result;
     }
 
     [Function(nameof(InvoiceItemDeleteOrchestrator))]
     public static async Task<bool> InvoiceItemDeleteOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
+        var logger = context.CreateReplaySafeLogger("InvoiceItemDeleteOrchestrator");
         var id = context.GetInput<Guid>();
-        return await context.CallActivityAsync<bool>("InvoiceItemDeleteActivity", id);
+        logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Orchestrator started for id {id}");
+        var result = await context.CallActivityAsync<bool>("InvoiceItemDeleteActivity", id);
+        logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Orchestrator completed for id {id}, deleted: {result}");
+        return result;
     }
 
     [Function("InvoiceItemGetByUserIdOrchestrator")]
     public static async Task<List<InvoiceItem>> InvoiceItemGetByUserIdOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
+        var logger = context.CreateReplaySafeLogger("InvoiceItemGetByUserIdOrchestrator");
         var userId = context.GetInput<Guid>();
-        return await context.CallActivityAsync<List<InvoiceItem>>("InvoiceItemGetByUserIdActivity", userId);
+        logger.LogInformation($"[InvoiceItemGetByUserIdOrchestrator] Orchestrator started for userId {userId}");
+        var result = await context.CallActivityAsync<List<InvoiceItem>>("InvoiceItemGetByUserIdActivity", userId);
+        logger.LogInformation($"[InvoiceItemGetByUserIdOrchestrator] Orchestrator completed for userId {userId}, returned {result.Count} items");
+        return result;
     }
 }
