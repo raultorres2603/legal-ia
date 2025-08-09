@@ -64,6 +64,7 @@ public class InvoiceItemActivities(
         if (invoice != null)
         {
             await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
             await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
         }
         log.LogInformation($"[InvoiceItemCreateActivity] Activity completed, created item: {created.Id}");
@@ -83,6 +84,7 @@ public class InvoiceItemActivities(
         if (invoice != null)
         {
             await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
             await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
         }
         log.LogInformation($"[InvoiceItemUpdateActivity] Activity completed, updated item: {updated.Id}");
@@ -104,6 +106,7 @@ public class InvoiceItemActivities(
             if (invoice != null)
             {
                 await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+                await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
                 await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
             }
         }
