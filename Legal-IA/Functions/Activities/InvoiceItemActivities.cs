@@ -58,7 +58,6 @@ public class InvoiceItemActivities(
         var log = context.GetLogger("InvoiceItemCreateActivity");
         log.LogInformation("[InvoiceItemCreateActivity] Activity started");
         var created = await invoiceItemRepository.AddAsync(item);
-        await cacheService.RemoveByPatternAsync("invoiceitems");
         // Remove cache for the user
         var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
         if (invoice != null)
@@ -78,7 +77,6 @@ public class InvoiceItemActivities(
         var log = context.GetLogger("InvoiceItemUpdateActivity");
         log.LogInformation("[InvoiceItemUpdateActivity] Activity started");
         var updated = await invoiceItemRepository.UpdateAsync(item);
-        await cacheService.RemoveByPatternAsync("invoiceitems");
         // Remove cache for the user
         var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
         if (invoice != null)
@@ -99,7 +97,6 @@ public class InvoiceItemActivities(
         // Fetch the item to get the invoiceId and userId before deleting
         var item = await invoiceItemRepository.GetByIdAsync(id);
         var deleted = await invoiceItemRepository.DeleteAsync(id);
-        await cacheService.RemoveByPatternAsync("invoiceitems");
         if (item != null)
         {
             var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
