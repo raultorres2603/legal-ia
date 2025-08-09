@@ -282,6 +282,27 @@ public class InvoiceHttpTriggers
         if (!Guid.TryParse(id, out var invoiceId)) return new BadRequestResult();
         var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
         if (dto == null) return new BadRequestResult();
+        List<InvoiceItem> items;
+        if (dto.Items != null)
+        {
+            items = dto.Items.ConvertAll(i => new InvoiceItem
+            {
+                Description = i.Description,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                VAT = i.VAT,
+                IRPF = i.IRPF,
+                Total = i.Total
+            });
+        }
+        else
+        {
+            // Fetch existing invoice to preserve its items
+            var getInstanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", invoiceId);
+            var getResponse = await client.WaitForInstanceCompletionAsync(getInstanceId, true, CancellationToken.None);
+            var existingInvoice = getResponse.ReadOutputAs<Invoice>();
+            items = existingInvoice?.Items ?? new List<InvoiceItem>();
+        }
         var invoice = new Invoice
         {
             Id = invoiceId,
@@ -297,15 +318,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = userId,
-            Items = (dto.Items).ConvertAll(i => new InvoiceItem
-            {
-                Description = i.Description,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                VAT = i.VAT,
-                IRPF = i.IRPF,
-                Total = i.Total
-            })
+            Items = items
         };
         var orchestratorInput = new { Invoice = invoice, UserId = userId };
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateByCurrentUserOrchestrator", orchestratorInput);

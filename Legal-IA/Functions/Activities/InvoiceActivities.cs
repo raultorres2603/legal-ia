@@ -96,20 +96,36 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     [Function("UpdateInvoiceByCurrentUserActivity")]
-    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] dynamic input, FunctionContext context)
+    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] object input, FunctionContext context)
     {
         var log = context.GetLogger("UpdateInvoiceByCurrentUserActivity");
-        Invoice invoice = input.Invoice.ToObject<Invoice>();
-        Guid userId = (Guid)input.UserId;
-        var existing = await invoiceRepository.GetByIdAsync(invoice.Id);
+        var inputElement = (System.Text.Json.JsonElement)input;
+        var invoiceElement = inputElement.GetProperty("Invoice");
+        var invoice = System.Text.Json.JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
+        var userId = inputElement.GetProperty("UserId").GetGuid();
+        var existing = await invoiceRepository.GetByIdAsync(invoice!.Id);
         if (existing == null || existing.UserId != userId)
             throw new UnauthorizedAccessException("Invoice not found or does not belong to user");
-        invoice.UserId = userId; // Ensure user cannot change owner
         if (existing.Status != InvoiceStatus.Pending)
             throw new InvalidOperationException("Only pending invoices can be updated");
-        var updated = await invoiceRepository.UpdateAsync(invoice);
+        // Copy properties from invoice to existing (except ID, UserId, Status)
+        existing.InvoiceNumber = invoice.InvoiceNumber;
+        existing.IssueDate = invoice.IssueDate;
+        existing.ClientName = invoice.ClientName;
+        existing.ClientNIF = invoice.ClientNIF;
+        existing.ClientAddress = invoice.ClientAddress;
+        existing.Subtotal = invoice.Subtotal;
+        existing.VAT = invoice.VAT;
+        existing.IRPF = invoice.IRPF;
+        existing.Total = invoice.Total;
+        existing.Notes = invoice.Notes;
+        existing.Items = invoice.Items;
+        // Do not update UserId or Status here
+        var updated = await invoiceRepository.UpdateAsync(existing);
+        // Invalidate user invoice list cache (exact key and pattern)
+        await cacheService.RemoveAsync($"invoices:user:{userId}");
         await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
-        await cacheService.RemoveByPatternAsync($"invoices:{invoice.Id}");
+        await cacheService.RemoveByPatternAsync($"invoices:{existing.Id}");
         log.LogInformation("Invoice updated by current user and related cache keys invalidated");
         return updated;
     }
