@@ -177,7 +177,7 @@ public class InvoiceItemHttpTriggers
     
     [Function("UpdateInvoiceItemByUser")]
     public async Task<IActionResult> UpdateInvoiceItemByUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoice-items/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoice-items/user/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,

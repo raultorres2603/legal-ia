@@ -72,7 +72,7 @@ public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivi
                 return new AuthResponse { Success = false, Message = "Invalid credentials." };
             }
 
-            logger.LogInformation("User logged in: {Email} with password: {Password}", user.Email, user.Password);
+            logger.LogInformation("User logged in: {Email} with password: {Password}", user.Email, "********");
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             {
                 logger.LogWarning("Invalid password for email: {Email}", request.Email);
