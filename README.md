@@ -514,3 +514,131 @@ Each Postman collection includes:
 - ⚡ Performance Benchmarks - Expected response times and limits
 
 The collections serve as both **testing tools** and **comprehensive API documentation**, making them invaluable for developers, testers, and integration partners working with the Legal-IA system.
+
+---
+
+# 🧾 Invoices & Invoice Items Module (Updated)
+
+## Why We Added This
+
+Spanish autonomous professionals ("autónomos") are required by law to issue invoices for their services, including specific details such as VAT (IVA), IRPF (retención), and itemized breakdowns. To support this, Legal-IA now includes:
+- 📄 **Invoice model**: Captures all required fields for Spanish invoices.
+- 🧾 **InvoiceItem model**: Allows itemized details per invoice, supporting legal compliance.
+- 🏗️ **Repository, orchestrators, and activities**: Ensure robust, scalable, and maintainable CRUD operations.
+- 🛡️ **Role-based access**: Only authorized users can manage invoices/items.
+
+## Endpoints
+
+All endpoints are protected by JWT. 🔒
+
+### Invoice Endpoints
+
+#### 🛡️ Admin Only
+- `GET /invoices` — Get all invoices
+  - ✅ **200 OK**: Returns a list of invoices
+  - 🚫 **404 Not Found**: No invoices found
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `GET /invoices/users/{id}` — Get invoice by user ID
+  - ✅ **200 OK**: Returns the invoice
+  - 🚫 **404 Not Found**: Invoice not found
+  - ❗ **400 Bad Request**: Invalid ID format
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `POST /invoices` — Create invoice
+  - ✅ **200 OK**: Returns the created invoice
+  - ❗ **400 Bad Request**: Invalid request body
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `PUT /invoices/users/{id}` — Update invoice by user ID
+  - ✅ **200 OK**: Returns the updated invoice
+  - ❗ **400 Bad Request**: Invalid ID or request body
+  - 🚫 **404 Not Found**: Invoice not found
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `DELETE /invoices/users/{id}` — Delete invoice by user ID
+  - ✅ **200 OK**: Invoice deleted
+  - ❗ **400 Bad Request**: Invalid ID format
+  - 🚫 **404 Not Found**: Invoice not found
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+
+#### 👤 User Only
+- `GET /invoices/user` — Get invoices for current user
+  - ✅ **200 OK**: Returns a list of invoices
+  - 🚫 **404 Not Found**: No invoices found
+  - ❗ **400 Bad Request**: Invalid or missing UserId in JWT
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `POST /invoices/user` — Create invoice for current user
+  - ✅ **200 OK**: Returns the created invoice
+  - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `PUT /invoices/user/{id}` — Update invoice for current user
+  - ✅ **200 OK**: Returns the updated invoice
+  - ❗ **400 Bad Request**: Invalid ID, request body, or missing UserId in JWT
+  - 🚫 **404 Not Found**: Invoice not found or does not belong to user
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+
+### Invoice Item Endpoints
+
+#### 🛡️ Admin Only
+- `GET /invoice-items/users` — Get all invoice items
+  - ✅ **200 OK**: Returns a list of invoice items
+  - 🚫 **404 Not Found**: No invoice items found
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `GET /invoice-items/users/{id}` — Get invoice item by ID
+  - ✅ **200 OK**: Returns the invoice item
+  - 🚫 **404 Not Found**: Invoice item not found
+  - ❗ **400 Bad Request**: Invalid ID format
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `POST /invoice-items` — Create invoice item
+  - ✅ **200 OK**: Returns the created invoice item
+  - ❗ **400 Bad Request**: Invalid request body
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `PUT /invoice-items/users/{id}` — Update invoice item by ID
+  - ✅ **200 OK**: Returns the updated invoice item
+  - ❗ **400 Bad Request**: Invalid ID or request body
+  - 🚫 **404 Not Found**: Invoice item not found
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `DELETE /invoice-items/users/{id}` — Delete invoice item by ID
+  - ✅ **200 OK**: Invoice item deleted
+  - ❗ **400 Bad Request**: Invalid ID format
+  - 🚫 **404 Not Found**: Invoice item not found
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+
+#### 👤 User Only
+- `GET /invoice-items/user` — Get invoice items for current user
+  - ✅ **200 OK**: Returns a list of invoice items
+  - 🚫 **404 Not Found**: No invoice items found
+  - ❗ **400 Bad Request**: Invalid or missing UserId in JWT
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+- `POST /invoice-items/user` — Create invoice item for current user
+  - ✅ **200 OK**: Returns the created invoice item
+  - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
+  - 🔒 **401 Unauthorized**: Invalid or missing token
+  - 💥 **500 Internal Server Error**: Unexpected error
+
+## Cache Invalidation Logic
+- Whenever you create, update, or delete an invoice item, the cache for both invoice items and invoices for the specific user is now invalidated:
+  - `invoiceitems:user:{userId}` and `invoices:user:{userId}` are both cleared.
+  - This ensures users always see the latest data after any CRUD operation on invoice items or invoices.
+- The cache is invalidated by fetching the parent invoice to get the correct userId, not by relying on navigation properties.
+
+## Invoice & Invoice Item Caching
+
+- **Per-user cache keys:**  
+  - Invoices: `invoices:user:{userId}`
+  - Invoice items: `invoiceitems:user:{userId}`
+- **Cache invalidation:**  
+  - On any create, update, or delete of an invoice item, both the invoice items and invoices cache for the affected user are cleared.
+  - This guarantees that users always see the latest invoice and item data after any change.
+
