@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -27,7 +28,7 @@ builder.Services
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:DefaultConnection")
                        ?? "Host=localhost;Port=5433;Database=LegalIA;Username=postgres;Password=password";
 
-builder.Services.AddDbContext<LegalIADbContext>(options =>
+builder.Services.AddDbContext<LegalIaDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
     options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
@@ -43,6 +44,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "LegalIA";
 });
 
+// Register IConnectionMultiplexer for StackExchange.Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(redisConnectionString));
+
 // Configure Azure Blob Storage (Azurite)
 var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
                               ??
@@ -53,6 +58,8 @@ builder.Services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServ
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceItemRepository, InvoiceItemRepository>();
 
 // Register services
 builder.Services.AddScoped<ICacheService, CacheService>();
@@ -68,12 +75,13 @@ builder.Services.AddLogging();
 // Register JwtService
 builder.Services.AddSingleton<JwtService>();
 
+
 var app = builder.Build();
 
 // Ensure database is created
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<LegalIADbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<LegalIaDbContext>();
     try
     {
         context.Database.EnsureCreated();

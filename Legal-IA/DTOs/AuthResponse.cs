@@ -1,10 +1,8 @@
-namespace Legal_IA.DTOs
-{
-    public class AuthResponse
-    {
-        public bool Success { get; set; }
-        public string? Message { get; set; }
-        public object? Data { get; set; }
-    }
-}
+namespace Legal_IA.DTOs;
 
+public class AuthResponse
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public object? Data { get; set; }
+}

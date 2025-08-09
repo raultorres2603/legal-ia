@@ -30,3 +30,20 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByCIFAsync(string cif);
     Task<IEnumerable<User>> GetActiveUsersAsync();
 }
+
+/// <summary>
+///     Invoice-specific repository interface
+/// </summary>
+public interface IInvoiceRepository : IRepository<Invoice>
+{
+    Task<List<Invoice>> GetInvoicesByUserIdAsync(Guid userId);
+}
+
+/// <summary>
+///     InvoiceItem-specific repository interface
+/// </summary>
+public interface IInvoiceItemRepository : IRepository<InvoiceItem>
+{
+    Task<IEnumerable<InvoiceItem>> GetItemsByInvoiceIdAsync(int invoiceId);
+    Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId);
+}
