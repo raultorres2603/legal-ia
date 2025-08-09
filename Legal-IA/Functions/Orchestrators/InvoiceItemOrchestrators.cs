@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
@@ -68,9 +69,9 @@ public static class InvoiceItemOrchestrators
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemDeleteOrchestrator");
-        var input = context.GetInput<dynamic>();
-        Guid itemId = input.ItemId;
-        Guid userId = input.UserId;
+        var inputElement = (JsonElement)(context.GetInput<object>() ?? throw new InvalidOperationException());
+        var itemId = inputElement.GetProperty("ItemId").GetGuid();
+        var userId = inputElement.GetProperty("UserId").GetGuid();
         logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Started for item {itemId} by user {userId}");
         var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity", new { ItemId = itemId, UserId = userId });
         if (!isValid)

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
@@ -58,6 +59,13 @@ public class InvoiceItemActivities(
         log.LogInformation("[InvoiceItemCreateActivity] Activity started");
         var created = await invoiceItemRepository.AddAsync(item);
         await cacheService.RemoveByPatternAsync("invoiceitems");
+        // Remove cache for the user
+        var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
+        if (invoice != null)
+        {
+            await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+            await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
+        }
         log.LogInformation($"[InvoiceItemCreateActivity] Activity completed, created item: {created.Id}");
         return created;
     }
@@ -70,6 +78,13 @@ public class InvoiceItemActivities(
         log.LogInformation("[InvoiceItemUpdateActivity] Activity started");
         var updated = await invoiceItemRepository.UpdateAsync(item);
         await cacheService.RemoveByPatternAsync("invoiceitems");
+        // Remove cache for the user
+        var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
+        if (invoice != null)
+        {
+            await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+            await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
+        }
         log.LogInformation($"[InvoiceItemUpdateActivity] Activity completed, updated item: {updated.Id}");
         return updated;
     }
@@ -79,8 +94,19 @@ public class InvoiceItemActivities(
     {
         var log = context.GetLogger("InvoiceItemDeleteActivity");
         log.LogInformation($"[InvoiceItemDeleteActivity] Activity started for id {id}");
+        // Fetch the item to get the invoiceId and userId before deleting
+        var item = await invoiceItemRepository.GetByIdAsync(id);
         var deleted = await invoiceItemRepository.DeleteAsync(id);
         await cacheService.RemoveByPatternAsync("invoiceitems");
+        if (item != null)
+        {
+            var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
+            if (invoice != null)
+            {
+                await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+                await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
+            }
+        }
         log.LogInformation($"[InvoiceItemDeleteActivity] Activity completed for id {id}, deleted: {deleted}");
         return deleted;
     }
@@ -97,14 +123,13 @@ public class InvoiceItemActivities(
     }
 
     [Function("InvoiceItemValidateOwnershipAndPendingActivity")]
-    public async Task<bool> InvoiceItemValidateOwnershipAndPendingActivity([ActivityTrigger] dynamic input,
-        FunctionContext context)
+    public async Task<bool> InvoiceItemValidateOwnershipAndPendingActivity([ActivityTrigger] object input, FunctionContext context)
     {
         var log = context.GetLogger("InvoiceItemValidateOwnershipAndPendingActivity");
-        Guid itemId = input.ItemId;
-        Guid userId = input.UserId;
-        log.LogInformation(
-            $"[InvoiceItemValidateOwnershipAndPendingActivity] Validating item {itemId} for user {userId}");
+        var inputElement = (JsonElement)input;
+        var itemId = inputElement.GetProperty("ItemId").GetGuid();
+        var userId = inputElement.GetProperty("UserId").GetGuid();
+        log.LogInformation($"[InvoiceItemValidateOwnershipAndPendingActivity] Validating item {itemId} for user {userId}");
         var item = await invoiceItemRepository.GetByIdAsync(itemId);
         if (item == null)
         {
@@ -112,7 +137,6 @@ public class InvoiceItemActivities(
             return false;
         }
 
-        // Assume you have a way to get the invoice repository, e.g. via DI
         var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
         if (invoice == null)
         {
@@ -122,8 +146,7 @@ public class InvoiceItemActivities(
 
         if (invoice.UserId != userId)
         {
-            log.LogWarning(
-                $"[InvoiceItemValidateOwnershipAndPendingActivity] User {userId} does not own invoice {invoice.Id}");
+            log.LogWarning($"[InvoiceItemValidateOwnershipAndPendingActivity] User {userId} does not own invoice {invoice.Id}");
             return false;
         }
 
