@@ -6,10 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
-public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository, ICacheService cacheService)
+public class InvoiceItemActivities(
+    IInvoiceItemRepository invoiceItemRepository,
+    IInvoiceRepository invoiceRepository,
+    ICacheService cacheService)
 {
     [Function(nameof(InvoiceItemGetAllActivity))]
-    public async Task<List<InvoiceItem>> InvoiceItemGetAllActivity([ActivityTrigger] object input, FunctionContext context)
+    public async Task<List<InvoiceItem>> InvoiceItemGetAllActivity([ActivityTrigger] object input,
+        FunctionContext context)
     {
         var log = context.GetLogger("InvoiceItemGetAllActivity");
         log.LogInformation("[InvoiceItemGetAllActivity] Activity started");
@@ -20,6 +24,7 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
             log.LogInformation("[InvoiceItemGetAllActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         var items = (await invoiceItemRepository.GetAllAsync()).ToList();
         await cacheService.SetAsync(cacheKey, items);
         log.LogInformation($"[InvoiceItemGetAllActivity] Activity completed with {items.Count} items");
@@ -38,6 +43,7 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
             log.LogInformation("[InvoiceItemGetByIdActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         var item = await invoiceItemRepository.GetByIdAsync(id);
         if (item != null) await cacheService.SetAsync(cacheKey, item);
         log.LogInformation($"[InvoiceItemGetByIdActivity] Activity completed for id {id}");
@@ -45,7 +51,8 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
     }
 
     [Function(nameof(InvoiceItemCreateActivity))]
-    public async Task<InvoiceItem> InvoiceItemCreateActivity([ActivityTrigger] InvoiceItem item, FunctionContext context)
+    public async Task<InvoiceItem> InvoiceItemCreateActivity([ActivityTrigger] InvoiceItem item,
+        FunctionContext context)
     {
         var log = context.GetLogger("InvoiceItemCreateActivity");
         log.LogInformation("[InvoiceItemCreateActivity] Activity started");
@@ -56,7 +63,8 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
     }
 
     [Function(nameof(InvoiceItemUpdateActivity))]
-    public async Task<InvoiceItem> InvoiceItemUpdateActivity([ActivityTrigger] InvoiceItem item, FunctionContext context)
+    public async Task<InvoiceItem> InvoiceItemUpdateActivity([ActivityTrigger] InvoiceItem item,
+        FunctionContext context)
     {
         var log = context.GetLogger("InvoiceItemUpdateActivity");
         log.LogInformation("[InvoiceItemUpdateActivity] Activity started");
@@ -86,5 +94,46 @@ public class InvoiceItemActivities(IInvoiceItemRepository invoiceItemRepository,
         var items = (await invoiceItemRepository.GetByUserIdAsync(userId)).ToList();
         await cacheService.SetAsync(cacheKey, items);
         return items;
+    }
+
+    [Function("InvoiceItemValidateOwnershipAndPendingActivity")]
+    public async Task<bool> InvoiceItemValidateOwnershipAndPendingActivity([ActivityTrigger] dynamic input,
+        FunctionContext context)
+    {
+        var log = context.GetLogger("InvoiceItemValidateOwnershipAndPendingActivity");
+        Guid itemId = input.ItemId;
+        Guid userId = input.UserId;
+        log.LogInformation(
+            $"[InvoiceItemValidateOwnershipAndPendingActivity] Validating item {itemId} for user {userId}");
+        var item = await invoiceItemRepository.GetByIdAsync(itemId);
+        if (item == null)
+        {
+            log.LogWarning($"[InvoiceItemValidateOwnershipAndPendingActivity] Item {itemId} not found");
+            return false;
+        }
+
+        // Assume you have a way to get the invoice repository, e.g. via DI
+        var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
+        if (invoice == null)
+        {
+            log.LogWarning($"[InvoiceItemValidateOwnershipAndPendingActivity] Invoice {item.InvoiceId} not found");
+            return false;
+        }
+
+        if (invoice.UserId != userId)
+        {
+            log.LogWarning(
+                $"[InvoiceItemValidateOwnershipAndPendingActivity] User {userId} does not own invoice {invoice.Id}");
+            return false;
+        }
+
+        if (invoice.Status != Enums.InvoiceStatus.Pending)
+        {
+            log.LogWarning($"[InvoiceItemValidateOwnershipAndPendingActivity] Invoice {invoice.Id} is not pending");
+            return false;
+        }
+
+        log.LogInformation($"[InvoiceItemValidateOwnershipAndPendingActivity] Validation passed for item {itemId}");
+        return true;
     }
 }

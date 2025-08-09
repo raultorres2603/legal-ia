@@ -42,28 +42,45 @@ public static class InvoiceItemOrchestrators
         return result;
     }
 
-    [Function(nameof(InvoiceItemUpdateOrchestrator))]
-    public static async Task<InvoiceItem> InvoiceItemUpdateOrchestrator(
+    [Function("InvoiceItemUpdateOrchestrator")]
+    public static async Task<InvoiceItem?> InvoiceItemUpdateOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemUpdateOrchestrator");
-        var item = context.GetInput<InvoiceItem>();
-        logger.LogInformation("[InvoiceItemUpdateOrchestrator] Orchestrator started");
-        var result = await context.CallActivityAsync<InvoiceItem>("InvoiceItemUpdateActivity", item);
-        logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Orchestrator completed, updated item: {result.Id}");
-        return result;
+        var input = context.GetInput<dynamic>();
+        Guid itemId = input.ItemId;
+        Guid userId = input.UserId;
+        var update = input.Update;
+        logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Started for item {itemId} by user {userId}");
+        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity", new { ItemId = itemId, UserId = userId });
+        if (!isValid)
+        {
+            logger.LogWarning($"[InvoiceItemUpdateOrchestrator] Validation failed for item {itemId} by user {userId}");
+            return null;
+        }
+        var updated = await context.CallActivityAsync<InvoiceItem>("InvoiceItemUpdateActivity", update);
+        logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Updated item {itemId}");
+        return updated;
     }
 
-    [Function(nameof(InvoiceItemDeleteOrchestrator))]
+    [Function("InvoiceItemDeleteOrchestrator")]
     public static async Task<bool> InvoiceItemDeleteOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemDeleteOrchestrator");
-        var id = context.GetInput<Guid>();
-        logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Orchestrator started for id {id}");
-        var result = await context.CallActivityAsync<bool>("InvoiceItemDeleteActivity", id);
-        logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Orchestrator completed for id {id}, deleted: {result}");
-        return result;
+        var input = context.GetInput<dynamic>();
+        Guid itemId = input.ItemId;
+        Guid userId = input.UserId;
+        logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Started for item {itemId} by user {userId}");
+        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity", new { ItemId = itemId, UserId = userId });
+        if (!isValid)
+        {
+            logger.LogWarning($"[InvoiceItemDeleteOrchestrator] Validation failed for item {itemId} by user {userId}");
+            return false;
+        }
+        var deleted = await context.CallActivityAsync<bool>("InvoiceItemDeleteActivity", itemId);
+        logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Deleted item {itemId}: {deleted}");
+        return deleted;
     }
 
     [Function("InvoiceItemGetByUserIdOrchestrator")]

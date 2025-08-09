@@ -175,5 +175,55 @@ public class InvoiceItemHttpTriggers
         return new StatusCodeResult(500);
     }
     
-    // TODO: Implement Update and Delete for current user if invoice is owned by them and Invoice.Status is Pending
+    [Function("UpdateInvoiceItemByUser")]
+    public async Task<IActionResult> UpdateInvoiceItemByUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoice-items/{id}")]
+        HttpRequestData req,
+        FunctionContext context,
+        [DurableClient] DurableTaskClient client,
+        string id)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!Guid.TryParse(id, out var itemId)) return new BadRequestResult();
+        var updateItem = await req.ReadFromJsonAsync<InvoiceItem>();
+        if (updateItem == null) return new BadRequestResult();
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
+        var input = new { ItemId = itemId, Update = updateItem, UserId = userId };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemUpdateOrchestrator", input);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var updated = response.ReadOutputAs<InvoiceItem>();
+            if (updated == null) return new NotFoundResult();
+            return new OkObjectResult(updated);
+        }
+        return new StatusCodeResult(500);
+    }
+
+    [Function("DeleteInvoiceItemByUser")]
+    public async Task<IActionResult> DeleteInvoiceItemByUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "invoice-items/{id}")]
+        HttpRequestData req,
+        FunctionContext context,
+        [DurableClient] DurableTaskClient client,
+        string id)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        if (!Guid.TryParse(id, out var itemId)) return new BadRequestResult();
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
+        var input = new { ItemId = itemId, UserId = userId };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemDeleteOrchestrator", input);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var deleted = response.ReadOutputAs<bool>();
+            if (!deleted) return new NotFoundResult();
+            return new OkResult();
+        }
+        return new StatusCodeResult(500);
+    }
 }
