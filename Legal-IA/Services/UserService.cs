@@ -104,7 +104,9 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
             Province = request.Province,
             Phone = request.Phone,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            EmailVerificationToken = request.EmailVerificationToken,
+            EmailVerificationTokenExpiresAt = request.EmailVerificationTokenExpiresAt,
         };
 
         var validator = new UserValidator();

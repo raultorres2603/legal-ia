@@ -40,7 +40,7 @@ public class NotificationService(
     {
         logger.LogInformation("Sending email verification to {Email}", email);
         var hostname = configuration["Hostname"] ?? "http://localhost:7180";
-        var verificationLink = $"{hostname}/verify?token={verificationToken}";
+        var verificationLink = $"{hostname}/api/user/verify?token={verificationToken}";
         await emailService.SendVerificationEmailAsync(email, firstName, verificationLink);
         logger.LogInformation("Email verification sent to {Email}", email);
     }

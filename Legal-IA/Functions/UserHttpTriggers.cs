@@ -247,4 +247,28 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
 
         return new UnauthorizedResult();
     }
+
+    [Function("VerifyUser")]
+    public async Task<IActionResult> VerifyUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "user/verify")] HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
+        var token = query["token"];
+        if (string.IsNullOrEmpty(token))
+            return new BadRequestObjectResult("Missing verification token.");
+
+        // Call orchestrator to verify user by token
+        var orchestrationId = await client.ScheduleNewOrchestrationInstanceAsync(
+            "VerifyUserEmailOrchestrator", token);
+        var response = await client.WaitForInstanceCompletionAsync(orchestrationId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var result = response.ReadOutputAs<AuthResponse>();
+            if (result.Success)
+                return new OkObjectResult("Email verified successfully. You can now log in.");
+            return new BadRequestObjectResult(result.Message ?? "Verification failed.");
+        }
+        return new StatusCodeResult(500);
+    }
 }
