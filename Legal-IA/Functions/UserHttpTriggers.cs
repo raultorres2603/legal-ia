@@ -129,7 +129,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
 
     [Function("UpdateUser")]
     public async Task<IActionResult> UpdateUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
