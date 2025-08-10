@@ -6,7 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
-public class RegisterUserActivity(IUserService userService, ILogger<RegisterUserActivity> logger)
+public class RegisterUserActivity(
+    IUserService userService,
+    ILogger<RegisterUserActivity> logger,
+    INotificationService notificationService)
 {
     [Function("RegisterUserActivity")]
     public async Task<AuthResponse> Run([ActivityTrigger] RegisterUserRequest request)
@@ -52,7 +55,6 @@ public class RegisterUserActivity(IUserService userService, ILogger<RegisterUser
             var createdUser = await userService.CreateUserAsync(user);
 
             // Send email verification
-            var notificationService = new NotificationService(logger);
             await notificationService.SendEmailVerificationAsync(user.Email, user.FirstName, verificationToken);
 
             logger.LogInformation("User registered successfully: {Email}", user.Email);

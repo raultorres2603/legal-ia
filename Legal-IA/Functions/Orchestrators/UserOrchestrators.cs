@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Legal_IA.DTOs;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;

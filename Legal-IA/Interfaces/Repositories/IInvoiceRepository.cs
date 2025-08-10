@@ -1,7 +1,4 @@
 using Legal_IA.Models;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Legal_IA.Interfaces.Repositories;
 
@@ -11,7 +8,7 @@ namespace Legal_IA.Interfaces.Repositories;
 public interface IInvoiceRepository : IRepository<Invoice>
 {
     /// <summary>
-    /// Gets all invoices for a specific user by their user ID.
+    ///     Gets all invoices for a specific user by their user ID.
     /// </summary>
     /// <param name="userId">The ID of the user.</param>
     /// <returns>A list of invoices belonging to the user.</returns>

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Legal_IA.Enums;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Models;
@@ -66,6 +67,7 @@ public class InvoiceItemActivities(
             await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
             await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
         }
+
         log.LogInformation($"[InvoiceItemCreateActivity] Activity completed, created item: {created.Id}");
         return created;
     }
@@ -85,6 +87,7 @@ public class InvoiceItemActivities(
             await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
             await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
         }
+
         log.LogInformation($"[InvoiceItemUpdateActivity] Activity completed, updated item: {updated.Id}");
         return updated;
     }
@@ -107,6 +110,7 @@ public class InvoiceItemActivities(
                 await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
             }
         }
+
         log.LogInformation($"[InvoiceItemDeleteActivity] Activity completed for id {id}, deleted: {deleted}");
         return deleted;
     }
@@ -123,13 +127,15 @@ public class InvoiceItemActivities(
     }
 
     [Function("InvoiceItemValidateOwnershipAndPendingActivity")]
-    public async Task<bool> InvoiceItemValidateOwnershipAndPendingActivity([ActivityTrigger] object input, FunctionContext context)
+    public async Task<bool> InvoiceItemValidateOwnershipAndPendingActivity([ActivityTrigger] object input,
+        FunctionContext context)
     {
         var log = context.GetLogger("InvoiceItemValidateOwnershipAndPendingActivity");
         var inputElement = (JsonElement)input;
         var itemId = inputElement.GetProperty("ItemId").GetGuid();
         var userId = inputElement.GetProperty("UserId").GetGuid();
-        log.LogInformation($"[InvoiceItemValidateOwnershipAndPendingActivity] Validating item {itemId} for user {userId}");
+        log.LogInformation(
+            $"[InvoiceItemValidateOwnershipAndPendingActivity] Validating item {itemId} for user {userId}");
         var item = await invoiceItemRepository.GetByIdAsync(itemId);
         if (item == null)
         {
@@ -146,11 +152,12 @@ public class InvoiceItemActivities(
 
         if (invoice.UserId != userId)
         {
-            log.LogWarning($"[InvoiceItemValidateOwnershipAndPendingActivity] User {userId} does not own invoice {invoice.Id}");
+            log.LogWarning(
+                $"[InvoiceItemValidateOwnershipAndPendingActivity] User {userId} does not own invoice {invoice.Id}");
             return false;
         }
 
-        if (invoice.Status != Enums.InvoiceStatus.Pending)
+        if (invoice.Status != InvoiceStatus.Pending)
         {
             log.LogWarning($"[InvoiceItemValidateOwnershipAndPendingActivity] Invoice {invoice.Id} is not pending");
             return false;

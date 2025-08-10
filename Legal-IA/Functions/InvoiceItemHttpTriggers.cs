@@ -172,9 +172,10 @@ public class InvoiceItemHttpTriggers
             // Optionally, set UserId on created item if not already set
             return new OkObjectResult(response.ReadOutputAs<InvoiceItem>());
         }
+
         return new StatusCodeResult(500);
     }
-    
+
     [Function("UpdateInvoiceItemByUser")]
     public async Task<IActionResult> UpdateInvoiceItemByUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoice-items/user/{id}")]
@@ -199,6 +200,7 @@ public class InvoiceItemHttpTriggers
             if (updated == null) return new NotFoundResult();
             return new OkObjectResult(updated);
         }
+
         return new StatusCodeResult(500);
     }
 
@@ -224,6 +226,7 @@ public class InvoiceItemHttpTriggers
             if (!deleted) return new NotFoundResult();
             return new OkResult();
         }
+
         return new StatusCodeResult(500);
     }
 }

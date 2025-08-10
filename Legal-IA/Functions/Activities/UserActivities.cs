@@ -39,6 +39,7 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
                 logger.LogWarning("User not found for UserId: {UserId}", userId);
                 return null;
             }
+
             logger.LogInformation($"[GetUserByIdActivity] Activity completed for UserId: {userId}");
             return result;
         }
@@ -50,7 +51,10 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
     }
 }
 
-public class CreateUserActivity(IUserService userService, ICacheService cacheService, ILogger<CreateUserActivity> logger)
+public class CreateUserActivity(
+    IUserService userService,
+    ICacheService cacheService,
+    ILogger<CreateUserActivity> logger)
 {
     [Function("CreateUserActivity")]
     public async Task<UserResponse> Run([ActivityTrigger] CreateUserRequest request)
@@ -71,7 +75,10 @@ public class CreateUserActivity(IUserService userService, ICacheService cacheSer
     }
 }
 
-public class UpdateUserActivity(IUserService userService, ICacheService cacheService, ILogger<UpdateUserActivity> logger)
+public class UpdateUserActivity(
+    IUserService userService,
+    ICacheService cacheService,
+    ILogger<UpdateUserActivity> logger)
 {
     [Function("UpdateUserActivity")]
     public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
@@ -85,6 +92,7 @@ public class UpdateUserActivity(IUserService userService, ICacheService cacheSer
                 logger.LogWarning($"User not found for UserId: {updateData.UserId}");
                 return null;
             }
+
             await cacheService.RemoveByPatternAsync("users");
             logger.LogInformation($"User updated successfully for UserId: {updateData.UserId}");
             return result;
@@ -97,7 +105,10 @@ public class UpdateUserActivity(IUserService userService, ICacheService cacheSer
     }
 }
 
-public class DeleteUserActivity(IUserService userService, ICacheService cacheService, ILogger<DeleteUserActivity> logger)
+public class DeleteUserActivity(
+    IUserService userService,
+    ICacheService cacheService,
+    ILogger<DeleteUserActivity> logger)
 {
     [Function("DeleteUserActivity")]
     public async Task<bool> Run([ActivityTrigger] Guid userId)

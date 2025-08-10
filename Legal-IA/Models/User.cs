@@ -41,8 +41,8 @@ public class User
     public bool IsActive { get; set; }
 
     // Email verification fields
-    [MaxLength(100)]
-    public string? EmailVerificationToken { get; set; } = null;
+    [MaxLength(100)] public string? EmailVerificationToken { get; set; } = null;
+
     public DateTime? EmailVerificationTokenExpiresAt { get; set; } = null;
     public DateTime? EmailVerifiedAt { get; set; } = null;
 }

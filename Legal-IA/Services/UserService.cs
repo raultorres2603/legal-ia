@@ -184,11 +184,6 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
         return userRepository.GetByEmailAsync(email);
     }
 
-    public async Task<bool> UserExistsByEmailAsync(string email)
-    {
-        return await userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
-    }
-
     public async Task<User?> GetUserByVerificationTokenAsync(string token)
     {
         try
@@ -199,6 +194,7 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
                 logger.LogWarning("User not found for verification token {Token}", token);
                 return null;
             }
+
             return user;
         }
         catch (Exception ex)
@@ -223,6 +219,11 @@ public class UserService(IUserRepository userRepository, ICacheService cacheServ
             logger.LogError(ex, "Error in UpdateUserAsync for user {UserId}", user.Id);
             throw new Exception($"Error updating user {user.Id}", ex);
         }
+    }
+
+    public async Task<bool> UserExistsByEmailAsync(string email)
+    {
+        return await userRepository.ExistsAsync(u => u.Email == email && u.IsActive);
     }
 
     private static UserResponse MapToUserResponse(User user)

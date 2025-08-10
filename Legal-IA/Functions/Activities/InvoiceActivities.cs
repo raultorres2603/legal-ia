@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Legal_IA.Enums;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
@@ -21,6 +22,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
             log.LogInformation("[InvoiceGetAllActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         var invoices = (await invoiceRepository.GetAllAsync()).ToList();
         await cacheService.SetAsync(cacheKey, invoices);
         log.LogInformation($"[InvoiceGetAllActivity] Activity completed with {invoices.Count} invoices");
@@ -39,6 +41,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
             log.LogInformation("[InvoiceGetByIdActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         var invoice = await invoiceRepository.GetByIdAsync(id);
         if (invoice != null) await cacheService.SetAsync(cacheKey, invoice);
         log.LogInformation($"[InvoiceGetByIdActivity] Activity completed for id {id}");
@@ -56,8 +59,9 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
             log.LogInformation("[InvoiceGetByUserIdActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         log.LogInformation("Fetching invoices for user {UserId} from repository", userId);
-        var invoices = (await invoiceRepository.GetInvoicesByUserIdAsync(userId));
+        var invoices = await invoiceRepository.GetInvoicesByUserIdAsync(userId);
         await cacheService.SetAsync(cacheKey, invoices);
         return invoices;
     }
@@ -96,12 +100,13 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     [Function("UpdateInvoiceByCurrentUserActivity")]
-    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] object input, FunctionContext context)
+    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] object input,
+        FunctionContext context)
     {
         var log = context.GetLogger("UpdateInvoiceByCurrentUserActivity");
-        var inputElement = (System.Text.Json.JsonElement)input;
+        var inputElement = (JsonElement)input;
         var invoiceElement = inputElement.GetProperty("Invoice");
-        var invoice = System.Text.Json.JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
+        var invoice = JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
         var userId = inputElement.GetProperty("UserId").GetGuid();
         var existing = await invoiceRepository.GetByIdAsync(invoice!.Id);
         if (existing == null || existing.UserId != userId)
@@ -131,20 +136,24 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     [Function("InvoiceGetByIdAndUserIdActivity")]
-    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] dynamic input, FunctionContext context)
+    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] dynamic input,
+        FunctionContext context)
     {
         var log = context.GetLogger("InvoiceGetByIdAndUserIdActivity");
-        Guid invoiceId = (Guid)input.InvoiceId;
-        Guid userId = (Guid)input.UserId;
-        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
+        var invoiceId = (Guid)input.InvoiceId;
+        var userId = (Guid)input.UserId;
+        log.LogInformation(
+            $"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
         var invoice = await invoiceRepository.GetByIdAsync(invoiceId);
         if (invoice != null && invoice.UserId == userId)
         {
             log.LogInformation($"Invoice {invoiceId} found for user {userId}");
             return invoice;
         }
+
         log.LogWarning($"Invoice {invoiceId} not found or does not belong to user {userId}");
-        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity completed for invoice {invoiceId} and user {userId}");
+        log.LogInformation(
+            $"[InvoiceGetByIdAndUserIdActivity] Activity completed for invoice {invoiceId} and user {userId}");
         return null;
     }
 }

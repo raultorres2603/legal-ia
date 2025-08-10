@@ -12,6 +12,9 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
+        <PackageReference Include="Google.Apis.Auth" Version="1.70.0"/>
+        <PackageReference Include="Google.Apis.Gmail.v1" Version="1.70.0.3833"/>
+        <PackageReference Include="MailKit" Version="4.13.0"/>
         <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0"/>
         <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0"/>
         <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0"/>
@@ -30,7 +33,7 @@
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0"/>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Migrations\" />
+        <Folder Include="Migrations\"/>
     </ItemGroup>
 
     <!-- Environment-specific configurations -->
