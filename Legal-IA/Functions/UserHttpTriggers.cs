@@ -6,12 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions;
 
-public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration configuration)
+public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 {
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
