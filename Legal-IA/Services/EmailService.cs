@@ -1,21 +1,15 @@
-using System.Text;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Gmail.v1;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MimeKit;
-using MimeKit.Text;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace Legal_IA.Services;
 
 public class EmailService(IConfiguration configuration, ILogger<EmailService> logger) : IEmailService
 {
-    private readonly string _fromEmail = configuration["Gmail:FromAddress"] ??
-                                         throw new ArgumentNullException("Email:FromAddress not configured");
-
-    private readonly string[] _scopes = [GmailService.Scope.GmailSend];
+    private readonly string _sendGridApiKey = configuration["SendGrid:ApiKey"] ?? throw new ArgumentNullException("SendGrid:ApiKey not configured");
+    private readonly string _fromEmail = configuration["SendGrid:FromAddress"] ?? throw new ArgumentNullException("SendGrid:FromAddress not configured");
+    private readonly string _fromName = configuration["SendGrid:FromName"] ?? "LegalIA";
 
     /// <summary>
     ///     Sends the verification email using the template and logs the process.
@@ -28,7 +22,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("[EmailService] Preparing to send verification email to {Email}.", to);
-        var subject = "Verify your LegalIA account";
+        var subject = "Verifica tu cuenta de LegalIA";
         var htmlBody = GetVerificationEmailBody(firstName, verificationLink);
         await SendEmailAsync(to, subject, htmlBody, cancellationToken);
         logger.LogInformation("[EmailService] Verification email sent to {Email}.", to);
@@ -38,37 +32,17 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
     private async Task SendEmailAsync(string to, string subject, string htmlBody,
         CancellationToken cancellationToken = default)
     {
-        var mimeMessage = new MimeMessage();
-        mimeMessage.From.Add(MailboxAddress.Parse(_fromEmail));
-        mimeMessage.To.Add(MailboxAddress.Parse(to));
-        mimeMessage.Subject = subject;
-        mimeMessage.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
-
-        using var smtp = new SmtpClient();
-        var oauth2 = await GetOAuth2CredentialAsync(cancellationToken);
-        await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls, cancellationToken);
-        var oauth2Token = new SaslMechanismOAuth2(_fromEmail, oauth2);
-        await smtp.AuthenticateAsync(oauth2Token, cancellationToken);
-        await smtp.SendAsync(mimeMessage, cancellationToken);
-        await smtp.DisconnectAsync(true, cancellationToken);
-    }
-
-    // Helper to get OAuth2 access token using service account
-    private async Task<string> GetOAuth2CredentialAsync(CancellationToken cancellationToken)
-    {
-        var jsonEnv = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS_JSON");
-        if (string.IsNullOrEmpty(jsonEnv)) throw new InvalidOperationException("No GoogleCredential found");
-        // Load credentials from environment variable (secure for production)
-        using var memStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonEnv));
-        var credential = (await GoogleCredential.FromStreamAsync(memStream, cancellationToken))
-            .CreateScoped(_scopes)
-            .CreateWithUser("raultorres2603@gmail.com");
-        var accessToken =
-            await credential.UnderlyingCredential.GetAccessTokenForRequestAsync("https://mail.google.com/",
-                cancellationToken);
-        if (string.IsNullOrEmpty(accessToken))
-            throw new InvalidOperationException("Could not obtain Gmail OAuth2 access token from service account.");
-        return accessToken;
+        var client = new SendGridClient(_sendGridApiKey);
+        var from = new EmailAddress(_fromEmail, _fromName);
+        var toEmail = new EmailAddress(to);
+        var msg = MailHelper.CreateSingleEmail(from, toEmail, subject, null, htmlBody);
+        var response = await client.SendEmailAsync(msg, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Body.ReadAsStringAsync(cancellationToken);
+            logger.LogError("SendGrid failed: {StatusCode} {Body}", response.StatusCode, body);
+            throw new InvalidOperationException($"SendGrid failed: {response.StatusCode} {body}");
+        }
     }
 
     /// <summary>
