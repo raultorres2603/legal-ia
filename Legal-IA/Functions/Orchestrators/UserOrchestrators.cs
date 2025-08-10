@@ -102,7 +102,7 @@ public static class UserOrchestrators
         }
     }
 
-    [Function("UserVerifyEmailOrchestrator")]
+    [Function("VerifyUserEmailOrchestrator")]
     public static async Task<AuthResponse> RunVerifyEmail([OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("UserVerifyEmailOrchestrator");
