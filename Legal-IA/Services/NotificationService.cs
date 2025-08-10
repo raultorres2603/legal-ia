@@ -1,4 +1,5 @@
 using Legal_IA.DTOs;
+using Legal_IA.Functions.Activities;
 using Legal_IA.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 
@@ -7,7 +8,7 @@ namespace Legal_IA.Services;
 /// <summary>
 ///     Notification service implementation
 /// </summary>
-public class NotificationService(ILogger<NotificationService> logger) : INotificationService
+public class NotificationService(ILogger<RegisterUserActivity> logger) : INotificationService
 {
     public async Task SendWelcomeNotificationAsync(UserResponse user)
     {
@@ -28,5 +29,15 @@ public class NotificationService(ILogger<NotificationService> logger) : INotific
         await Task.Delay(100); // Simulate async operation
 
         logger.LogInformation("Update notification sent successfully to user {UserId}", user.Id);
+    }
+
+    public async Task SendEmailVerificationAsync(string email, string firstName, string verificationToken)
+    {
+        logger.LogInformation("Sending email verification to {Email}", email);
+        // TODO: Replace with actual email sending logic
+        var verificationLink = $"{Environment.GetEnvironmentVariable("Host")}/verify?token={verificationToken}";
+        logger.LogInformation("Verification link: {Link}", verificationLink);
+        await Task.Delay(100); // Simulate async operation
+        logger.LogInformation("Email verification sent to {Email}", email);
     }
 }

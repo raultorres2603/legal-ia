@@ -38,5 +38,11 @@ public class User
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; }
+
+    // Email verification fields
+    [MaxLength(100)]
+    public string? EmailVerificationToken { get; set; } = null;
+    public DateTime? EmailVerificationTokenExpiresAt { get; set; } = null;
+    public DateTime? EmailVerifiedAt { get; set; } = null;
 }

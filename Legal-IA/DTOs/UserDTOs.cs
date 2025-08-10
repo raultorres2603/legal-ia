@@ -20,6 +20,10 @@ public class CreateUserRequest
     public string Province { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.User;
+
+    // Email verification fields
+    public string? EmailVerificationToken { get; set; } = null;
+    public DateTime? EmailVerificationTokenExpiresAt { get; set; } = null;
 }
 
 public class UpdateUserRequest
