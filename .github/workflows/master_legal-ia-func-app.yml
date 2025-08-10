@@ -56,6 +56,7 @@ jobs:
               Jwt:Issuer="${{ secrets.JWT_ISSUER }}" \
               Jwt:Audience="${{ secrets.JWT_AUDIENCE }}" \
               Jwt:Secret="${{ secrets.JWT_SECRET }}" \
+              Hostname="${{ secrets.HOSTNAME }}" \
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1

@@ -35,7 +35,7 @@ public class NotificationService(ILogger<RegisterUserActivity> logger) : INotifi
     {
         logger.LogInformation("Sending email verification to {Email}", email);
         // TODO: Replace with actual email sending logic
-        var verificationLink = $"{Environment.GetEnvironmentVariable("Host")}/verify?token={verificationToken}";
+        var verificationLink = $"{Environment.GetEnvironmentVariable("Hostname")}/verify?token={verificationToken}";
         logger.LogInformation("Verification link: {Link}", verificationLink);
         await Task.Delay(100); // Simulate async operation
         logger.LogInformation("Email verification sent to {Email}", email);
