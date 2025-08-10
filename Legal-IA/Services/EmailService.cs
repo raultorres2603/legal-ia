@@ -56,14 +56,13 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
     // Helper to get OAuth2 access token using service account
     private async Task<string> GetOAuth2CredentialAsync(CancellationToken cancellationToken)
     {
-        GoogleCredential credential;
         var jsonEnv = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS_JSON");
         if (string.IsNullOrEmpty(jsonEnv)) throw new InvalidOperationException("No GoogleCredential found");
         // Load credentials from environment variable (secure for production)
         using var memStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonEnv));
-        credential = (await GoogleCredential.FromStreamAsync(memStream, cancellationToken))
+        var credential = (await GoogleCredential.FromStreamAsync(memStream, cancellationToken))
             .CreateScoped(_scopes)
-            .CreateWithUser(_fromEmail);
+            .CreateWithUser("raultorres2603@gmail.com");
         var accessToken =
             await credential.UnderlyingCredential.GetAccessTokenForRequestAsync("https://mail.google.com/",
                 cancellationToken);
