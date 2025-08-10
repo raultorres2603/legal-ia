@@ -265,7 +265,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
             var result = response.ReadOutputAs<AuthResponse>();
-            if (result.Success)
+            if (result!.Success)
                 return new OkObjectResult("Email verified successfully. You can now log in.");
             return new BadRequestObjectResult(result.Message ?? "Verification failed.");
         }
