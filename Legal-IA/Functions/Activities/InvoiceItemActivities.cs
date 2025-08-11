@@ -60,36 +60,10 @@ public class InvoiceItemActivities(
         log.LogInformation("[InvoiceItemCreateActivity] Activity started");
         var created = await invoiceItemRepository.AddAsync(item);
         // Remove cache for the user
-        var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
-        if (invoice != null)
-        {
-            await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
-            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
-            await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
-        }
+        await InvalidateUserInvoiceItemCache(item.InvoiceId);
 
         log.LogInformation($"[InvoiceItemCreateActivity] Activity completed, created item: {created.Id}");
         return created;
-    }
-
-    [Function(nameof(InvoiceItemUpdateActivity))]
-    public async Task<InvoiceItem> InvoiceItemUpdateActivity([ActivityTrigger] InvoiceItem item,
-        FunctionContext context)
-    {
-        var log = context.GetLogger("InvoiceItemUpdateActivity");
-        log.LogInformation("[InvoiceItemUpdateActivity] Activity started");
-        var updated = await invoiceItemRepository.UpdateAsync(item);
-        // Remove cache for the user
-        var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
-        if (invoice != null)
-        {
-            await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
-            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
-            await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
-        }
-
-        log.LogInformation($"[InvoiceItemUpdateActivity] Activity completed, updated item: {updated.Id}");
-        return updated;
     }
 
     [Function(nameof(InvoiceItemDeleteActivity))]
@@ -102,13 +76,7 @@ public class InvoiceItemActivities(
         var deleted = await invoiceItemRepository.DeleteAsync(id);
         if (item != null)
         {
-            var invoice = await invoiceRepository.GetByIdAsync(item.InvoiceId);
-            if (invoice != null)
-            {
-                await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
-                await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
-                await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
-            }
+            await InvalidateUserInvoiceItemCache(item.InvoiceId);
         }
 
         log.LogInformation($"[InvoiceItemDeleteActivity] Activity completed for id {id}, deleted: {deleted}");
@@ -165,5 +133,46 @@ public class InvoiceItemActivities(
 
         log.LogInformation($"[InvoiceItemValidateOwnershipAndPendingActivity] Validation passed for item {itemId}");
         return true;
+    }
+
+    [Function("PatchInvoiceItemActivity")]
+    public async Task<InvoiceItem?> PatchInvoiceItemActivity([ActivityTrigger] object input, FunctionContext context)
+    {
+        var log = context.GetLogger("PatchInvoiceItemActivity");
+        var inputElement = (JsonElement)input;
+        var itemId = inputElement.GetProperty("ItemId").GetGuid();
+        var updateRequest = System.Text.Json.JsonSerializer.Deserialize<DTOs.UpdateInvoiceItemRequest>(inputElement.GetProperty("UpdateRequest").GetRawText());
+        var existing = await invoiceItemRepository.GetByIdAsync(itemId);
+        if (existing == null)
+        {
+            log.LogWarning($"[PatchInvoiceItemActivity] InvoiceItem {itemId} not found");
+            return null;
+        }
+        PatchInvoiceItem(existing, updateRequest);
+        var updated = await invoiceItemRepository.UpdateAsync(existing);
+        await InvalidateUserInvoiceItemCache(existing.InvoiceId);
+        log.LogInformation($"[PatchInvoiceItemActivity] Patched item: {updated.Id}");
+        return updated;
+    }
+
+    private void PatchInvoiceItem(InvoiceItem existing, DTOs.UpdateInvoiceItemRequest updateRequest)
+    {
+        if (updateRequest.Description != null) existing.Description = updateRequest.Description;
+        if (updateRequest.Quantity != null) existing.Quantity = updateRequest.Quantity.Value;
+        if (updateRequest.UnitPrice != null) existing.UnitPrice = updateRequest.UnitPrice.Value;
+        if (updateRequest.VAT != null) existing.VAT = updateRequest.VAT.Value;
+        if (updateRequest.IRPF != null) existing.IRPF = updateRequest.IRPF.Value;
+        if (updateRequest.Total != null) existing.Total = updateRequest.Total.Value;
+    }
+
+    private async Task InvalidateUserInvoiceItemCache(Guid invoiceId)
+    {
+        var invoice = await invoiceRepository.GetByIdAsync(invoiceId);
+        if (invoice != null)
+        {
+            await cacheService.RemoveByPatternAsync($"invoiceitems:user:{invoice.UserId}");
+            await cacheService.RemoveAsync($"invoices:user:{invoice.UserId}");
+            await cacheService.RemoveByPatternAsync($"invoices:user:{invoice.UserId}");
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
@@ -78,15 +79,6 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         return created;
     }
 
-    [Function(nameof(InvoiceUpdateActivity))]
-    public async Task<Invoice> InvoiceUpdateActivity([ActivityTrigger] Invoice invoice, FunctionContext context)
-    {
-        var log = context.GetLogger("InvoiceUpdateActivity");
-        var updated = await invoiceRepository.UpdateAsync(invoice);
-        await cacheService.RemoveByPatternAsync("invoices");
-        log.LogInformation("Invoice updated and cache invalidated for pattern 'invoices'");
-        return updated;
-    }
 
     [Function(nameof(InvoiceDeleteActivity))]
     public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
@@ -98,62 +90,95 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         log.LogInformation("Invoice deleted and related cache keys invalidated");
         return deleted;
     }
-
-    [Function("UpdateInvoiceByCurrentUserActivity")]
-    public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] object input,
-        FunctionContext context)
-    {
-        var log = context.GetLogger("UpdateInvoiceByCurrentUserActivity");
-        var inputElement = (JsonElement)input;
-        var invoiceElement = inputElement.GetProperty("Invoice");
-        var invoice = JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
-        var userId = inputElement.GetProperty("UserId").GetGuid();
-        var existing = await invoiceRepository.GetByIdAsync(invoice!.Id);
-        if (existing == null || existing.UserId != userId)
-            throw new UnauthorizedAccessException("Invoice not found or does not belong to user");
-        if (existing.Status != InvoiceStatus.Pending)
-            throw new InvalidOperationException("Only pending invoices can be updated");
-        // Copy properties from invoice to existing (except ID, UserId, Status)
-        existing.InvoiceNumber = invoice.InvoiceNumber;
-        existing.IssueDate = invoice.IssueDate;
-        existing.ClientName = invoice.ClientName;
-        existing.ClientNIF = invoice.ClientNIF;
-        existing.ClientAddress = invoice.ClientAddress;
-        existing.Subtotal = invoice.Subtotal;
-        existing.VAT = invoice.VAT;
-        existing.IRPF = invoice.IRPF;
-        existing.Total = invoice.Total;
-        existing.Notes = invoice.Notes;
-        existing.Items = invoice.Items;
-        // Do not update UserId or Status here
-        var updated = await invoiceRepository.UpdateAsync(existing);
-        // Invalidate user invoice list cache (exact key and pattern)
-        await cacheService.RemoveAsync($"invoices:user:{userId}");
-        await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
-        await cacheService.RemoveByPatternAsync($"invoices:{existing.Id}");
-        log.LogInformation("Invoice updated by current user and related cache keys invalidated");
-        return updated;
-    }
-
+    
     [Function("InvoiceGetByIdAndUserIdActivity")]
-    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] dynamic input,
+    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] object input,
         FunctionContext context)
     {
         var log = context.GetLogger("InvoiceGetByIdAndUserIdActivity");
-        var invoiceId = (Guid)input.InvoiceId;
-        var userId = (Guid)input.UserId;
-        log.LogInformation(
-            $"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
+        Guid invoiceId;
+        Guid userId;
+        if (input is JsonElement inputElement)
+        {
+            invoiceId = inputElement.GetProperty("InvoiceId").GetGuid();
+            userId = inputElement.GetProperty("UserId").GetGuid();
+        }
+        else
+        {
+            dynamic dyn = input;
+            if (dyn != null)
+            {
+                invoiceId = (Guid)dyn.InvoiceId;
+                userId = (Guid)dyn.UserId;
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid input for InvoiceGetByIdAndUserIdActivity");
+            }
+        }
+
+        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
         var invoice = await invoiceRepository.GetByIdAsync(invoiceId);
         if (invoice != null && invoice.UserId == userId)
         {
             log.LogInformation($"Invoice {invoiceId} found for user {userId}");
             return invoice;
         }
-
         log.LogWarning($"Invoice {invoiceId} not found or does not belong to user {userId}");
-        log.LogInformation(
-            $"[InvoiceGetByIdAndUserIdActivity] Activity completed for invoice {invoiceId} and user {userId}");
         return null;
+    }
+
+    [Function("PatchInvoiceByCurrentUserActivity")]
+    public async Task<Invoice> PatchInvoiceByCurrentUserActivity([ActivityTrigger] object input, FunctionContext context)
+    {
+        var log = context.GetLogger("PatchInvoiceByCurrentUserActivity");
+        var inputElement = (System.Text.Json.JsonElement)input;
+        var invoiceId = inputElement.GetProperty("InvoiceId").GetGuid();
+        var updateRequest = System.Text.Json.JsonSerializer.Deserialize<UpdateInvoiceRequest>(inputElement.GetProperty("UpdateRequest").GetRawText());
+        var userId = inputElement.GetProperty("UserId").GetGuid();
+        var existing = await invoiceRepository.GetByIdAsync(invoiceId);
+        if (existing == null || existing.UserId != userId)
+            throw new UnauthorizedAccessException("Invoice not found or does not belong to user");
+        if (existing.Status != InvoiceStatus.Pending)
+            throw new InvalidOperationException("Only pending invoices can be updated");
+
+        PatchInvoice(existing, updateRequest);
+
+        var updated = await invoiceRepository.UpdateAsync(existing);
+        await cacheService.RemoveAsync($"invoices:user:{userId}");
+        await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
+        await cacheService.RemoveByPatternAsync($"invoices:{existing.Id}");
+        log.LogInformation("Invoice patched by current user and related cache keys invalidated");
+        return updated;
+    }
+
+    private void PatchInvoice(Invoice existing, UpdateInvoiceRequest? updateRequest)
+    {
+        if (updateRequest == null) return;
+        if (updateRequest.InvoiceNumber != null)
+            existing.InvoiceNumber = updateRequest.InvoiceNumber;
+        if (updateRequest.IssueDate.HasValue)
+            existing.IssueDate = updateRequest.IssueDate.Value;
+        if (updateRequest.ClientName != null)
+            existing.ClientName = updateRequest.ClientName;
+        if (updateRequest.ClientNIF != null)
+            existing.ClientNIF = updateRequest.ClientNIF;
+        if (updateRequest.ClientAddress != null)
+            existing.ClientAddress = updateRequest.ClientAddress;
+        if (updateRequest.Subtotal.HasValue)
+            existing.Subtotal = updateRequest.Subtotal.Value;
+        if (updateRequest.VAT.HasValue)
+            existing.VAT = updateRequest.VAT.Value;
+        if (updateRequest.IRPF.HasValue)
+            existing.IRPF = updateRequest.IRPF.Value;
+        if (updateRequest.Total.HasValue)
+            existing.Total = updateRequest.Total.Value;
+        if (updateRequest.Notes != null)
+            existing.Notes = updateRequest.Notes;
+        if (updateRequest.UserId.HasValue)
+            existing.UserId = updateRequest.UserId.Value;
+        if (updateRequest.Status.HasValue)
+            existing.Status = updateRequest.Status.Value;
+        // Items patching is not handled here; implement if needed
     }
 }

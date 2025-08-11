@@ -129,26 +129,66 @@ public static class InvoiceOrchestrators
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceDeleteByCurrentUserOrchestrator");
-        var input = context.GetInput<dynamic>();
-        if (input != null)
+        var inputRaw = context.GetInput<object>();
+        Guid invoiceId;
+        Guid userId;
+        if (inputRaw is JsonElement inputElement)
         {
-            var invoiceId = (Guid)input.InvoiceId;
-            var userId = (Guid)input.UserId;
-            logger.LogInformation(
-                $"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
-            var activityInput = new { InvoiceId = invoiceId, UserId = userId };
-            var invoice = await context.CallActivityAsync<Invoice>("InvoiceGetByIdAndUserIdActivity", activityInput);
-            if (invoice.Status == InvoiceStatus.Pending)
+            invoiceId = inputElement.GetProperty("InvoiceId").GetGuid();
+            userId = inputElement.GetProperty("UserId").GetGuid();
+        }
+        else
+        {
+            dynamic? inputDyn = inputRaw;
+            if (inputDyn != null)
             {
-                var deleted = await context.CallActivityAsync<bool>("InvoiceDeleteActivity", invoiceId);
-                logger.LogInformation($"Invoice {invoiceId} deleted by user {userId}: {deleted}");
-                return deleted;
+                invoiceId = (Guid)inputDyn.InvoiceId;
+                userId = (Guid)inputDyn.UserId;
             }
-
-            logger.LogWarning($"Invoice {invoiceId} not deleted. Either not found, not owned by user, or not pending.");
+            else
+            {
+                throw new InvalidOperationException("Invalid input for InvoiceDeleteByCurrentUserOrchestrator");
+            }
         }
 
-        logger.LogError("Orchestrator failed: InvoiceDeleteByCurrentUserOrchestrator received null input");
+        logger.LogInformation($"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
+        var activityInput = new { InvoiceId = invoiceId, UserId = userId };
+        var invoice = await context.CallActivityAsync<Invoice>("InvoiceGetByIdAndUserIdActivity", activityInput);
+        if (invoice != null && invoice.Status == InvoiceStatus.Pending)
+        {
+            var deleted = await context.CallActivityAsync<bool>("InvoiceDeleteActivity", invoiceId);
+            logger.LogInformation($"Orchestrator completed: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId}");
+            return deleted;
+        }
+        logger.LogWarning($"Invoice {invoiceId} not found, not pending, or does not belong to user {userId}");
         return false;
+    }
+
+    [Function("PatchInvoiceByCurrentUserOrchestrator")]
+    public static async Task<Invoice?> PatchInvoiceByCurrentUserOrchestrator(
+        [OrchestrationTrigger] TaskOrchestrationContext context)
+    {
+        var logger = context.CreateReplaySafeLogger("PatchInvoiceByCurrentUserOrchestrator");
+        var input = context.GetInput<object>();
+        if (input == null)
+        {
+            logger.LogError("PatchInvoiceByCurrentUserOrchestrator received null input");
+            return null;
+        }
+        var inputElement = input as JsonElement?;
+        if (inputElement == null || !inputElement.Value.TryGetProperty("InvoiceId", out var invoiceIdProp) ||
+            !inputElement.Value.TryGetProperty("UserId", out var userIdProp) ||
+            !inputElement.Value.TryGetProperty("UpdateRequest", out var updateRequestProp))
+        {
+            logger.LogError("PatchInvoiceByCurrentUserOrchestrator received invalid input structure");
+            return null;
+        }
+        if (!Guid.TryParse(invoiceIdProp.ToString(), out var invoiceId) || !Guid.TryParse(userIdProp.ToString(), out var userId))
+        {
+            logger.LogError("PatchInvoiceByCurrentUserOrchestrator received invalid InvoiceId or UserId");
+            return null;
+        }
+        var result = await context.CallActivityAsync<Invoice?>("PatchInvoiceByCurrentUserActivity", input);
+        return result;
     }
 }

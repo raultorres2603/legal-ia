@@ -63,24 +63,43 @@ public static class UserOrchestrators
         }
     }
 
-    [Function("UserUpdateOrchestrator")]
-    public static async Task<UserResponse?> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
+    [Function("UserPatchOrchestrator")]
+    public static async Task<UserResponse?> RunPatch([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        var logger = context.CreateReplaySafeLogger("UserUpdateOrchestrator");
+        var logger = context.CreateReplaySafeLogger("UserPatchOrchestrator");
         var updateData = context.GetInput<dynamic>();
-        logger.LogInformation("[UserUpdateOrchestrator] Orchestrator started");
+        logger.LogInformation("[UserPatchOrchestrator] Orchestrator started");
         try
         {
-            var result = await context.CallActivityAsync<UserResponse?>("UpdateUserActivity", updateData);
-            logger.LogInformation($"[UserUpdateOrchestrator] Orchestrator completed, updated user: {result?.Id}");
+            var result = await context.CallActivityAsync<UserResponse?>("PatchUserActivity", updateData);
+            logger.LogInformation($"[UserPatchOrchestrator] Orchestrator completed, patched user: {result?.Id}");
             return result;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "[UserUpdateOrchestrator] Error");
+            logger.LogError(ex, "[UserPatchOrchestrator] Error");
             throw;
         }
     }
+
+    // [Function("UserUpdateOrchestrator")]
+    // public static async Task<UserResponse?> RunUpdate([OrchestrationTrigger] TaskOrchestrationContext context)
+    // {
+    //     var logger = context.CreateReplaySafeLogger("UserUpdateOrchestrator");
+    //     var updateData = context.GetInput<dynamic>();
+    //     logger.LogInformation("[UserUpdateOrchestrator] Orchestrator started");
+    //     try
+    //     {
+    //         var result = await context.CallActivityAsync<UserResponse?>("UpdateUserActivity", updateData);
+    //         logger.LogInformation($"[UserUpdateOrchestrator] Orchestrator completed, updated user: {result?.Id}");
+    //         return result;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         logger.LogError(ex, "[UserUpdateOrchestrator] Error");
+    //         throw;
+    //     }
+    // }
 
     [Function("UserDeleteOrchestrator")]
     public static async Task<bool> RunDelete([OrchestrationTrigger] TaskOrchestrationContext context)
