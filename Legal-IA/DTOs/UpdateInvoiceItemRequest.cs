@@ -9,4 +9,3 @@ public class UpdateInvoiceItemRequest
     public decimal? IRPF { get; set; }
     public decimal? Total { get; set; }
 }
-

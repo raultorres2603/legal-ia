@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
@@ -74,10 +75,7 @@ public class InvoiceItemActivities(
         // Fetch the item to get the invoiceId and userId before deleting
         var item = await invoiceItemRepository.GetByIdAsync(id);
         var deleted = await invoiceItemRepository.DeleteAsync(id);
-        if (item != null)
-        {
-            await InvalidateUserInvoiceItemCache(item.InvoiceId);
-        }
+        if (item != null) await InvalidateUserInvoiceItemCache(item.InvoiceId);
 
         log.LogInformation($"[InvoiceItemDeleteActivity] Activity completed for id {id}, deleted: {deleted}");
         return deleted;
@@ -141,13 +139,16 @@ public class InvoiceItemActivities(
         var log = context.GetLogger("PatchInvoiceItemActivity");
         var inputElement = (JsonElement)input;
         var itemId = inputElement.GetProperty("ItemId").GetGuid();
-        var updateRequest = System.Text.Json.JsonSerializer.Deserialize<DTOs.UpdateInvoiceItemRequest>(inputElement.GetProperty("UpdateRequest").GetRawText());
+        var updateRequest =
+            JsonSerializer.Deserialize<UpdateInvoiceItemRequest>(inputElement.GetProperty("UpdateRequest")
+                .GetRawText());
         var existing = await invoiceItemRepository.GetByIdAsync(itemId);
         if (existing == null)
         {
             log.LogWarning($"[PatchInvoiceItemActivity] InvoiceItem {itemId} not found");
             return null;
         }
+
         PatchInvoiceItem(existing, updateRequest);
         var updated = await invoiceItemRepository.UpdateAsync(existing);
         await InvalidateUserInvoiceItemCache(existing.InvoiceId);
@@ -155,7 +156,7 @@ public class InvoiceItemActivities(
         return updated;
     }
 
-    private void PatchInvoiceItem(InvoiceItem existing, DTOs.UpdateInvoiceItemRequest updateRequest)
+    private void PatchInvoiceItem(InvoiceItem existing, UpdateInvoiceItemRequest updateRequest)
     {
         if (updateRequest.Description != null) existing.Description = updateRequest.Description;
         if (updateRequest.Quantity != null) existing.Quantity = updateRequest.Quantity.Value;

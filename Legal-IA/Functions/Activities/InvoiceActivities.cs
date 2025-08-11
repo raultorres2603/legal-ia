@@ -90,7 +90,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         log.LogInformation("Invoice deleted and related cache keys invalidated");
         return deleted;
     }
-    
+
     [Function("InvoiceGetByIdAndUserIdActivity")]
     public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] object input,
         FunctionContext context)
@@ -117,24 +117,28 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
             }
         }
 
-        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
+        log.LogInformation(
+            $"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
         var invoice = await invoiceRepository.GetByIdAsync(invoiceId);
         if (invoice != null && invoice.UserId == userId)
         {
             log.LogInformation($"Invoice {invoiceId} found for user {userId}");
             return invoice;
         }
+
         log.LogWarning($"Invoice {invoiceId} not found or does not belong to user {userId}");
         return null;
     }
 
     [Function("PatchInvoiceByCurrentUserActivity")]
-    public async Task<Invoice> PatchInvoiceByCurrentUserActivity([ActivityTrigger] object input, FunctionContext context)
+    public async Task<Invoice> PatchInvoiceByCurrentUserActivity([ActivityTrigger] object input,
+        FunctionContext context)
     {
         var log = context.GetLogger("PatchInvoiceByCurrentUserActivity");
-        var inputElement = (System.Text.Json.JsonElement)input;
+        var inputElement = (JsonElement)input;
         var invoiceId = inputElement.GetProperty("InvoiceId").GetGuid();
-        var updateRequest = System.Text.Json.JsonSerializer.Deserialize<UpdateInvoiceRequest>(inputElement.GetProperty("UpdateRequest").GetRawText());
+        var updateRequest =
+            JsonSerializer.Deserialize<UpdateInvoiceRequest>(inputElement.GetProperty("UpdateRequest").GetRawText());
         var userId = inputElement.GetProperty("UserId").GetGuid();
         var existing = await invoiceRepository.GetByIdAsync(invoiceId);
         if (existing == null || existing.UserId != userId)

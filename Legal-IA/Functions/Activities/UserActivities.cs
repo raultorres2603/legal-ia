@@ -104,6 +104,7 @@ public class PatchUserActivity(
         }
     }
 }
+
 public class DeleteUserActivity(
     IUserService userService,
     ICacheService cacheService,

@@ -11,7 +11,6 @@ namespace Legal_IA.Functions;
 
 public class InvoiceItemHttpTriggers
 {
-
     [Function("GetInvoiceItemsByCurrentUser")]
     public async Task<IActionResult> GetInvoiceItemsByCurrentUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/user")]
@@ -75,7 +74,7 @@ public class InvoiceItemHttpTriggers
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var itemId)) return new BadRequestResult();
-        var dto = await req.ReadFromJsonAsync<DTOs.UpdateInvoiceItemRequest>();
+        var dto = await req.ReadFromJsonAsync<UpdateInvoiceItemRequest>();
         if (dto == null) return new BadRequestResult();
         if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");

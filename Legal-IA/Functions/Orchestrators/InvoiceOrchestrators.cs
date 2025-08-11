@@ -151,15 +151,18 @@ public static class InvoiceOrchestrators
             }
         }
 
-        logger.LogInformation($"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
+        logger.LogInformation(
+            $"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
         var activityInput = new { InvoiceId = invoiceId, UserId = userId };
         var invoice = await context.CallActivityAsync<Invoice>("InvoiceGetByIdAndUserIdActivity", activityInput);
         if (invoice != null && invoice.Status == InvoiceStatus.Pending)
         {
             var deleted = await context.CallActivityAsync<bool>("InvoiceDeleteActivity", invoiceId);
-            logger.LogInformation($"Orchestrator completed: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId}");
+            logger.LogInformation(
+                $"Orchestrator completed: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId}");
             return deleted;
         }
+
         logger.LogWarning($"Invoice {invoiceId} not found, not pending, or does not belong to user {userId}");
         return false;
     }
@@ -175,6 +178,7 @@ public static class InvoiceOrchestrators
             logger.LogError("PatchInvoiceByCurrentUserOrchestrator received null input");
             return null;
         }
+
         var inputElement = input as JsonElement?;
         if (inputElement == null || !inputElement.Value.TryGetProperty("InvoiceId", out var invoiceIdProp) ||
             !inputElement.Value.TryGetProperty("UserId", out var userIdProp) ||
@@ -183,11 +187,14 @@ public static class InvoiceOrchestrators
             logger.LogError("PatchInvoiceByCurrentUserOrchestrator received invalid input structure");
             return null;
         }
-        if (!Guid.TryParse(invoiceIdProp.ToString(), out var invoiceId) || !Guid.TryParse(userIdProp.ToString(), out var userId))
+
+        if (!Guid.TryParse(invoiceIdProp.ToString(), out var invoiceId) ||
+            !Guid.TryParse(userIdProp.ToString(), out var userId))
         {
             logger.LogError("PatchInvoiceByCurrentUserOrchestrator received invalid InvoiceId or UserId");
             return null;
         }
+
         var result = await context.CallActivityAsync<Invoice?>("PatchInvoiceByCurrentUserActivity", input);
         return result;
     }
