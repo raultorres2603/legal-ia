@@ -139,7 +139,7 @@ Legal-IA addresses the critical need for automated legal document generation in 
 |--------|----------|-------------|
 | `POST` | `/api/users` | Create new user account |
 | `GET` | `/api/users/{id}` | Get user by ID |
-| `PUT` | `/api/users/{id}` | Update user profile |
+| `PATCH` | `/api/users/{id}` | Partially update user profile (only provided fields are updated) |
 | `DELETE` | `/api/users/{id}` | Deactivate user account |
 | `GET` | `/api/users` | List all users (admin) |
 
@@ -176,7 +176,7 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
-- `PUT /invoices/users/{id}` — Update invoice by user ID
+- `PATCH /invoices/users/{id}` — Partially update invoice by user ID
   - ✅ **200 OK**: Returns the updated invoice
   - ❗ **400 Bad Request**: Invalid ID or request body
   - 🚫 **404 Not Found**: Invoice not found
@@ -201,7 +201,7 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
-- `PUT /invoices/user/{id}` — Update invoice for current user
+- `PATCH /invoices/user/{id}` — Update invoice for current user
   - ✅ **200 OK**: Returns the updated invoice
   - ❗ **400 Bad Request**: Invalid ID, request body, or missing UserId in JWT
   - 🚫 **404 Not Found**: Invoice not found or does not belong to user
@@ -227,7 +227,7 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
-- `PUT /invoice-items/users/{id}` — Update invoice item by ID
+- `PATCH /invoice-items/users/{id}` — Update invoice item by ID
   - ✅ **200 OK**: Returns the updated invoice item
   - ❗ **400 Bad Request**: Invalid ID or request body
   - 🚫 **404 Not Found**: Invoice item not found
@@ -550,7 +550,7 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
-- `PUT /invoices/users/{id}` — Update invoice by user ID
+- `PATCH /invoices/users/{id}` — Partially update invoice by user ID
   - ✅ **200 OK**: Returns the updated invoice
   - ❗ **400 Bad Request**: Invalid ID or request body
   - 🚫 **404 Not Found**: Invoice not found
@@ -575,7 +575,7 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
-- `PUT /invoices/user/{id}` — Update invoice for current user
+- `PATCH /invoices/user/{id}` — Update invoice for current user
   - ✅ **200 OK**: Returns the updated invoice
   - ❗ **400 Bad Request**: Invalid ID, request body, or missing UserId in JWT
   - 🚫 **404 Not Found**: Invoice not found or does not belong to user
@@ -601,7 +601,7 @@ All endpoints are protected by JWT. 🔒
   - ❗ **400 Bad Request**: Invalid request body
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
-- `PUT /invoice-items/users/{id}` — Update invoice item by ID
+- `PATCH /invoice-items/users/{id}` — Update invoice item by ID
   - ✅ **200 OK**: Returns the updated invoice item
   - ❗ **400 Bad Request**: Invalid ID or request body
   - 🚫 **404 Not Found**: Invoice item not found
@@ -642,3 +642,21 @@ All endpoints are protected by JWT. 🔒
   - On any create, update, or delete of an invoice item, both the invoice items and invoices cache for the affected user are cleared.
   - This guarantees that users always see the latest invoice and item data after any change.
 
+## ⚡ PATCH-Only Update Semantics
+
+- All update operations for User, Invoice, and InvoiceItem now use PATCH (partial update) semantics.
+- PATCH endpoints accept only the fields to be updated (partial updates), not the full object.
+- All orchestrators, activities, and HTTP triggers for update operations are named with the `Patch*` prefix (e.g., PatchUser, PatchInvoice, PatchInvoiceItem).
+- Deprecated update code and PUT endpoints have been removed for clarity and maintainability.
+
+### Example PATCH Request (User)
+```http
+PATCH /api/users/123e4567-e89b-12d3-a456-426614174000
+Content-Type: application/json
+
+{
+  "FirstName": "Ana",
+  "Phone": "+34 600 123 456"
+}
+```
+This will only update the user's first name and phone number, leaving all other fields unchanged.
