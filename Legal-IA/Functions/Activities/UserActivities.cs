@@ -75,15 +75,15 @@ public class CreateUserActivity(
     }
 }
 
-public class UpdateUserActivity(
+public class PatchUserActivity(
     IUserService userService,
     ICacheService cacheService,
-    ILogger<UpdateUserActivity> logger)
+    ILogger<PatchUserActivity> logger)
 {
-    [Function("UpdateUserActivity")]
+    [Function("PatchUserActivity")]
     public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
     {
-        logger.LogInformation($"Starting UpdateUserActivity for UserId: {updateData.UserId}");
+        logger.LogInformation($"Starting PatchUserActivity for UserId: {updateData.UserId}");
         try
         {
             var result = await userService.UpdateUserAsync(updateData.UserId, updateData.UpdateRequest);
@@ -94,17 +94,40 @@ public class UpdateUserActivity(
             }
 
             await cacheService.RemoveByPatternAsync("users");
-            logger.LogInformation($"User updated successfully for UserId: {updateData.UserId}");
+            logger.LogInformation($"User patched successfully for UserId: {updateData.UserId}");
             return result;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Error in UpdateUserActivity for UserId: {updateData.UserId}");
+            logger.LogError(ex, $"Error in PatchUserActivity for UserId: {updateData.UserId}");
             throw;
         }
     }
 }
 
+// [Function("UpdateUserActivity")]
+// public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
+// {
+//     logger.LogInformation($"Starting UpdateUserActivity for UserId: {updateData.UserId}");
+//     try
+//     {
+//         var result = await userService.UpdateUserAsync(updateData.UserId, updateData.UpdateRequest);
+//         if (result == null)
+//         {
+//             logger.LogWarning($"User not found for UserId: {updateData.UserId}");
+//             return null;
+//         }
+//
+//         await cacheService.RemoveByPatternAsync("users");
+//         logger.LogInformation($"User updated successfully for UserId: {updateData.UserId}");
+//         return result;
+//     }
+//     catch (Exception ex)
+//     {
+//         logger.LogError(ex, $"Error in UpdateUserActivity for UserId: {updateData.UserId}");
+//         throw;
+//     }
+// }
 public class DeleteUserActivity(
     IUserService userService,
     ICacheService cacheService,

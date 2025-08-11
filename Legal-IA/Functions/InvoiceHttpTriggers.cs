@@ -159,32 +159,8 @@ public class InvoiceHttpTriggers
             return new BadRequestResult();
         }
 
-        var invoice = new Invoice
-        {
-            Id = guid,
-            InvoiceNumber = dto.InvoiceNumber,
-            IssueDate = dto.IssueDate,
-            ClientName = dto.ClientName,
-            ClientNIF = dto.ClientNIF,
-            ClientAddress = dto.ClientAddress,
-            Subtotal = dto.Subtotal,
-            VAT = dto.VAT,
-            IRPF = dto.IRPF,
-            Total = dto.Total,
-            Notes = dto.Notes,
-            Status = dto.Status,
-            UserId = dto.UserId,
-            Items = dto.Items.ConvertAll(i => new InvoiceItem
-            {
-                Description = i.Description,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                VAT = i.VAT,
-                IRPF = i.IRPF,
-                Total = i.Total
-            })
-        };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateOrchestrator", invoice);
+        var orchestratorInput = new { InvoiceId = guid, UpdateRequest = dto };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateOrchestrator", orchestratorInput);
         logger.LogInformation($"[UpdateInvoice] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         logger.LogInformation($"[UpdateInvoice] Orchestration completed with status: {response.RuntimeStatus}");
@@ -287,8 +263,8 @@ public class InvoiceHttpTriggers
         return new StatusCodeResult(500);
     }
 
-    [Function("UpdateInvoiceByCurrentUser")]
-    public async Task<IActionResult> UpdateInvoiceByCurrentUser(
+    [Function("PatchInvoiceByCurrentUser")]
+    public async Task<IActionResult> PatchInvoiceByCurrentUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "invoices/user/{id}")]
         HttpRequestData req,
         FunctionContext context,
@@ -302,50 +278,9 @@ public class InvoiceHttpTriggers
         if (!Guid.TryParse(id, out var invoiceId)) return new BadRequestResult();
         var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
         if (dto == null) return new BadRequestResult();
-        List<InvoiceItem> items;
-        if (dto.Items != null)
-        {
-            items = dto.Items.ConvertAll(i => new InvoiceItem
-            {
-                Description = i.Description,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                VAT = i.VAT,
-                IRPF = i.IRPF,
-                Total = i.Total
-            });
-        }
-        else
-        {
-            // Fetch existing invoice to preserve its items
-            var getInstanceId =
-                await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", invoiceId);
-            var getResponse = await client.WaitForInstanceCompletionAsync(getInstanceId, true, CancellationToken.None);
-            var existingInvoice = getResponse.ReadOutputAs<Invoice>();
-            items = existingInvoice?.Items ?? new List<InvoiceItem>();
-        }
 
-        var invoice = new Invoice
-        {
-            Id = invoiceId,
-            InvoiceNumber = dto.InvoiceNumber,
-            IssueDate = dto.IssueDate,
-            ClientName = dto.ClientName,
-            ClientNIF = dto.ClientNIF,
-            ClientAddress = dto.ClientAddress,
-            Subtotal = dto.Subtotal,
-            VAT = dto.VAT,
-            IRPF = dto.IRPF,
-            Total = dto.Total,
-            Notes = dto.Notes,
-            Status = dto.Status,
-            UserId = userId,
-            Items = items
-        };
-        var orchestratorInput = new { Invoice = invoice, UserId = userId };
-        var instanceId =
-            await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateByCurrentUserOrchestrator",
-                orchestratorInput);
+        var orchestratorInput = new { InvoiceId = invoiceId, UserId = userId, UpdateRequest = dto };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceByCurrentUserOrchestrator", orchestratorInput);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());

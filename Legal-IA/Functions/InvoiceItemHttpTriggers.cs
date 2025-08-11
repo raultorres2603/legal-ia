@@ -187,12 +187,12 @@ public class InvoiceItemHttpTriggers
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var itemId)) return new BadRequestResult();
-        var updateItem = await req.ReadFromJsonAsync<InvoiceItem>();
-        if (updateItem == null) return new BadRequestResult();
+        var dto = await req.ReadFromJsonAsync<DTOs.UpdateInvoiceItemRequest>();
+        if (dto == null) return new BadRequestResult();
         if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");
-        var input = new { ItemId = itemId, Update = updateItem, UserId = userId };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemUpdateOrchestrator", input);
+        var input = new { ItemId = itemId, UserId = userId, UpdateRequest = dto };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceItemOrchestrator", input);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
