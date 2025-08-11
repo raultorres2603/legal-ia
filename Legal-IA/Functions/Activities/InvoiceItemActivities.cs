@@ -66,16 +66,6 @@ public class InvoiceItemActivities(
         return created;
     }
 
-    // [Function(nameof(InvoiceItemUpdateActivity))]
-    // public async Task<InvoiceItem> InvoiceItemUpdateActivity([ActivityTrigger] InvoiceItem item,
-    //     FunctionContext context)
-    // {
-    //     var log = context.GetLogger("InvoiceItemUpdateActivity");
-    //     log.LogInformation("[InvoiceItemUpdateActivity] Activity started");
-    //     var updated = await invoiceItemRepository.UpdateAsync(item);
-    //     // Remove cache for the user
-    //     await InvalidateUserInvoiceItemCache(item.InvoiceId);
-
     [Function(nameof(InvoiceItemDeleteActivity))]
     public async Task<bool> InvoiceItemDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
     {

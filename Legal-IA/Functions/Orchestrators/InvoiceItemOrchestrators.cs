@@ -43,28 +43,6 @@ public static class InvoiceItemOrchestrators
         return result;
     }
 
-    [Function("InvoiceItemUpdateOrchestrator")]
-    public static async Task<InvoiceItem?> InvoiceItemUpdateOrchestrator(
-        [OrchestrationTrigger] TaskOrchestrationContext context)
-    {
-        var logger = context.CreateReplaySafeLogger("InvoiceItemUpdateOrchestrator");
-        var input = context.GetInput<dynamic>();
-        Guid itemId = input.ItemId;
-        Guid userId = input.UserId;
-        var update = input.Update;
-        logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Started for item {itemId} by user {userId}");
-        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity",
-            new { ItemId = itemId, UserId = userId });
-        if (!isValid)
-        {
-            logger.LogWarning($"[InvoiceItemUpdateOrchestrator] Validation failed for item {itemId} by user {userId}");
-            return null;
-        }
-
-        var updated = await context.CallActivityAsync<InvoiceItem>("InvoiceItemUpdateActivity", update);
-        logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Updated item {itemId}");
-        return updated;
-    }
 
     [Function("InvoiceItemDeleteOrchestrator")]
     public static async Task<bool> InvoiceItemDeleteOrchestrator(
