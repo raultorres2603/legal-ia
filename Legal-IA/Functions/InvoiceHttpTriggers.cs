@@ -22,10 +22,12 @@ public class InvoiceHttpTriggers
         var logger = context.GetLogger("InvoiceHttpTriggers");
         logger.LogInformation("[GetInvoices] HTTP trigger started");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
+        {
             logger.LogInformation("[GetInvoices] Unauthorized access attempt");
             return new UnauthorizedResult();
         }
+
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetAllOrchestrator", null!);
         logger.LogInformation($"[GetInvoices] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
@@ -46,14 +48,18 @@ public class InvoiceHttpTriggers
         var logger = context.GetLogger("InvoiceHttpTriggers");
         logger.LogInformation($"[GetInvoiceById] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
+        {
             logger.LogInformation("[GetInvoiceById] Unauthorized access attempt");
             return new UnauthorizedResult();
         }
-        if (!Guid.TryParse(id, out var guid)) {
+
+        if (!Guid.TryParse(id, out var guid))
+        {
             logger.LogInformation("[GetInvoiceById] Invalid GUID format");
             return new BadRequestResult();
         }
+
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", guid);
         logger.LogInformation($"[GetInvoiceById] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
@@ -77,15 +83,19 @@ public class InvoiceHttpTriggers
         var logger = context.GetLogger("InvoiceHttpTriggers");
         logger.LogInformation("[CreateInvoice] HTTP trigger started");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
+        {
             logger.LogInformation("[CreateInvoice] Unauthorized access attempt");
             return new UnauthorizedResult();
         }
+
         var dto = await req.ReadFromJsonAsync<CreateInvoiceRequest>();
-        if (dto == null) {
+        if (dto == null)
+        {
             logger.LogInformation("[CreateInvoice] Invalid request body");
             return new BadRequestResult();
         }
+
         var invoice = new Invoice
         {
             InvoiceNumber = dto.InvoiceNumber,
@@ -100,7 +110,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = dto.UserId,
-            Items = (dto.Items).ConvertAll(i => new InvoiceItem
+            Items = dto.Items.ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
@@ -121,7 +131,7 @@ public class InvoiceHttpTriggers
 
     [Function("UpdateInvoice")]
     public async Task<IActionResult> UpdateInvoice(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoices/users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "invoices/users/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
@@ -130,19 +140,25 @@ public class InvoiceHttpTriggers
         var logger = context.GetLogger("InvoiceHttpTriggers");
         logger.LogInformation($"[UpdateInvoice] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
+        {
             logger.LogInformation("[UpdateInvoice] Unauthorized access attempt");
             return new UnauthorizedResult();
         }
-        if (!Guid.TryParse(id, out var guid)) {
+
+        if (!Guid.TryParse(id, out var guid))
+        {
             logger.LogInformation("[UpdateInvoice] Invalid GUID format");
             return new BadRequestResult();
         }
+
         var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
-        if (dto == null) {
+        if (dto == null)
+        {
             logger.LogInformation("[UpdateInvoice] Invalid request body");
             return new BadRequestResult();
         }
+
         var invoice = new Invoice
         {
             Id = guid,
@@ -158,7 +174,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = dto.UserId,
-            Items = (dto.Items).ConvertAll(i => new InvoiceItem
+            Items = dto.Items.ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
@@ -188,14 +204,18 @@ public class InvoiceHttpTriggers
         var logger = context.GetLogger("InvoiceHttpTriggers");
         logger.LogInformation($"[DeleteInvoice] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) {
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
+        {
             logger.LogInformation("[DeleteInvoice] Unauthorized access attempt");
             return new UnauthorizedResult();
         }
-        if (!Guid.TryParse(id, out var guid)) {
+
+        if (!Guid.TryParse(id, out var guid))
+        {
             logger.LogInformation("[DeleteInvoice] Invalid GUID format");
             return new BadRequestResult();
         }
+
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteOrchestrator", guid);
         logger.LogInformation($"[DeleteInvoice] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
@@ -250,7 +270,7 @@ public class InvoiceHttpTriggers
             Notes = dto.Notes,
             Status = dto.Status,
             UserId = userId,
-            Items = (dto.Items).ConvertAll(i => new InvoiceItem
+            Items = dto.Items.ConvertAll(i => new InvoiceItem
             {
                 Description = i.Description,
                 Quantity = i.Quantity,
@@ -269,7 +289,7 @@ public class InvoiceHttpTriggers
 
     [Function("UpdateInvoiceByCurrentUser")]
     public async Task<IActionResult> UpdateInvoiceByCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "invoices/user/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "invoices/user/{id}")]
         HttpRequestData req,
         FunctionContext context,
         [DurableClient] DurableTaskClient client,
@@ -298,11 +318,13 @@ public class InvoiceHttpTriggers
         else
         {
             // Fetch existing invoice to preserve its items
-            var getInstanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", invoiceId);
+            var getInstanceId =
+                await client.ScheduleNewOrchestrationInstanceAsync("InvoiceGetByIdOrchestrator", invoiceId);
             var getResponse = await client.WaitForInstanceCompletionAsync(getInstanceId, true, CancellationToken.None);
             var existingInvoice = getResponse.ReadOutputAs<Invoice>();
             items = existingInvoice?.Items ?? new List<InvoiceItem>();
         }
+
         var invoice = new Invoice
         {
             Id = invoiceId,
@@ -321,7 +343,9 @@ public class InvoiceHttpTriggers
             Items = items
         };
         var orchestratorInput = new { Invoice = invoice, UserId = userId };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateByCurrentUserOrchestrator", orchestratorInput);
+        var instanceId =
+            await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateByCurrentUserOrchestrator",
+                orchestratorInput);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
@@ -342,13 +366,16 @@ public class InvoiceHttpTriggers
             return new BadRequestObjectResult("Invalid or missing UserId in JWT");
         if (!Guid.TryParse(id, out var invoiceId)) return new BadRequestResult();
         var orchestratorInput = new { InvoiceId = invoiceId, UserId = userId };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteByCurrentUserOrchestrator", orchestratorInput);
+        var instanceId =
+            await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteByCurrentUserOrchestrator",
+                orchestratorInput);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
             var result = response.ReadOutputAs<bool>();
             return result ? new OkResult() : new ForbidResult();
         }
+
         return new StatusCodeResult(500);
     }
 }

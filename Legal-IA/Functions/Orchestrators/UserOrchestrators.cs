@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Legal_IA.DTOs;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
@@ -100,6 +99,25 @@ public static class UserOrchestrators
         {
             logger.LogError(ex, "[UserDeleteOrchestrator] Error");
             throw;
+        }
+    }
+
+    [Function("VerifyUserEmailOrchestrator")]
+    public static async Task<AuthResponse> RunVerifyEmail([OrchestrationTrigger] TaskOrchestrationContext context)
+    {
+        var logger = context.CreateReplaySafeLogger("UserVerifyEmailOrchestrator");
+        var token = context.GetInput<string>();
+        logger.LogInformation($"[UserVerifyEmailOrchestrator] Orchestrator started for token {token}");
+        try
+        {
+            var result = await context.CallActivityAsync<AuthResponse>("VerifyUserEmailActivity", token);
+            logger.LogInformation($"[UserVerifyEmailOrchestrator] Orchestrator completed for token {token}");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "[UserVerifyEmailOrchestrator] Error");
+            return new AuthResponse { Success = false, Message = "Verification failed due to an internal error." };
         }
     }
 }

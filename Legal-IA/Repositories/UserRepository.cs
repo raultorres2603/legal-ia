@@ -42,4 +42,9 @@ public class UserRepository(LegalIaDbContext context, ILogger<UserRepository> lo
             throw new Exception("Error retrieving active users", e);
         }
     }
+
+    public async Task<User?> GetByVerificationTokenAsync(string token)
+    {
+        return await DbSet.FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
+    }
 }

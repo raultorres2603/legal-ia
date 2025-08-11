@@ -56,6 +56,10 @@ jobs:
               Jwt:Issuer="${{ secrets.JWT_ISSUER }}" \
               Jwt:Audience="${{ secrets.JWT_AUDIENCE }}" \
               Jwt:Secret="${{ secrets.JWT_SECRET }}" \
+              Hostname="${{ secrets.HOSTNAME }}" \
+              SendGrid:ApiKey="${{ secrets.SENDGRID_API_KEY }}" \
+              SendGrid:FromAddress="${{ secrets.SENDGRID_FROM_EMAIL }}" \
+              SendGrid:FromName="${{ secrets.SENDGRID_FROM_NAME }}" \
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1

@@ -1,15 +1,16 @@
+using System.Text.Json;
 using Legal_IA.Interfaces.Services;
 using Microsoft.Extensions.Caching.Distributed;
-using StackExchange.Redis;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace Legal_IA.Services;
 
 /// <summary>
 ///     Cache service implementation using Redis
 /// </summary>
-public class CacheService(IDistributedCache cache, IConnectionMultiplexer redis, ILogger<CacheService> logger) : ICacheService
+public class CacheService(IDistributedCache cache, IConnectionMultiplexer redis, ILogger<CacheService> logger)
+    : ICacheService
 {
     private readonly TimeSpan _defaultExpiry = TimeSpan.FromMinutes(30);
 
@@ -21,6 +22,7 @@ public class CacheService(IDistributedCache cache, IConnectionMultiplexer redis,
             logger.LogInformation($"[CacheService] Cache miss for key: {key}");
             return null;
         }
+
         logger.LogInformation($"[CacheService] Cache hit for key: {key}");
         return JsonSerializer.Deserialize<T>(cachedValue);
     }
@@ -33,7 +35,8 @@ public class CacheService(IDistributedCache cache, IConnectionMultiplexer redis,
             AbsoluteExpirationRelativeToNow = expiry ?? _defaultExpiry
         };
         await cache.SetStringAsync(key, serializedValue, options);
-        logger.LogInformation($"[CacheService] Cache set for key: {key} (expiry: {(expiry ?? _defaultExpiry).TotalSeconds} seconds)");
+        logger.LogInformation(
+            $"[CacheService] Cache set for key: {key} (expiry: {(expiry ?? _defaultExpiry).TotalSeconds} seconds)");
     }
 
     public async Task RemoveAsync(string key)

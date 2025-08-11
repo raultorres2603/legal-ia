@@ -53,12 +53,14 @@ public static class InvoiceItemOrchestrators
         Guid userId = input.UserId;
         var update = input.Update;
         logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Started for item {itemId} by user {userId}");
-        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity", new { ItemId = itemId, UserId = userId });
+        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity",
+            new { ItemId = itemId, UserId = userId });
         if (!isValid)
         {
             logger.LogWarning($"[InvoiceItemUpdateOrchestrator] Validation failed for item {itemId} by user {userId}");
             return null;
         }
+
         var updated = await context.CallActivityAsync<InvoiceItem>("InvoiceItemUpdateActivity", update);
         logger.LogInformation($"[InvoiceItemUpdateOrchestrator] Updated item {itemId}");
         return updated;
@@ -73,12 +75,14 @@ public static class InvoiceItemOrchestrators
         var itemId = inputElement.GetProperty("ItemId").GetGuid();
         var userId = inputElement.GetProperty("UserId").GetGuid();
         logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Started for item {itemId} by user {userId}");
-        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity", new { ItemId = itemId, UserId = userId });
+        var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity",
+            new { ItemId = itemId, UserId = userId });
         if (!isValid)
         {
             logger.LogWarning($"[InvoiceItemDeleteOrchestrator] Validation failed for item {itemId} by user {userId}");
             return false;
         }
+
         var deleted = await context.CallActivityAsync<bool>("InvoiceItemDeleteActivity", itemId);
         logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Deleted item {itemId}: {deleted}");
         return deleted;
@@ -92,7 +96,8 @@ public static class InvoiceItemOrchestrators
         var userId = context.GetInput<Guid>();
         logger.LogInformation($"[InvoiceItemGetByUserIdOrchestrator] Orchestrator started for userId {userId}");
         var result = await context.CallActivityAsync<List<InvoiceItem>>("InvoiceItemGetByUserIdActivity", userId);
-        logger.LogInformation($"[InvoiceItemGetByUserIdOrchestrator] Orchestrator completed for userId {userId}, returned {result.Count} items");
+        logger.LogInformation(
+            $"[InvoiceItemGetByUserIdOrchestrator] Orchestrator completed for userId {userId}, returned {result.Count} items");
         return result;
     }
 }

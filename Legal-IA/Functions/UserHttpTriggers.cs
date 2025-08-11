@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Services;
@@ -5,13 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Legal_IA.Functions;
 
-public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration configuration)
+public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 {
     [Function("GetUsers")]
     public async Task<IActionResult> GetUsers(
@@ -129,7 +128,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
 
     [Function("UpdateUser")]
     public async Task<IActionResult> UpdateUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/{id}")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "users/{id}")]
         HttpRequestData req,
         string id,
         [DurableClient] DurableTaskClient client)
@@ -246,5 +245,29 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger, IConfiguration c
         }
 
         return new UnauthorizedResult();
+    }
+
+    [Function("VerifyUser")]
+    public async Task<IActionResult> VerifyUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "user/verify")] HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
+        var token = query["token"];
+        if (string.IsNullOrEmpty(token))
+            return new BadRequestObjectResult("Missing verification token.");
+
+        // Call orchestrator to verify user by token
+        var orchestrationId = await client.ScheduleNewOrchestrationInstanceAsync(
+            "VerifyUserEmailOrchestrator", token);
+        var response = await client.WaitForInstanceCompletionAsync(orchestrationId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var result = response.ReadOutputAs<AuthResponse>();
+            if (result!.Success)
+                return new OkObjectResult("Email verified successfully. You can now log in.");
+            return new BadRequestObjectResult(result.Message ?? "Verification failed.");
+        }
+        return new StatusCodeResult(500);
     }
 }

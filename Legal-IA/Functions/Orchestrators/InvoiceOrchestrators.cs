@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Legal_IA.Enums;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
@@ -15,7 +16,8 @@ public static class InvoiceOrchestrators
         var logger = context.CreateReplaySafeLogger("InvoiceGetAllOrchestrator");
         logger.LogInformation("[InvoiceGetAllOrchestrator] Orchestrator started");
         var invoices = await context.CallActivityAsync<List<Invoice>>("InvoiceGetAllActivity", null!);
-        logger.LogInformation($"[InvoiceGetAllOrchestrator] Orchestrator completed with {invoices?.Count ?? 0} invoices");
+        logger.LogInformation(
+            $"[InvoiceGetAllOrchestrator] Orchestrator completed with {invoices?.Count ?? 0} invoices");
         return invoices ?? throw new InvalidOperationException();
     }
 
@@ -47,6 +49,7 @@ public static class InvoiceOrchestrators
                 created.Id);
             return created;
         }
+
         logger.LogError("Orchestrator failed: InvoiceCreateOrchestrator received null invoice input");
         throw new ArgumentNullException(nameof(invoice), "Invoice input cannot be null");
     }
@@ -65,6 +68,7 @@ public static class InvoiceOrchestrators
                 updated.Id);
             return updated;
         }
+
         logger.LogError("Orchestrator failed: InvoiceUpdateOrchestrator received null invoice input");
         throw new ArgumentNullException(nameof(invoice), "Invoice input cannot be null");
     }
@@ -76,7 +80,8 @@ public static class InvoiceOrchestrators
         var id = context.GetInput<Guid>();
         logger.LogInformation("Orchestrator started: InvoiceDeleteOrchestrator for id {Id}", id);
         var deleted = await context.CallActivityAsync<bool>("InvoiceDeleteActivity", id);
-        logger.LogInformation("Orchestrator completed: InvoiceDeleteOrchestrator for id {Id} - Deleted: {Deleted}", id, deleted);
+        logger.LogInformation("Orchestrator completed: InvoiceDeleteOrchestrator for id {Id} - Deleted: {Deleted}", id,
+            deleted);
         return deleted;
     }
 
@@ -89,13 +94,10 @@ public static class InvoiceOrchestrators
         logger.LogInformation("Orchestrator started for userId: {UserId}", userId);
         var invoices = await context.CallActivityAsync<List<Invoice>>("InvoiceGetByUserIdActivity", userId);
         if (invoices == null)
-        {
             logger.LogWarning("No invoices returned for userId: {UserId}", userId);
-        }
         else
-        {
-            logger.LogInformation("Orchestrator completed for userId: {UserId} with {Count} invoices", userId, invoices.Count);
-        }
+            logger.LogInformation("Orchestrator completed for userId: {UserId} with {Count} invoices", userId,
+                invoices.Count);
         return invoices!;
     }
 
@@ -105,22 +107,21 @@ public static class InvoiceOrchestrators
     {
         var logger = context.CreateReplaySafeLogger("InvoiceUpdateByCurrentUserOrchestrator");
         var input = context.GetInput<dynamic>();
-            // Fix: Properly handle System.Text.Json.JsonElement
-            var inputElement = (JsonElement)(input ?? throw new InvalidOperationException());
-            var invoiceElement = inputElement.GetProperty("Invoice");
-            var invoice = JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
-            var userId = inputElement.GetProperty("UserId").GetGuid();
-            
-                logger.LogInformation(
-                    $"Orchestrator started: InvoiceUpdateByCurrentUserOrchestrator for invoice {invoice!.Id} and user {userId}");
-                var activityInput = new { Invoice = invoice, UserId = userId };
-                var updated =
-                    await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
-                logger.LogInformation(
-                    "Orchestrator completed: InvoiceUpdateByCurrentUserOrchestrator for invoice {InvoiceId}",
-                    updated.Id);
-                return updated;
-        
+        // Fix: Properly handle System.Text.Json.JsonElement
+        var inputElement = (JsonElement)(input ?? throw new InvalidOperationException());
+        var invoiceElement = inputElement.GetProperty("Invoice");
+        var invoice = JsonSerializer.Deserialize<Invoice>(invoiceElement.GetRawText());
+        var userId = inputElement.GetProperty("UserId").GetGuid();
+
+        logger.LogInformation(
+            $"Orchestrator started: InvoiceUpdateByCurrentUserOrchestrator for invoice {invoice!.Id} and user {userId}");
+        var activityInput = new { Invoice = invoice, UserId = userId };
+        var updated =
+            await context.CallActivityAsync<Invoice>("UpdateInvoiceByCurrentUserActivity", activityInput);
+        logger.LogInformation(
+            "Orchestrator completed: InvoiceUpdateByCurrentUserOrchestrator for invoice {InvoiceId}",
+            updated.Id);
+        return updated;
     }
 
     [Function("InvoiceDeleteByCurrentUserOrchestrator")]
@@ -133,17 +134,20 @@ public static class InvoiceOrchestrators
         {
             var invoiceId = (Guid)input.InvoiceId;
             var userId = (Guid)input.UserId;
-            logger.LogInformation($"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
+            logger.LogInformation(
+                $"Orchestrator started: InvoiceDeleteByCurrentUserOrchestrator for invoice {invoiceId} and user {userId}");
             var activityInput = new { InvoiceId = invoiceId, UserId = userId };
             var invoice = await context.CallActivityAsync<Invoice>("InvoiceGetByIdAndUserIdActivity", activityInput);
-            if (invoice.Status == Enums.InvoiceStatus.Pending)
+            if (invoice.Status == InvoiceStatus.Pending)
             {
                 var deleted = await context.CallActivityAsync<bool>("InvoiceDeleteActivity", invoiceId);
                 logger.LogInformation($"Invoice {invoiceId} deleted by user {userId}: {deleted}");
                 return deleted;
             }
+
             logger.LogWarning($"Invoice {invoiceId} not deleted. Either not found, not owned by user, or not pending.");
         }
+
         logger.LogError("Orchestrator failed: InvoiceDeleteByCurrentUserOrchestrator received null input");
         return false;
     }

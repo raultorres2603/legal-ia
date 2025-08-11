@@ -10,27 +10,29 @@
         <SelfContained>false</SelfContained>
     </PropertyGroup>
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
-        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
-        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.1"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.2"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" Version="1.1.5"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4"/>
-        <PackageReference Include="StackExchange.Redis" Version="2.8.0"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.7"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-        <PackageReference Include="FluentValidation" Version="11.9.2"/>
-        <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1"/>
-        <PackageReference Include="Contrib.Grpc.Core.M1" Version="2.41.0"/>
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="MailKit" Version="4.13.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.1" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.2" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" Version="1.1.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+        <PackageReference Include="SendGrid" Version="9.29.3" />
+        <PackageReference Include="StackExchange.Redis" Version="2.8.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.7" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="FluentValidation" Version="11.9.2" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+        <PackageReference Include="Contrib.Grpc.Core.M1" Version="2.41.0" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Migrations\" />
+        <Folder Include="Migrations\" />
     </ItemGroup>
 
     <!-- Environment-specific configurations -->
@@ -39,8 +41,8 @@
     </PropertyGroup>
     <Target Name="CopyGrpcNativeAssetsToOutDir" AfterTargets="Build">
         <ItemGroup>
-            <NativeAssetToCopy Condition="$([MSBuild]::IsOSPlatform('OSX'))" Include="$(OutDir)runtimes/osx-arm64/native/*"/>
+            <NativeAssetToCopy Condition="$([MSBuild]::IsOSPlatform('OSX'))" Include="$(OutDir)runtimes/osx-arm64/native/*" />
         </ItemGroup>
-        <Copy SourceFiles="@(NativeAssetToCopy)" DestinationFolder="$(OutDir).azurefunctions/runtimes/osx-arm64/native"/>
+        <Copy SourceFiles="@(NativeAssetToCopy)" DestinationFolder="$(OutDir).azurefunctions/runtimes/osx-arm64/native" />
     </Target>
 </Project>

@@ -1,12 +1,7 @@
 using Azure.Storage.Blobs;
-using FluentValidation;
+using Legal_IA;
 using Legal_IA.Data;
-using Legal_IA.DTOs;
-using Legal_IA.Interfaces.Repositories;
-using Legal_IA.Interfaces.Services;
-using Legal_IA.Repositories;
 using Legal_IA.Services;
-using Legal_IA.Validators;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -55,19 +50,11 @@ var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsSt
 
 builder.Services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServiceClient(azuriteConnectionString));
 
-// Register repositories
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
-builder.Services.AddScoped<IInvoiceItemRepository, InvoiceItemRepository>();
-
-// Register services
-builder.Services.AddScoped<ICacheService, CacheService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-
-// Register validators
-builder.Services.AddTransient<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
+// Register repositories, services, validators, and external clients using Startup extensions
+builder.Services.AddRepositories();
+builder.Services.AddServices();
+builder.Services.AddValidators();
+builder.Services.AddExternalClients(redisConnectionString, azuriteConnectionString);
 
 // Configure logging
 builder.Services.AddLogging();
