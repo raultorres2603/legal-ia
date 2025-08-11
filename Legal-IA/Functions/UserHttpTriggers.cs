@@ -126,8 +126,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         }
     }
 
-    [Function("UpdateUser")]
-    public async Task<IActionResult> UpdateUser(
+    [Function("PatchUser")]
+    public async Task<IActionResult> PatchUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "users/{id}")]
         HttpRequestData req,
         string id,
@@ -149,11 +149,11 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
 
             var updateData = new { UserId = userId, UpdateRequest = updateRequest };
             var result = await client.ScheduleNewOrchestrationInstanceAsync(
-                "UserUpdateOrchestrator", updateData);
+                "PatchUserOrchestrator", updateData);
             var response = await client.WaitForInstanceCompletionAsync(result, true, CancellationToken.None);
             if (response.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
             {
-                logger.LogError("Failed to update user {UserId}: {Error}", id, response.FailureDetails);
+                logger.LogError("Failed to patch user {UserId}: {Error}", id, response.FailureDetails);
                 return new StatusCodeResult(500);
             }
 
@@ -163,8 +163,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
                     return new NotFoundResult();
                 return new OkObjectResult(new
                 {
-                    message = "User updated successfully",
-                    userUpdated = response.ReadOutputAs<UserResponse>()
+                    message = "User patched successfully",
+                    userPatched = response.ReadOutputAs<UserResponse>()
                 });
             }
 
@@ -172,7 +172,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating user {UserId}", id);
+            logger.LogError(ex, "Error patching user {UserId}", id);
             return new StatusCodeResult(500);
         }
     }

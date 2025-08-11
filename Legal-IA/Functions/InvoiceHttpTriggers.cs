@@ -129,8 +129,8 @@ public class InvoiceHttpTriggers
         return new StatusCodeResult(500);
     }
 
-    [Function("UpdateInvoice")]
-    public async Task<IActionResult> UpdateInvoice(
+    [Function("PatchInvoice")]
+    public async Task<IActionResult> PatchInvoice(
         [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "invoices/users/{id}")]
         HttpRequestData req,
         FunctionContext context,
@@ -138,36 +138,37 @@ public class InvoiceHttpTriggers
         string id)
     {
         var logger = context.GetLogger("InvoiceHttpTriggers");
-        logger.LogInformation($"[UpdateInvoice] HTTP trigger started for id {id}");
+        logger.LogInformation($"[PatchInvoice] HTTP trigger started for id {id}");
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin)))
         {
-            logger.LogInformation("[UpdateInvoice] Unauthorized access attempt");
+            logger.LogInformation("[PatchInvoice] Unauthorized access attempt");
             return new UnauthorizedResult();
         }
 
         if (!Guid.TryParse(id, out var guid))
         {
-            logger.LogInformation("[UpdateInvoice] Invalid GUID format");
+            logger.LogInformation("[PatchInvoice] Invalid GUID format");
             return new BadRequestResult();
         }
 
         var dto = await req.ReadFromJsonAsync<UpdateInvoiceRequest>();
         if (dto == null)
         {
-            logger.LogInformation("[UpdateInvoice] Invalid request body");
+            logger.LogInformation("[PatchInvoice] Invalid request body");
             return new BadRequestResult();
         }
 
         var orchestratorInput = new { InvoiceId = guid, UpdateRequest = dto };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceUpdateOrchestrator", orchestratorInput);
-        logger.LogInformation($"[UpdateInvoice] Orchestration started with InstanceId: {instanceId}");
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceByCurrentUserOrchestrator", orchestratorInput);
+        logger.LogInformation($"[PatchInvoice] Orchestration started with InstanceId: {instanceId}");
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-        logger.LogInformation($"[UpdateInvoice] Orchestration completed with status: {response.RuntimeStatus}");
+        logger.LogInformation($"[PatchInvoice] Orchestration completed with status: {response.RuntimeStatus}");
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());
         return new StatusCodeResult(500);
     }
+
 
     [Function("DeleteInvoice")]
     public async Task<IActionResult> DeleteInvoice(

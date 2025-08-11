@@ -1,3 +1,4 @@
+using Legal_IA.DTOs;
 using Legal_IA.Enums;
 using Legal_IA.Models;
 using Legal_IA.Services;
@@ -76,8 +77,8 @@ public class InvoiceItemHttpTriggers
         return new StatusCodeResult(500);
     }
 
-    [Function("UpdateInvoiceItem")]
-    public async Task<IActionResult> UpdateInvoiceItem(
+    [Function("PatchInvoiceItem")]
+    public async Task<IActionResult> PatchInvoiceItem(
         [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "invoice-items/users/{id}")]
         HttpRequestData req,
         FunctionContext context,
@@ -87,9 +88,10 @@ public class InvoiceItemHttpTriggers
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.Admin))) return new UnauthorizedResult();
         if (!Guid.TryParse(id, out var guid)) return new BadRequestResult();
-        var item = await req.ReadFromJsonAsync<InvoiceItem>();
-        if (item == null || !Equals(item.Id, guid)) return new BadRequestResult();
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemUpdateOrchestrator", item);
+        var dto = await req.ReadFromJsonAsync<UpdateInvoiceItemRequest>();
+        if (dto == null) return new BadRequestResult();
+        var orchestratorInput = new { InvoiceItemId = guid, UpdateRequest = dto };
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceItemOrchestrator", orchestratorInput);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
@@ -97,9 +99,9 @@ public class InvoiceItemHttpTriggers
             if (updated == null) return new NotFoundResult();
             return new OkObjectResult(updated);
         }
-
         return new StatusCodeResult(500);
     }
+
 
     [Function("DeleteInvoiceItem")]
     public async Task<IActionResult> DeleteInvoiceItem(
