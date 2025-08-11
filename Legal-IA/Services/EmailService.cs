@@ -7,9 +7,13 @@ namespace Legal_IA.Services;
 
 public class EmailService(IConfiguration configuration, ILogger<EmailService> logger) : IEmailService
 {
-    private readonly string _sendGridApiKey = configuration["SendGrid:ApiKey"] ?? throw new ArgumentNullException("SendGrid:ApiKey not configured");
-    private readonly string _fromEmail = configuration["SendGrid:FromAddress"] ?? throw new ArgumentNullException("SendGrid:FromAddress not configured");
+    private readonly string _fromEmail = configuration["SendGrid:FromAddress"] ??
+                                         throw new ArgumentNullException("SendGrid:FromAddress not configured");
+
     private readonly string _fromName = configuration["SendGrid:FromName"] ?? "LegalIA";
+
+    private readonly string _sendGridApiKey = configuration["SendGrid:ApiKey"] ??
+                                              throw new ArgumentNullException("SendGrid:ApiKey not configured");
 
     /// <summary>
     ///     Sends the verification email using the template and logs the process.

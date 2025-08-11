@@ -6,13 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
-using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions;
 
 public class InvoiceHttpTriggers
 {
-
     [Function("GetInvoicesByCurrentUser")]
     public async Task<IActionResult> GetInvoicesByCurrentUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoices/user")]
@@ -92,7 +90,9 @@ public class InvoiceHttpTriggers
         if (dto == null) return new BadRequestResult();
 
         var orchestratorInput = new { InvoiceId = invoiceId, UserId = userId, UpdateRequest = dto };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceByCurrentUserOrchestrator", orchestratorInput);
+        var instanceId =
+            await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceByCurrentUserOrchestrator",
+                orchestratorInput);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
             return new OkObjectResult(response.ReadOutputAs<Invoice>());

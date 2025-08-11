@@ -78,9 +78,10 @@ public static class InvoiceItemOrchestrators
             $"[InvoiceItemGetByUserIdOrchestrator] Orchestrator completed for userId {userId}, returned {result.Count} items");
         return result;
     }
-    
+
     [Function("PatchInvoiceItemOrchestrator")]
-    public static async Task<InvoiceItem?> PatchInvoiceItemOrchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
+    public static async Task<InvoiceItem?> PatchInvoiceItemOrchestrator(
+        [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("PatchInvoiceItemOrchestrator");
         var input = context.GetInput<object>();
@@ -97,11 +98,14 @@ public static class InvoiceItemOrchestrators
             logger.LogError("PatchInvoiceItemOrchestrator received invalid input structure");
             return null;
         }
-        if (!Guid.TryParse(itemIdProp.ToString(), out var itemId) || !Guid.TryParse(userIdProp.ToString(), out var userId))
+
+        if (!Guid.TryParse(itemIdProp.ToString(), out var itemId) ||
+            !Guid.TryParse(userIdProp.ToString(), out var userId))
         {
             logger.LogError("PatchInvoiceItemOrchestrator received invalid ItemId or UserId");
             return null;
         }
+
         var result = await context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", input);
         return result;
     }

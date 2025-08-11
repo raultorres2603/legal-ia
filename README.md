@@ -133,15 +133,32 @@ Legal-IA addresses the critical need for automated legal document generation in 
 
 ## 🌐 **API Endpoints**
 
-### **User Management** (`/api/users`) 👥
+### **User Management**
 
-| 🛠️ Method | 🔗 Endpoint | 📝 Description |
-|--------|----------|-------------|
-| `POST` | `/api/users` | Create new user account |
-| `GET` | `/api/users/{id}` | Get user by ID |
-| `PATCH` | `/api/users/{id}` | Partially update user profile (only provided fields are updated) |
-| `DELETE` | `/api/users/{id}` | Deactivate user account |
-| `GET` | `/api/users` | List all users (admin) |
+| 🛠️ Method | 🔗 Endpoint      | 📝 Description                                      |
+|-----------|-----------------|----------------------------------------------------|
+| `POST`    | `/api/users`    | Create new user account                            |
+| `GET`     | `/api/users/{id}` | Get user by ID                                   |
+| `PATCH`   | `/user/me`      | Partially update current user's profile (JWT only)  |
+| `DELETE`  | `/api/users/{id}` | Deactivate user account                          |
+| `GET`     | `/api/users`    | List all users (admin)                             |
+
+> **Note:**
+> - The `PATCH /user/me` endpoint requires a valid JWT in the `Authorization` header. The userId is extracted from the token, so users can only update their own profile.
+> - All PATCH endpoints accept only the fields to be updated (partial updates), not the full object.
+
+#### Example PATCH Request (User)
+```http
+PATCH /user/me
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "FirstName": "Ana",
+  "Phone": "+34 600 123 456"
+}
+```
+This will only update the user's first name and phone number, leaving all other fields unchanged.
 
 # 🧾 Invoices & Invoice Items Module
 
