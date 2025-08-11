@@ -3,6 +3,8 @@
 
 # Azure Functions localsettings file
 /Legal-IA/local.settings.json
+# Ignore Azure Functions local settings
+local.settings.json
 
 # User-specific files
 *.suo
