@@ -174,7 +174,31 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
 
     private void PatchInvoice(Invoice existing, UpdateInvoiceRequest? updateRequest)
     {
-        throw new NotImplementedException();
+        if (updateRequest == null) return;
+        if (updateRequest.InvoiceNumber != null)
+            existing.InvoiceNumber = updateRequest.InvoiceNumber;
+        if (updateRequest.IssueDate.HasValue)
+            existing.IssueDate = updateRequest.IssueDate.Value;
+        if (updateRequest.ClientName != null)
+            existing.ClientName = updateRequest.ClientName;
+        if (updateRequest.ClientNIF != null)
+            existing.ClientNIF = updateRequest.ClientNIF;
+        if (updateRequest.ClientAddress != null)
+            existing.ClientAddress = updateRequest.ClientAddress;
+        if (updateRequest.Subtotal.HasValue)
+            existing.Subtotal = updateRequest.Subtotal.Value;
+        if (updateRequest.VAT.HasValue)
+            existing.VAT = updateRequest.VAT.Value;
+        if (updateRequest.IRPF.HasValue)
+            existing.IRPF = updateRequest.IRPF.Value;
+        if (updateRequest.Total.HasValue)
+            existing.Total = updateRequest.Total.Value;
+        if (updateRequest.Notes != null)
+            existing.Notes = updateRequest.Notes;
+        if (updateRequest.UserId.HasValue)
+            existing.UserId = updateRequest.UserId.Value;
+        if (updateRequest.Status.HasValue)
+            existing.Status = updateRequest.Status.Value;
+        // Items patching is not handled here; implement if needed
     }
 }
-
