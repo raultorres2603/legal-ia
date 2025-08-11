@@ -78,4 +78,36 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         }
         return new StatusCodeResult(500);
     }
+
+    [Function("PatchUser")]
+    public async Task<IActionResult> PatchUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "user/me")] HttpRequestData req,
+        [DurableClient] DurableTaskClient client)
+    {
+        // Validate JWT and extract userId
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)) || jwtResult == null || !jwtResult.IsValid || jwtResult.Claims == null || jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId)) return new UnauthorizedResult();
+
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var updateRequest = JsonSerializer.Deserialize<UpdateUserRequest>(requestBody);
+        if (updateRequest == null || updateRequest.IsActive.HasValue)
+            return new BadRequestObjectResult("Invalid update data");
+
+        var orchestrationInput = new UpdateUserOrchestrationInput
+        {
+            UserId = userId,
+            UpdateRequest = updateRequest
+        };
+
+        var instance = await client.ScheduleNewOrchestrationInstanceAsync("UserPatchOrchestrator", orchestrationInput);
+        var response = await client.WaitForInstanceCompletionAsync(instance, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        {
+            var userResponse = response.ReadOutputAs<UserResponse>();
+            if (userResponse == null)
+                return new NotFoundObjectResult($"User not found.");
+            return new OkObjectResult(userResponse);
+        }
+        return new StatusCodeResult(500);
+    }
 }

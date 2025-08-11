@@ -104,30 +104,6 @@ public class PatchUserActivity(
         }
     }
 }
-
-// [Function("UpdateUserActivity")]
-// public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
-// {
-//     logger.LogInformation($"Starting UpdateUserActivity for UserId: {updateData.UserId}");
-//     try
-//     {
-//         var result = await userService.UpdateUserAsync(updateData.UserId, updateData.UpdateRequest);
-//         if (result == null)
-//         {
-//             logger.LogWarning($"User not found for UserId: {updateData.UserId}");
-//             return null;
-//         }
-//
-//         await cacheService.RemoveByPatternAsync("users");
-//         logger.LogInformation($"User updated successfully for UserId: {updateData.UserId}");
-//         return result;
-//     }
-//     catch (Exception ex)
-//     {
-//         logger.LogError(ex, $"Error in UpdateUserActivity for UserId: {updateData.UserId}");
-//         throw;
-//     }
-// }
 public class DeleteUserActivity(
     IUserService userService,
     ICacheService cacheService,
