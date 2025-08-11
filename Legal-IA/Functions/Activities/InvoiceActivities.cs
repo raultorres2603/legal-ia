@@ -90,61 +90,41 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         log.LogInformation("Invoice deleted and related cache keys invalidated");
         return deleted;
     }
-
-    // [Function(nameof(InvoiceUpdateActivity))]
-    // public async Task<Invoice> InvoiceUpdateActivity([ActivityTrigger] Invoice invoice, FunctionContext context)
-    // {
-    //     var log = context.GetLogger("InvoiceUpdateActivity");
-    //     var updated = await invoiceRepository.UpdateAsync(invoice);
-    //     await cacheService.RemoveByPatternAsync("invoices");
-    //     log.LogInformation("Invoice updated and cache invalidated for pattern 'invoices'");
-    //     return updated;
-    // }
-
-    // [Function("UpdateInvoiceByCurrentUserActivity")]
-    // public async Task<Invoice> UpdateInvoiceByCurrentUserActivity([ActivityTrigger] object input,
-    //     FunctionContext context)
-    // {
-    //     var log = context.GetLogger("UpdateInvoiceByCurrentUserActivity");
-    //     var inputElement = (JsonElement)input;
-    //     var invoiceId = inputElement.GetProperty("InvoiceId").GetGuid();
-    //     var updateRequest = JsonSerializer.Deserialize<UpdateInvoiceRequest>(inputElement.GetProperty("UpdateRequest").GetRawText());
-    //     var userId = inputElement.GetProperty("UserId").GetGuid();
-    //     var existing = await invoiceRepository.GetByIdAsync(invoiceId);
-    //     if (existing == null || existing.UserId != userId)
-    //         throw new UnauthorizedAccessException("Invoice not found or does not belong to user");
-    //     if (existing.Status != InvoiceStatus.Pending)
-    //         throw new InvalidOperationException("Only pending invoices can be updated");
-
-    //    PatchInvoice(existing, updateRequest);
-
-    //     var updated = await invoiceRepository.UpdateAsync(existing);
-    //     // Invalidate user invoice list cache (exact key and pattern)
-    //     await cacheService.RemoveAsync($"invoices:user:{userId}");
-    //     await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
-    //     await cacheService.RemoveByPatternAsync($"invoices:{existing.Id}");
-    //     log.LogInformation("Invoice updated by current user and related cache keys invalidated");
-    //     return updated;
-    // }
+    
     [Function("InvoiceGetByIdAndUserIdActivity")]
-    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] dynamic input,
+    public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] object input,
         FunctionContext context)
     {
         var log = context.GetLogger("InvoiceGetByIdAndUserIdActivity");
-        var invoiceId = (Guid)input.InvoiceId;
-        var userId = (Guid)input.UserId;
-        log.LogInformation(
-            $"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
+        Guid invoiceId;
+        Guid userId;
+        if (input is JsonElement inputElement)
+        {
+            invoiceId = inputElement.GetProperty("InvoiceId").GetGuid();
+            userId = inputElement.GetProperty("UserId").GetGuid();
+        }
+        else
+        {
+            dynamic dyn = input;
+            if (dyn != null)
+            {
+                invoiceId = (Guid)dyn.InvoiceId;
+                userId = (Guid)dyn.UserId;
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid input for InvoiceGetByIdAndUserIdActivity");
+            }
+        }
+
+        log.LogInformation($"[InvoiceGetByIdAndUserIdActivity] Activity started for invoice {invoiceId} and user {userId}");
         var invoice = await invoiceRepository.GetByIdAsync(invoiceId);
         if (invoice != null && invoice.UserId == userId)
         {
             log.LogInformation($"Invoice {invoiceId} found for user {userId}");
             return invoice;
         }
-
         log.LogWarning($"Invoice {invoiceId} not found or does not belong to user {userId}");
-        log.LogInformation(
-            $"[InvoiceGetByIdAndUserIdActivity] Activity completed for invoice {invoiceId} and user {userId}");
         return null;
     }
 
