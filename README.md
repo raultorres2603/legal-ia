@@ -259,3 +259,124 @@ Content-Type: application/json
 }
 ```
 This will only update the user's first name and phone number, leaving all other fields unchanged.
+
+# Legal-IA
+
+A legal invoice management system built with Azure Functions and .NET 8.
+
+## Overview
+
+Legal-IA is a serverless application designed to manage legal invoices and invoice items. The system provides RESTful APIs for user management, invoice operations, and administrative functions.
+
+## Features
+
+- **User Management**: Registration, authentication, and role-based access control
+- **Invoice Management**: Create, read, update, and delete invoices
+- **Invoice Items**: Manage individual items within invoices
+- **Email Notifications**: Automated email services for various operations
+- **Caching**: Redis-based caching for improved performance
+- **Database**: Entity Framework Core with SQL Server
+
+## Technology Stack
+
+- **.NET 8**: Core framework
+- **Azure Functions**: Serverless compute platform
+- **Entity Framework Core**: Object-relational mapping
+- **SQL Server**: Database
+- **JWT**: Authentication and authorization
+- **FluentValidation**: Input validation
+- **Docker**: Containerization
+
+## Project Structure
+
+```
+Legal-IA/
+├── Data/                   # Database context and configurations
+├── DTOs/                   # Data Transfer Objects
+├── Enums/                  # Enumeration types
+├── Functions/              # Azure Functions (HTTP triggers)
+├── Interfaces/             # Service and repository interfaces
+├── Models/                 # Entity models
+├── Repositories/           # Data access layer
+├── Services/               # Business logic layer
+├── Validators/             # Request validation logic
+├── Migrations/             # Entity Framework migrations
+└── Bruno/                  # API testing collections
+```
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 8 SDK
+- SQL Server or SQL Server Express
+- Azure Functions Core Tools
+- Docker (optional)
+
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Legal-IA
+   ```
+
+2. **Configure local settings**
+   Update `local.settings.json` with your database connection strings and other configuration values.
+
+3. **Run database migrations**
+   ```bash
+   dotnet ef database update
+   ```
+
+4. **Start the application**
+   ```bash
+   func start
+   ```
+
+### Using Docker
+
+You can also run the application using Docker Compose:
+
+```bash
+docker-compose up
+```
+
+## API Testing
+
+The project includes Bruno collections for API testing located in the `Bruno/` directory. Bruno is used instead of Postman for:
+
+- **E2E Testing**: End-to-end test scenarios
+- **Invoice Management**: Testing invoice and invoice item operations
+- **User Logic**: User authentication and management workflows
+
+### Bruno Collections
+
+- `E2E Test/`: Complete end-to-end testing scenarios
+- `Legal-IA Invoices & InvoiceItems Updated/`: Updated invoice management tests
+- `User Logic Collection/`: User authentication and management tests
+
+To use the Bruno collections:
+1. Install Bruno from [usebruno.com](https://www.usebruno.com/)
+2. Open the collections from the `Bruno/` directory
+3. Configure environment variables as needed
+4. Run the API tests
+
+## Database Schema
+
+The application uses the following main entities:
+
+- **User**: User accounts with role-based permissions
+- **Invoice**: Legal invoices with status tracking
+- **InvoiceItem**: Individual line items within invoices
+
+## Authentication
+
+The application uses JWT-based authentication with role-based authorization:
+
+- **Admin**: Full system access
+- **User**: Limited access to own resources
+
+## License
+
+This project is licensed under the terms specified in the LICENSE file.
