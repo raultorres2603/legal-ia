@@ -1,0 +1,41 @@
+meta {
+  name: Create Invoice
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/invoices/user
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "invoiceNumber": "INV-2025-002",
+    "issueDate": "2025-08-05T00:00:00Z",
+    "clientName": "Ana López",
+    "clientNIF": "87654321X",
+    "clientAddress": "Calle Nueva 2, Barcelona",
+    "subtotal": 500.00,
+    "VAT": 105.00,
+    "IRPF": 75.00,
+    "total": 530.00,
+    "notes": "Consulting",
+    "items": []
+  }
+}
+
+script:post-response {
+  // Set invoiceId
+  console.log("Set invoiceId to: " + res.getBody().id);
+  bru.setEnvVar("invoiceId", res.getBody().id);
+}
+
+settings {
+  encodeUrl: true
+}

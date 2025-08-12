@@ -1,0 +1,22 @@
+meta {
+  name: Update Invoice By Current User
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/invoices/user/{{invoiceId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "id": "{{invoiceId}}",
+      "invoiceNumber": "INV-2025-002"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

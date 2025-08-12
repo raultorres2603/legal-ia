@@ -1,0 +1,15 @@
+meta {
+  name: Get Invoices
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/invoices/user
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

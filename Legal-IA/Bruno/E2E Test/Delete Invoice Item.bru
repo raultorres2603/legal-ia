@@ -1,0 +1,15 @@
+meta {
+  name: Delete Invoice Item
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/invoice-items/user/{{invoiceItemId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
