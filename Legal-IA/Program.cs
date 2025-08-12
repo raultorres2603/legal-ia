@@ -33,22 +33,16 @@ builder.Services.AddDbContext<LegalIaDbContext>(options =>
 var redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings:Redis")
                             ?? "localhost:6380";
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = redisConnectionString;
-    options.InstanceName = "LegalIA";
-});
-
-// Register IConnectionMultiplexer for StackExchange.Redis
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect(redisConnectionString));
-
 // Configure Azure Blob Storage (Azurite)
 var azuriteConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
                               ??
                               "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;";
 
 builder.Services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServiceClient(azuriteConnectionString));
+
+// Register IConnectionMultiplexer for StackExchange.Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(redisConnectionString));
 
 // Register repositories, services, validators, and external clients using Startup extensions
 builder.Services.AddRepositories();
@@ -62,6 +56,8 @@ builder.Services.AddLogging();
 // Register JwtService
 builder.Services.AddSingleton<JwtService>();
 
+// Configure CORS using Startup extension
+builder.Services.AddCorsConfiguration();
 
 var app = builder.Build();
 
