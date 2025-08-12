@@ -1,0 +1,40 @@
+meta {
+  name: Register User copy
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "FirstName": "{{$randomNameSuffix}}",
+    "LastName": "{{$randomNamePrefix}}",
+    "Email": "{{randomEmail}}",
+    "DNI": "49909606F",
+    "Password": "{{randomPassword}}"
+  }
+}
+
+script:pre-request {
+  const randomPassword = bru.interpolate("{{$randomPassword}}")
+  const randomEmail = bru.interpolate("${{randomEmail}}")
+  bru.setEnvVar("randomPassword", randomPassword)
+  bru.setEnvVar("randomEmail", randomEmail)
+}
+
+script:post-response {
+  bru.set
+}
+
+settings {
+  encodeUrl: true
+}
