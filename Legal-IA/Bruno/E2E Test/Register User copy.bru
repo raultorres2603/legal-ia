@@ -16,19 +16,24 @@ headers {
 
 body:json {
   {
-    "FirstName": "{{$randomNameSuffix}}",
-    "LastName": "{{$randomNamePrefix}}",
+    "FirstName": "{{$randomFirstName}}",
+    "LastName": "{{$randomLastName}}",
     "Email": "{{randomEmail}}",
+    "Phone": "{{$randomPhoneNumber}}",
+    "Address": "{{$randomStreetAddress}}",
+    "City": "{{$randomCity}}",
     "DNI": "49909606F",
     "Password": "{{randomPassword}}"
   }
 }
 
 script:pre-request {
-  const randomPassword = bru.interpolate("{{$randomPassword}}")
-  const randomEmail = bru.interpolate("${{randomEmail}}")
-  bru.setEnvVar("randomPassword", randomPassword)
-  bru.setEnvVar("randomEmail", randomEmail)
+  const randomPassword = bru.interpolate('{{$randomPassword}}')
+  console.log(randomPassword);
+  const randomEmail = bru.interpolate('{{$randomEmail}}')
+  console.log(randomEmail)
+  bru.setEnvVar('randomPassword', randomPassword)
+  bru.setEnvVar('randomEmail', randomEmail)
 }
 
 script:post-response {
