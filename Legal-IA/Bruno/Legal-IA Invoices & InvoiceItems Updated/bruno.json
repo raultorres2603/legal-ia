@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Legal-IA Invoices & InvoiceItems Updated",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

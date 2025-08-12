@@ -1,0 +1,27 @@
+meta {
+  name: Update Invoice
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/invoices/user/{{invoiceId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "id": "{{invoiceId}}",
+      "invoiceNumber": "INV-2025-005",
+      "clientName": "PAPAOUTE",
+      "clientNIF": "12345678Z",
+      "clientAddress": "Calle Mayor 1, Madrid",
+      "IRPF": 150.00,
+      "notes": "Professional IT"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,36 @@
+meta {
+  name: Create Invoice Item By Current User
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/invoice-items/user
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "invoiceId": "{{invoiceId}}",
+    "description": "LEGAL service",
+    "quantity": 1,
+    "unitPrice": 500.00,
+    "VAT": 105.00,
+    "IRPF": 75.00,
+    "total": 530.00
+  }
+}
+
+script:post-response {
+  // Set invoiceItemId
+  bru.setEnvVar("invoiceItemId", res.getBody().id);
+}
+
+settings {
+  encodeUrl: true
+}
