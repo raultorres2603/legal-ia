@@ -1,0 +1,23 @@
+meta {
+  name: Update User
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/user/me
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "FirstName": "{{$randomFirstName}}",
+    "Address": "{{$randomStreetAddress}}",
+    "City": "{{$randomCity}}"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
