@@ -19,11 +19,20 @@ body:json {
     "invoiceId": "{{invoiceId}}",
     "description": "LEGAL service",
     "quantity": 1,
-    "unitPrice": 500.00,
-    "VAT": 105.00,
-    "IRPF": 75.00,
-    "total": 530.00
+    "unitPrice": {{$randomPrice}},
+    "VAT": "{{randomVat}}",
+    "IRPF": "{{randomIrpf}}",
+    "total": "{{randomTotal}}"
   }
+}
+
+script:pre-request {
+  const vat = bru.interpolate("{{$randomPrice}}")
+  const irpf = bru.interpolate("{{$randomPrice}}")
+  const total = parseInt(vat) + parseInt(irpf)
+  bru.setEnvVar("randomVat",vat)
+  bru.setEnvVar("randomIrpf",irpf)
+  bru.setEnvVar("randomTotal",total)
 }
 
 script:post-response {

@@ -22,18 +22,30 @@ body:json {
     "Phone": "{{$randomPhoneNumber}}",
     "Address": "{{$randomStreetAddress}}",
     "City": "{{$randomCity}}",
-    "DNI": "49909606F",
+    "DNI": "{{randomDni}}",
     "Password": "{{randomPassword}}"
   }
 }
 
 script:pre-request {
-  const randomPassword = bru.interpolate('{{$randomPassword}}')
-  console.log(randomPassword);
+  function randomDni() {
+    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'; // checksum map
+    const n = Math.floor(Math.random() * 100000000); // 0..99,999,999
+    const numStr = n.toString().padStart(8, '0');    // 8 digits
+    const letter = letters[n % 23];
+    return `${numStr}${letter}`;
+  }
+  
   const randomEmail = bru.interpolate('{{$randomEmail}}')
-  console.log(randomEmail)
-  bru.setEnvVar('randomPassword', randomPassword)
+  console.log("Random E-Mail: " + randomEmail)
+  const randomPassword = bru.interpolate('{{$randomPassword}}')
+  console.log("Random password: " + randomPassword);
+  const randomDNI = randomDni();
+  console.log("Random DNI: " + randomDNI)
   bru.setEnvVar('randomEmail', randomEmail)
+  bru.setEnvVar('randomPassword', randomPassword)
+  bru.setEnvVar("randomDni",randomDNI)
+  
 }
 
 script:post-response {

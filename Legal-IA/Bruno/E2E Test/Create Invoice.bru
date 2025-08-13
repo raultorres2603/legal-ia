@@ -16,18 +16,37 @@ headers {
 
 body:json {
   {
-    "invoiceNumber": "INV-2025-002",
-    "issueDate": "2025-08-05T00:00:00Z",
-    "clientName": "Ana López",
-    "clientNIF": "87654321X",
-    "clientAddress": "Calle Nueva 2, Barcelona",
-    "subtotal": 500.00,
-    "VAT": 105.00,
-    "IRPF": 75.00,
-    "total": 530.00,
-    "notes": "Consulting",
+    "invoiceNumber": "INV-{{$timestamp}}",
+    "issueDate": "{{$isoTimestamp}}",
+    "clientName": "{{$randomFullName}}",
+    "clientNIF": "{{randomDni}}",
+    "clientAddress": "{{$randomStreetAddress}}",
+    "subtotal": {{$randomPrice}},
+    "VAT": "{{randomVat}}",
+    "IRPF": "{{randomIrpf}}",
+    "total": "{{randomTotal}}",
+    "notes": "{{$randomLoremSentence}}",
     "items": []
   }
+}
+
+script:pre-request {
+  function randomDni() {
+    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'; // checksum map
+    const n = Math.floor(Math.random() * 100000000); // 0..99,999,999
+    const numStr = n.toString().padStart(8, '0');    // 8 digits
+    const letter = letters[n % 23];
+    return `${numStr}${letter}`;
+  }
+  
+  const vat = bru.interpolate("{{$randomPrice}}")
+  const irpf = bru.interpolate("{{$randomPrice}}")
+  const total = parseInt(vat) + parseInt(irpf)
+  const randomClientNif = randomDni();
+  bru.setEnvVar("randomVat",vat)
+  bru.setEnvVar("randomIrpf",irpf)
+  bru.setEnvVar("randomTotal",total)
+  bru.setEnvVar("randomDni",randomClientNif)
 }
 
 script:post-response {
