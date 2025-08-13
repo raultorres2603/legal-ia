@@ -60,6 +60,8 @@ jobs:
               SendGrid:ApiKey="${{ secrets.SENDGRID_API_KEY }}" \
               SendGrid:FromAddress="${{ secrets.SENDGRID_FROM_EMAIL }}" \
               SendGrid:FromName="${{ secrets.SENDGRID_FROM_NAME }}" \
+              ASPNETCORE_ENVIRONMENT="${{secrets.ASPNETCORE_ENVIRONMENT}}" \
+              PRODUCTION_DOMAIN="${{ secrets.PRODUCTION_DOMAIN }}" \
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1

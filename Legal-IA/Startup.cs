@@ -13,32 +13,29 @@ namespace Legal_IA;
 
 public static class Startup
 {
-    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    public static void AddRepositories(this IServiceCollection services)
     {
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IInvoiceItemRepository, InvoiceItemRepository>();
-        return services;
     }
 
-    public static IServiceCollection AddServices(this IServiceCollection services)
+    public static void AddServices(this IServiceCollection services)
     {
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IUserService, UserService>();
         services.AddSingleton<JwtService>();
-        return services;
     }
 
-    public static IServiceCollection AddValidators(this IServiceCollection services)
+    public static void AddValidators(this IServiceCollection services)
     {
         services.AddTransient<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
-        return services;
     }
 
-    public static IServiceCollection AddExternalClients(this IServiceCollection services, string redisConnectionString,
+    public static void AddExternalClients(this IServiceCollection services, string redisConnectionString,
         string azuriteConnectionString)
     {
         services.AddStackExchangeRedisCache(options =>
@@ -49,6 +46,60 @@ public static class Startup
         services.AddSingleton<IConnectionMultiplexer>(sp =>
             ConnectionMultiplexer.Connect(redisConnectionString));
         services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServiceClient(azuriteConnectionString));
-        return services;
+    }
+
+    public static void AddCorsConfiguration(this IServiceCollection services)
+    {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? throw new ArgumentNullException();
+        bool isLocal = environment is "Local" or "Development";
+
+        services.AddCors(options =>
+        {
+            if (isLocal)
+            {
+                // Use CORS_ALLOWED_ORIGIN for local
+                var localOrigin = Environment.GetEnvironmentVariable("LOCAL_DOMAIN") ?? throw new ArgumentNullException();
+                options.AddPolicy("LocalPolicy", policy =>
+                {
+                    policy.WithOrigins(localOrigin)
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+                });
+            }
+            else
+            {
+                // Only allow https for production domain
+                var prodDomain = Environment.GetEnvironmentVariable("PRODUCTION_DOMAIN") ?? throw new ArgumentNullException();
+                options.AddPolicy("ProductionPolicy", policy =>
+                {
+                    policy.WithOrigins(prodDomain)
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+                });
+            }
+
+            // Default policy
+            options.AddDefaultPolicy(policy =>
+            {
+                if (isLocal)
+                {
+                    var localOrigin = Environment.GetEnvironmentVariable("LOCAL_DOMAIN") ?? throw new ArgumentNullException();
+                    policy.WithOrigins(localOrigin)
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+                }
+                else
+                {
+                    var prodDomain = Environment.GetEnvironmentVariable("PRODUCTION_DOMAIN") ?? throw new ArgumentNullException();
+                    policy.WithOrigins(prodDomain)
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+                }
+            });
+        });
     }
 }

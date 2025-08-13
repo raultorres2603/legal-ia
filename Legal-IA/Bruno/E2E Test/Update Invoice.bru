@@ -1,7 +1,7 @@
 meta {
   name: Update Invoice
   type: http
-  seq: 3
+  seq: 6
 }
 
 patch {
@@ -13,13 +13,24 @@ patch {
 body:json {
   {
       "id": "{{invoiceId}}",
-      "invoiceNumber": "INV-2025-005",
-      "clientName": "PAPAOUTE",
-      "clientNIF": "12345678Z",
-      "clientAddress": "Calle Mayor 1, Madrid",
-      "IRPF": 150.00,
-      "notes": "Professional IT"
+      "clientName": "{{$randomFullName}}",
+      "clientNIF": "{{randomDni}}",
+      "clientAddress": "{{$randomStreetAddress}}",
+      "IRPF": 15,
+      "notes": "{{$randomLoremSentence}}"
   }
+}
+
+script:pre-request {
+  function randomDni() {
+    const letters = 'TRWAGMYFPDXBNJZSQVHLCKE'; // checksum map
+    const n = Math.floor(Math.random() * 100000000); // 0..99,999,999
+    const numStr = n.toString().padStart(8, '0');    // 8 digits
+    const letter = letters[n % 23];
+    return `${numStr}${letter}`;
+  }
+  
+  bru.setEnvVar("randomDni",randomDni())
 }
 
 settings {
