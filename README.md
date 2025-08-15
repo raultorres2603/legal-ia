@@ -231,32 +231,33 @@ All endpoints are protected by JWT. 🔒
 | 🛠️ Method | 🔗 Endpoint                        | 📝 Description                                 |
 |-----------|-------------------------------------|-----------------------------------------------|
 | `PATCH`   | `/api/invoice-items/batch-update`   | Batch update multiple invoice items by user    |
+| `POST`    | `/api/invoice-items/batch-create`   | Batch create multiple invoice items by user    |
 
 > **Note:**
-> - The `PATCH /api/invoice-items/batch-update` endpoint requires a valid JWT in the `Authorization` header. Only items belonging to the authenticated user can be updated.
+> - The `PATCH /api/invoice-items/batch-update` and `POST /api/invoice-items/batch-create` endpoints require a valid JWT in the `Authorization` header. Only items belonging to the authenticated user can be updated or created.
 > - All validation errors are aggregated and returned in a single response under the `ValidationError` key.
 > **Batch Size Limit:**
-> - The maximum number of invoice items you can update in a single batch is **50**. If you submit more than 50 items, the request will be rejected and no items will be updated.
-> - Updates are processed in batches of up to 5 items concurrently for optimal performance and reliability.
+> - The maximum number of invoice items you can update or create in a single batch is **50**. If you submit more than 50 items, the request will be rejected and no items will be processed.
+> - Operations are processed in batches of up to 5 items concurrently for optimal performance and reliability.
 
-#### Example PATCH Request (Batch Update Invoice Items)
+#### Example POST Request (Batch Create Invoice Items)
 ```http
-PATCH /api/invoice-items/batch-update
+POST /api/invoice-items/batch-create
 Authorization: Bearer <your-jwt-token>
 Content-Type: application/json
 
 [
   {
-    "ItemId": "d252c3c3-1425-4d79-b013-9a029b83da89",
-    "UpdateRequest": {
-      "Description": "Updated legal service",
-      "Amount": 120.00,
-      "Status": "Approved"
-    }
+    "InvoiceId": "a1b2c3d4-5678-1234-5678-abcdefabcdef",
+    "Description": "Legal consultation",
+    "Amount": 100.00,
+    "Status": "Pending"
   },
   {
-    "ItemId": "00000000-0000-0000-0000-000000000000",
-    "UpdateRequest": null
+    "InvoiceId": "a1b2c3d4-5678-1234-5678-abcdefabcdef",
+    "Description": "Document drafting",
+    "Amount": 200.00,
+    "Status": "Pending"
   }
 ]
 ```
@@ -269,20 +270,22 @@ Content-Type: application/json
   "detail": "See the errors property for details.",
   "errors": {
     "ValidationError": [
-      "ItemId 00000000-0000-0000-0000-000000000000: ItemId must not be empty.",
-      "ItemId 00000000-0000-0000-0000-000000000000: UpdateRequest must not be null."
+      "InvoiceId must not be empty.",
+      "Description must not be null or empty.",
+      "Amount must be greater than zero."
     ]
   }
 }
 ```
 
 **Validation Rules:**
-- `ItemId` must be a valid, non-empty GUID.
-- `UpdateRequest` must not be null and must conform to the invoice item update schema.
+- `InvoiceId` must be a valid, non-empty GUID.
+- `Description` must not be null or empty.
+- `Amount` must be greater than zero.
 - All errors are returned in a single response for easier client-side handling.
 
 **Improved Error Handling:**
-- Validation errors for batch operations are now aggregated under a single key, preventing duplicate key exceptions and making error parsing easier for clients.
+- Validation errors for batch operations (create and update) are now aggregated under a single key, preventing duplicate key exceptions and making error parsing easier for clients.
 
 ## Cache Invalidation Logic
 - Whenever you create, update, or delete an invoice item, the cache for both invoice items and invoices for the specific user is now invalidated:
