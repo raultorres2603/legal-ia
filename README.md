@@ -318,14 +318,6 @@ Content-Type: application/json
 ```
 This will only update the user's first name and phone number, leaving all other fields unchanged.
 
-## ⚡ Batch Processing (Standardized)
-
-- Both invoice item creation and update (patch) operations support batching for scalability and reliability.
-- **Batch Size Limit:** Maximum 50 items per batch for both create and patch orchestrators.
-- The orchestrators expect a batch input DTO: `BatchCreateInvoiceItemOrchestratorInput` for create, and `BatchUpdateInvoiceItemOrchestratorInput` for patch.
-- If you send more than 50 items in a single batch, the orchestrator will return an error and no items will be processed.
-- The batch validation logic is modular and consistent for both create and patch operations.
-
 # Legal-IA
 
 A legal invoice management system built with Azure Functions and .NET 8.
