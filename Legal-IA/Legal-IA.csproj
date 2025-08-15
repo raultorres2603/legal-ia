@@ -35,7 +35,7 @@
         <Folder Include="Migrations\"/>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\AI-Agent\AI-Agent.csproj" />
+        <ProjectReference Include="..\AI-Agent\AI-Agent.csproj"/>
     </ItemGroup>
 
     <!-- Environment-specific configurations -->
