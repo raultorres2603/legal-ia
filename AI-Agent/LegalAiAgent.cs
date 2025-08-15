@@ -384,6 +384,8 @@ Organiza la información cronológicamente y destaca las fechas más importantes
             FormType = request.FormType,
             Success = false
         };
+        
+        // TODO: Get invoices, invoice items and other user context data from the database in order to let AI make a guidance with real data from user
 
         try
         {
