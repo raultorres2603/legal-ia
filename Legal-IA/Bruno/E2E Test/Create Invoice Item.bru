@@ -48,7 +48,7 @@ script:pre-request {
 
 script:post-response {
   // Set invoiceItemId
-  bru.setEnvVar("invoiceItemId", res.getBody()[0].id);
+  bru.setEnvVar("invoiceItemId", res.getBody()[0].Id);
 }
 
 settings {

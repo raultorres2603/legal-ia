@@ -52,7 +52,7 @@ script:pre-request {
 script:post-response {
   // Set invoiceId
   console.log("Set invoiceId to: " + res.getBody().id);
-  bru.setEnvVar("invoiceId", res.getBody().id);
+  bru.setEnvVar("invoiceId", res.getBody().Id);
 }
 
 settings {
