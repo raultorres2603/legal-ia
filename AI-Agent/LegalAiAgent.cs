@@ -73,7 +73,7 @@ Pregunta: " + question;
                     new SystemChatMessage(classificationPrompt)
                 };
 
-                var chatClient = _openAiClient.GetChatClient("gpt-3.5-turbo");
+                var chatClient = _openAiClient.GetChatClient("gpt-5-nano"); // Use a smaller model for classification
                 var options = new ChatCompletionOptions
                 {
                     MaxOutputTokenCount = 10,
