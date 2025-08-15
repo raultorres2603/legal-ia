@@ -21,8 +21,8 @@ public class LegalAiAgent : ILegalAiAgent
         });
         
         _openAiClient = openRouterClient;
-        // Use the best free model for Spanish legal content - Llama 3.1 8B has excellent Spanish capabilities
-        _chatClient = _openAiClient.GetChatClient("meta-llama/llama-3.1-8b-instruct:free");
+        // Use a reliable free model - Google Gemma 2 9B has excellent Spanish capabilities and is confirmed available
+        _chatClient = _openAiClient.GetChatClient("google/gemma-2-9b-it:free");
         _systemPrompt = BuildSystemPrompt();
     }
 
@@ -71,6 +71,7 @@ Responde únicamente con 'SÍ' si la pregunta está relacionada con:
 - Sucesiones y herencias
 - Derecho societario
 - Cualquier otro tema jurídico
+- Modelos fiscales y obligaciones de trabajadores autónomos
 
 Responde únicamente con 'NO' si la pregunta NO está relacionada con estos temas.
 
@@ -81,7 +82,7 @@ Pregunta: " + question;
                 new SystemChatMessage(classificationPrompt)
             };
 
-            var chatClient = _openAiClient.GetChatClient("microsoft/phi-3-mini-4k-instruct:free"); // Use a smaller free model for classification
+            var chatClient = _openAiClient.GetChatClient("google/gemma-2-9b-it:free"); // Use the same reliable free model for classification
             var options = new ChatCompletionOptions
             {
                 MaxOutputTokenCount = 10,
