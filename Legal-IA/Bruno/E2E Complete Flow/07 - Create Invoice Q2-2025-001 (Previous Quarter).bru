@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/invoices
+  url: {{baseUrl}}/invoices/user
   body: json
   auth: bearer
 }
@@ -16,13 +16,25 @@ auth:bearer {
 
 body:json {
   {
-    "invoiceNumber": "Q2-2025-001",
-    "clientName": "Multinacional Corp",
-    "clientCIF": "A11223344",
-    "issueDate": "2025-05-15T00:00:00Z",
-    "dueDate": "2025-06-15T00:00:00Z",
-    "status": "Paid",
-    "notes": "Consultoría internacional Q2"
+    "invoiceNumber": "INV-2025-002",
+    "issueDate": "2025-04-05T00:00:00Z",
+    "clientName": "Ana López",
+    "clientNIF": "87654321X",
+    "clientAddress": "Calle Nueva 2, Barcelona",
+    "subtotal": 121.00,
+    "VAT": 105.00,
+    "IRPF": 75.00,
+    "total": 121.00,
+    "notes": "Consulting",
+    "items": []
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("invoice3Id", responseData.Id);
+    console.log("📄 Created Q2 Invoice:", responseData.invoiceNumber);
   }
 }
 
@@ -30,12 +42,4 @@ tests {
   test("Should create Q2 invoice successfully", function() {
     expect(res.getStatus()).to.equal(201);
   });
-}
-
-script:post-response {
-  if (res.status === 201) {
-    const responseData = res.body;
-    bru.setVar("invoice3Id", responseData.id);
-    console.log("📄 Created Q2 Invoice:", responseData.invoiceNumber);
-  }
 }

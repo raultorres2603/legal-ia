@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/users/login
+  url: {{baseUrl}}/auth/login
   body: json
   auth: none
 }
@@ -14,6 +14,14 @@ body:json {
   {
     "email": "{{testEmail}}",
     "password": "{{testPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("jwtToken", responseData.token);
+    console.log("✅ User logged in successfully");
   }
 }
 
@@ -33,12 +41,4 @@ tests {
     expect(responseJson.user.businessName).to.equal(bru.getEnvVar("testBusinessName"));
     expect(responseJson.user.taxRegime).to.equal(bru.getEnvVar("testTaxRegime"));
   });
-}
-
-script:post-response {
-  if (res.status === 200) {
-    const responseData = res.body;
-    bru.setVar("jwtToken", responseData.token);
-    console.log("✅ User logged in successfully");
-  }
 }

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/invoices
+  url: {{baseUrl}}/invoices/user
   body: json
   auth: bearer
 }
@@ -16,13 +16,25 @@ auth:bearer {
 
 body:json {
   {
-    "invoiceNumber": "Q3-2025-002",
-    "clientName": "Empresa Digital SL",
-    "clientCIF": "B87654321",
-    "issueDate": "2025-08-01T00:00:00Z",
-    "dueDate": "2025-09-01T00:00:00Z",
-    "status": "Paid",
-    "notes": "Desarrollo web y consultoría IT"
+    "invoiceNumber": "INV-2025-002",
+    "issueDate": "2025-08-05T00:00:00Z",
+    "clientName": "Ana López",
+    "clientNIF": "87654321X",
+    "clientAddress": "Calle Nueva 2, Barcelona",
+    "subtotal": 500.00,
+    "VAT": 105.00,
+    "IRPF": 75.00,
+    "total": 530.00,
+    "notes": "Consulting",
+    "items": []
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("invoice2Id", responseData.Id);
+    console.log("📄 Created Invoice 2:", responseData.invoiceNumber);
   }
 }
 
@@ -36,12 +48,4 @@ tests {
     expect(responseJson.invoiceNumber).to.equal("Q3-2025-002");
     expect(responseJson.clientName).to.equal("Empresa Digital SL");
   });
-}
-
-script:post-response {
-  if (res.status === 201) {
-    const responseData = res.body;
-    bru.setVar("invoice2Id", responseData.id);
-    console.log("📄 Created Invoice 2:", responseData.invoiceNumber);
-  }
 }

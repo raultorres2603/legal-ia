@@ -4,21 +4,14 @@ meta {
   seq: 15
 }
 
-post {
-  url: {{baseUrl}}/ai/annual-obligations
-  body: json
+get {
+  url: {{baseUrl}}/ai/legal/annual-obligations/{{currentYear}}
+  body: none
   auth: bearer
 }
 
 auth:bearer {
   token: {{jwtToken}}
-}
-
-body:json {
-  {
-    "year": {{currentYear}},
-    "userId": "{{userId}}"
-  }
 }
 
 tests {
@@ -28,7 +21,9 @@ tests {
   
   test("Should contain comprehensive year-end guidance", function() {
     const responseJson = res.getBody();
-    const answer = responseJson.toLowerCase();
+    expect(responseJson.obligations).to.be.a('string');
+    
+    const answer = responseJson.obligations.toLowerCase();
     
     // Should be personalized with user data
     expect(answer).to.satisfy(function(text) {
@@ -43,7 +38,7 @@ tests {
   
   test("Should calculate based on actual revenue", function() {
     const responseJson = res.getBody();
-    const answer = responseJson.toLowerCase();
+    const answer = responseJson.obligations.toLowerCase();
     
     // With €17,900 revenue, should provide specific guidance
     expect(answer).to.satisfy(function(text) {
@@ -53,7 +48,7 @@ tests {
   
   test("Should mention IRPF and VAT obligations", function() {
     const responseJson = res.getBody();
-    const answer = responseJson.toLowerCase();
+    const answer = responseJson.obligations.toLowerCase();
     expect(answer).to.include('irpf');
     expect(answer).to.include('iva');
   });
@@ -63,8 +58,8 @@ script:post-response {
   if (res.status === 200) {
     const response = res.body;
     console.log("📊 AI Annual Obligations:");
-    console.log("✅ Personalized with user data: " + (response.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
-    console.log("✅ Mentions modelo 100: " + (response.toLowerCase().includes('100') ? 'YES' : 'NO'));
-    console.log("✅ Mentions modelo 347: " + (response.toLowerCase().includes('347') ? 'YES' : 'NO'));
+    console.log("✅ Personalized with user data: " + (response.obligations.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Mentions modelo 100: " + (response.obligations.toLowerCase().includes('100') ? 'YES' : 'NO'));
+    console.log("✅ Mentions modelo 347: " + (response.obligations.toLowerCase().includes('347') ? 'YES' : 'NO'));
   }
 }

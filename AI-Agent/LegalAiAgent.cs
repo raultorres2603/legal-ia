@@ -546,6 +546,13 @@ Organiza cronológicamente y destaca las fechas críticas para su situación esp
     {
         try
         {
+            // First, let's set the raw content as instructions as a fallback
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                response.Instructions = "No se pudo generar la guía para este formulario.";
+                return;
+            }
+
             var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             var currentSection = "";
             var currentList = new List<string>();
@@ -553,71 +560,130 @@ Organiza cronológicamente y destaca las fechas críticas para su situación esp
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimmedLine)) continue;
 
-                if (trimmedLine.StartsWith("NOMBRE DEL FORMULARIO:"))
+                // Check for Spanish headers (case insensitive and more flexible)
+                if (trimmedLine.ToUpper().Contains("NOMBRE DEL FORMULARIO") || 
+                    trimmedLine.ToUpper().Contains("FORMULARIO") && trimmedLine.Contains(":"))
                 {
-                    response.FormName = trimmedLine.Replace("NOMBRE DEL FORMULARIO:", "").Trim();
+                    response.FormName = ExtractValueAfterColon(trimmedLine);
                     currentSection = "name";
                 }
-                else if (trimmedLine.StartsWith("INSTRUCCIONES GENERALES:"))
+                else if (trimmedLine.ToUpper().Contains("INSTRUCCIONES GENERALES") || 
+                         trimmedLine.ToUpper().Contains("INSTRUCCIONES") && trimmedLine.Contains(":"))
                 {
+                    SaveCurrentSection(currentSection, currentList, response);
                     currentSection = "instructions";
                     currentList.Clear();
                 }
-                else if (trimmedLine.StartsWith("DATOS NECESARIOS:"))
+                else if (trimmedLine.ToUpper().Contains("DATOS NECESARIOS") || 
+                         trimmedLine.ToUpper().Contains("DATOS") && trimmedLine.Contains(":"))
                 {
-                    if (currentSection == "instructions")
-                        response.Instructions = string.Join(" ", currentList);
+                    SaveCurrentSection(currentSection, currentList, response);
                     currentSection = "data";
                     currentList.Clear();
                 }
-                else if (trimmedLine.StartsWith("DOCUMENTOS REQUERIDOS:"))
+                else if (trimmedLine.ToUpper().Contains("DOCUMENTOS REQUERIDOS") || 
+                         trimmedLine.ToUpper().Contains("DOCUMENTOS") && trimmedLine.Contains(":"))
                 {
-                    if (currentSection == "data")
-                        response.RequiredData = new List<string>(currentList);
+                    SaveCurrentSection(currentSection, currentList, response);
                     currentSection = "documents";
                     currentList.Clear();
                 }
-                else if (trimmedLine.StartsWith("FECHA LÍMITE:"))
+                else if (trimmedLine.ToUpper().Contains("FECHA LÍMITE") || 
+                         trimmedLine.ToUpper().Contains("FECHA") && trimmedLine.Contains(":"))
                 {
-                    if (currentSection == "documents")
-                        response.RequiredDocuments = new List<string>(currentList);
-                    var dateText = trimmedLine.Replace("FECHA LÍMITE:", "").Trim();
-                    // Try to parse date if possible
+                    SaveCurrentSection(currentSection, currentList, response);
+                    response.DueDate = ExtractValueAfterColon(trimmedLine);
                     currentSection = "deadline";
                 }
-                else if (trimmedLine.StartsWith("PLAZO DE PAGO:"))
+                else if (trimmedLine.ToUpper().Contains("PLAZO DE PAGO") || 
+                         trimmedLine.ToUpper().Contains("PAGO") && trimmedLine.Contains(":"))
                 {
+                    response.PaymentDeadline = ExtractValueAfterColon(trimmedLine);
                     currentSection = "payment";
-                    response.PaymentDeadline = trimmedLine.Replace("PLAZO DE PAGO:", "").Trim();
                 }
-                else if (trimmedLine.StartsWith("CONSECUENCIAS DE RETRASO:"))
+                else if (trimmedLine.ToUpper().Contains("CONSECUENCIAS") && trimmedLine.Contains(":"))
                 {
+                    SaveCurrentSection(currentSection, currentList, response);
                     currentSection = "consequences";
                     currentList.Clear();
                 }
-                else if (trimmedLine.StartsWith("ORIENTACIÓN PARA CÁLCULOS:"))
+                else if (trimmedLine.ToUpper().Contains("ORIENTACIÓN") && trimmedLine.Contains(":") ||
+                         trimmedLine.ToUpper().Contains("CÁLCULOS") && trimmedLine.Contains(":"))
                 {
-                    if (currentSection == "consequences")
-                        response.Consequences = new List<string>(currentList);
+                    SaveCurrentSection(currentSection, currentList, response);
                     currentSection = "calculations";
                     currentList.Clear();
                 }
-                else if (!string.IsNullOrEmpty(trimmedLine) && !trimmedLine.Contains(":"))
+                else if (!trimmedLine.Contains(":") || trimmedLine.StartsWith("-") || trimmedLine.StartsWith("•") || 
+                         char.IsDigit(trimmedLine[0]))
                 {
+                    // This is content, not a header
+                    currentList.Add(trimmedLine);
+                }
+                else
+                {
+                    // Fallback: add to current list
                     currentList.Add(trimmedLine);
                 }
             }
 
-            // Handle the last section
-            if (currentSection == "calculations")
-                response.CalculationGuidance = string.Join(" ", currentList);
+            // Save the last section
+            SaveCurrentSection(currentSection, currentList, response);
+
+            // If we couldn't parse anything properly, put all content in instructions
+            if (string.IsNullOrEmpty(response.Instructions) && 
+                string.IsNullOrEmpty(response.FormName) && 
+                (response.RequiredData?.Count ?? 0) == 0)
+            {
+                response.Instructions = content;
+                response.FormName = $"Modelo {response.FormType}";
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // If parsing fails, put all content in instructions
+            // If parsing fails completely, put all content in instructions
             response.Instructions = content;
+            response.FormName = $"Modelo {response.FormType}";
+            response.ErrorMessage = $"Error parsing response: {ex.Message}";
         }
+    }
+
+    private void SaveCurrentSection(string currentSection, List<string> currentList, AutonomoFormResponse response)
+    {
+        if (currentList.Count == 0) return;
+
+        var content = string.Join(" ", currentList).Trim();
+        
+        switch (currentSection)
+        {
+            case "instructions":
+                response.Instructions = content;
+                break;
+            case "data":
+                response.RequiredData = new List<string>(currentList);
+                break;
+            case "documents":
+                response.RequiredDocuments = new List<string>(currentList);
+                break;
+            case "consequences":
+                response.Consequences = new List<string>(currentList);
+                break;
+            case "calculations":
+                response.CalculationGuidance = content;
+                break;
+        }
+    }
+
+    private string ExtractValueAfterColon(string line)
+    {
+        var colonIndex = line.IndexOf(':');
+        if (colonIndex >= 0 && colonIndex < line.Length - 1)
+        {
+            return line.Substring(colonIndex + 1).Trim();
+        }
+        return line.Trim();
     }
 
     private string BuildSystemPrompt(UserContext? userContext = null)

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/invoices/{{invoice2Id}}/items
+  url: {{baseUrl}}/invoice-items/user
   body: json
   auth: bearer
 }
@@ -15,12 +15,23 @@ auth:bearer {
 }
 
 body:json {
-  {
-    "description": "Desarrollo aplicación web personalizada",
-    "quantity": 40,
-    "unitPrice": 85.00,
-    "vatRate": 21.0,
-    "irpfRate": 15.0
+  [
+    {
+      "invoiceId": "{{invoice2Id}}",
+      "description": "LEGAL service",
+      "quantity": 1,
+      "unitPrice": 125.00,
+      "VAT": 105.00,
+      "IRPF": 75.00,
+      "total": 125.00
+    }
+  ]
+}
+
+script:post-response {
+  if (res.status === 200) {
+    console.log("📊 Added Invoice Item - 40 hours x €85 = €3,400");
+    console.log("💰 Running total: €6,900 + VAT");
   }
 }
 
@@ -39,11 +50,4 @@ tests {
     expect(responseJson.vatAmount).to.equal(714.00);
     expect(responseJson.irpfAmount).to.equal(510.00);
   });
-}
-
-script:post-response {
-  if (res.status === 201) {
-    console.log("📊 Added Invoice Item - 40 hours x €85 = €3,400");
-    console.log("💰 Running total: €6,900 + VAT");
-  }
 }

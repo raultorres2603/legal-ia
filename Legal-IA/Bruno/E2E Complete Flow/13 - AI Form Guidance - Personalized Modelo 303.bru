@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/ai/form-guidance
+  url: {{baseUrl}}/ai/legal/form-guidance
   body: json
   auth: bearer
 }
@@ -17,11 +17,19 @@ auth:bearer {
 body:json {
   {
     "formType": "303",
-    "quarter": {{currentQuarter}},
+    "quarter": "{{currentQuarter}}",
     "year": {{currentYear}},
     "regimeType": "{{testTaxRegime}}",
-    "activityCode": "{{testActivityCode}}",
-    "userId": "{{userId}}"
+    "activityCode": "{{testActivityCode}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.body;
+    console.log("📋 AI Form Guidance for Modelo 303:");
+    console.log("✅ Personalized guidance: " + (response.instructions.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Contains calculations: " + (response.instructions.includes('€') ? 'YES' : 'NO'));
   }
 }
 
@@ -52,13 +60,4 @@ tests {
       return text.includes('€') || text.includes('aproximadamente') || text.includes('estimado');
     });
   });
-}
-
-script:post-response {
-  if (res.status === 200) {
-    const response = res.body;
-    console.log("📋 AI Form Guidance for Modelo 303:");
-    console.log("✅ Personalized guidance: " + (response.instructions.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
-    console.log("✅ Contains calculations: " + (response.instructions.includes('€') ? 'YES' : 'NO'));
-  }
 }
