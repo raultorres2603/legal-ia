@@ -1,0 +1,41 @@
+meta {
+  name: 07 - Create Invoice Q2-2025-001 (Previous Quarter)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/invoices
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "invoiceNumber": "Q2-2025-001",
+    "clientName": "Multinacional Corp",
+    "clientCIF": "A11223344",
+    "issueDate": "2025-05-15T00:00:00Z",
+    "dueDate": "2025-06-15T00:00:00Z",
+    "status": "Paid",
+    "notes": "Consultoría internacional Q2"
+  }
+}
+
+tests {
+  test("Should create Q2 invoice successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const responseData = res.body;
+    bru.setVar("invoice3Id", responseData.id);
+    console.log("📄 Created Q2 Invoice:", responseData.invoiceNumber);
+  }
+}

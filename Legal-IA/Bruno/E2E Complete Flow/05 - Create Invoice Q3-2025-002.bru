@@ -1,0 +1,47 @@
+meta {
+  name: 05 - Create Invoice Q3-2025-002
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/invoices
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "invoiceNumber": "Q3-2025-002",
+    "clientName": "Empresa Digital SL",
+    "clientCIF": "B87654321",
+    "issueDate": "2025-08-01T00:00:00Z",
+    "dueDate": "2025-09-01T00:00:00Z",
+    "status": "Paid",
+    "notes": "Desarrollo web y consultoría IT"
+  }
+}
+
+tests {
+  test("Should create second invoice successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should return created invoice data", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.invoiceNumber).to.equal("Q3-2025-002");
+    expect(responseJson.clientName).to.equal("Empresa Digital SL");
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const responseData = res.body;
+    bru.setVar("invoice2Id", responseData.id);
+    console.log("📄 Created Invoice 2:", responseData.invoiceNumber);
+  }
+}

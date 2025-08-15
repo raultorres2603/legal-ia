@@ -1,0 +1,49 @@
+meta {
+  name: 06 - Add Invoice Items to Q3-2025-002
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/invoices/{{invoice2Id}}/items
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "description": "Desarrollo aplicación web personalizada",
+    "quantity": 40,
+    "unitPrice": 85.00,
+    "vatRate": 21.0,
+    "irpfRate": 15.0
+  }
+}
+
+tests {
+  test("Should add invoice item successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should calculate totals for multiple quantity", function() {
+    const responseJson = res.getBody();
+    const totalBase = 40 * 85.00; // 3400
+    expect(responseJson.quantity).to.equal(40);
+    expect(responseJson.unitPrice).to.equal(85.00);
+    // Total base: €3,400
+    // VAT: €714, IRPF: €510
+    expect(responseJson.vatAmount).to.equal(714.00);
+    expect(responseJson.irpfAmount).to.equal(510.00);
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    console.log("📊 Added Invoice Item - 40 hours x €85 = €3,400");
+    console.log("💰 Running total: €6,900 + VAT");
+  }
+}

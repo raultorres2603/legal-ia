@@ -1,0 +1,77 @@
+meta {
+  name: 16 - AI Complex Tax Scenario - High Revenue
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "question": "Con mis ingresos actuales de casi €18,000, ¿qué obligaciones fiscales adicionales debo considerar y hay algún umbral importante que haya superado?",
+    "userId": "{{userId}}",
+    "sessionId": "{{sessionId}}"
+  }
+}
+
+tests {
+  test("Should handle complex tax scenario", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should recognize high revenue implications", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.be.true;
+    expect(responseJson.isLegalQuestion).to.be.true;
+    
+    const answer = responseJson.answer.toLowerCase();
+    
+    // Should mention modelo 347 threshold exceeded
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('modelo 347') || text.includes('3.005') || text.includes('umbral');
+    });
+    
+    // Should provide personalized guidance
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('carlos') || text.includes('según sus ingresos') || text.includes('basado en su volumen');
+    });
+  });
+  
+  test("Should mention specific tax obligations", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.answer.toLowerCase();
+    
+    // Should mention quarterly obligations
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('trimestral') || text.includes('modelo 303') || text.includes('modelo 130');
+    });
+    
+    // Should reference actual amounts or calculations
+    expect(answer).to.include('€');
+  });
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.body;
+    console.log("🎯 AI Complex Tax Scenario Test:");
+    console.log("✅ Recognizes high revenue: " + (response.answer.toLowerCase().includes('347') ? 'YES' : 'NO'));
+    console.log("✅ Personalized response: " + (response.answer.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Contains calculations: " + (response.answer.includes('€') ? 'YES' : 'NO'));
+    console.log("");
+    console.log("🎉 E2E TEST SUITE COMPLETE!");
+    console.log("📊 Total tests: 16");
+    console.log("💰 Revenue generated: €17,900");
+    console.log("🧾 VAT collected: ~€3,759");
+    console.log("📋 IRPF retained: ~€2,685");
+    console.log("✨ AI personalization validated!");
+  }
+}

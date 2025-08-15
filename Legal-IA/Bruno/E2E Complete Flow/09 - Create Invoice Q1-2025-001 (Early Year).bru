@@ -1,0 +1,87 @@
+meta {
+  name: 09 - Create Invoice Q1-2025-001 (Early Year)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/invoices
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "invoiceNumber": "Q1-2025-001",
+    "clientName": "Startup Innovadora SL",
+    "clientCIF": "B99887766",
+    "issueDate": "2025-02-10T00:00:00Z",
+    "dueDate": "2025-03-10T00:00:00Z",
+    "status": "Paid",
+    "notes": "Consultoría inicial para startup"
+  }
+}
+meta {
+tests {
+  test("Should create Q1 invoice successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const responseData = res.body;
+    bru.setVar("invoice4Id", responseData.id);
+    console.log("📄 Created Q1 Invoice for year-to-date calculations");
+  }
+}
+  name: 08 - Add High-Value Item to Q2-2025-001
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/invoices/{{invoice3Id}}/items
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "description": "Consultoría estratégica internacional - Proyecto Q2",
+    "quantity": 1,
+    "unitPrice": 8500.00,
+    "vatRate": 21.0,
+    "irpfRate": 15.0
+  }
+}
+
+tests {
+  test("Should add high-value invoice item", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should calculate large amounts correctly", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.unitPrice).to.equal(8500.00);
+    // VAT: €1,785, IRPF: €1,275
+    expect(responseJson.vatAmount).to.equal(1785.00);
+    expect(responseJson.irpfAmount).to.equal(1275.00);
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    console.log("💰 Added high-value item: €8,500");
+    console.log("📊 Year-to-date revenue now: €15,400");
+    console.log("🧾 This should trigger modelo 347 obligation (>€3,005.06)");
+  }
+}

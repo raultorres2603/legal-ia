@@ -57,23 +57,17 @@ public class LegalAiAgent : ILegalAiAgent
         try
         {
             var classificationPrompt = @"
-Eres un clasificador especializado. Tu tarea es determinar si una pregunta está relacionada con temas legales, fiscales o judiciales en España.
+Clasifica si esta pregunta está relacionada con temas legales, fiscales o judiciales en España.
 
-Responde únicamente con 'SÍ' si la pregunta está relacionada con:
-- Derecho civil, penal, laboral, mercantil, administrativo
-- Legislación española o europea aplicable en España
-- Procedimientos judiciales
-- Fiscalidad y tributación
-- Derecho constitucional
-- Contratos y obligaciones
-- Propiedad intelectual e industrial
-- Derecho de familia
-- Sucesiones y herencias
-- Derecho societario
-- Cualquier otro tema jurídico
-- Modelos fiscales y obligaciones de trabajadores autónomos
+Responde ÚNICAMENTE con una palabra: 'SÍ' o 'NO'
 
-Responde únicamente con 'NO' si la pregunta NO está relacionada con estos temas.
+Temas legales incluyen:
+- IVA, IRPF, impuestos, declaraciones fiscales
+- Modelos de Hacienda (303, 130, 131, etc.)
+- Autónomos, obligaciones fiscales
+- Derecho civil, penal, laboral, mercantil
+- Contratos, obligaciones legales
+- Seguridad Social
 
 Pregunta: " + question;
 
@@ -82,17 +76,29 @@ Pregunta: " + question;
                 new SystemChatMessage(classificationPrompt)
             };
 
-            var chatClient = _openAiClient.GetChatClient("google/gemma-2-9b-it:free"); // Use the same reliable free model for classification
+            var chatClient = _openAiClient.GetChatClient("google/gemma-2-9b-it:free");
             var options = new ChatCompletionOptions
             {
-                MaxOutputTokenCount = 10,
-                Temperature = 0.1f
+                MaxOutputTokenCount = 5, // Reduced to force a simple response
+                Temperature = 0.0f // Zero temperature for consistent classification
             };
 
             var response = await chatClient.CompleteChatAsync(messages, options, cancellationToken);
             var answer = response.Value.Content[0].Text.Trim().ToUpper();
 
-            return answer.Contains("SÍ") || answer.Contains("SI");
+            // More robust classification logic
+            bool isLegal = answer.Contains("SÍ") || answer.Contains("SI") || answer.StartsWith("S");
+            
+            // Additional fallback - check for common Spanish tax/legal keywords
+            if (!isLegal)
+            {
+                var legalKeywords = new[] { "iva", "irpf", "impuesto", "fiscal", "hacienda", "modelo", "autonomo", "autónomo", 
+                                          "declaracion", "declaración", "derecho", "legal", "contrato", "obligacion", "obligación" };
+                var questionLower = question.ToLower();
+                isLegal = legalKeywords.Any(keyword => questionLower.Contains(keyword));
+            }
+            
+            return isLegal;
         }
         catch
         {

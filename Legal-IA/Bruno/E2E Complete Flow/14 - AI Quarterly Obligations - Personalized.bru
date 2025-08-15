@@ -1,0 +1,69 @@
+meta {
+  name: 14 - AI Quarterly Obligations - Personalized
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/ai/quarterly-obligations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "quarter": {{currentQuarter}},
+    "year": {{currentYear}},
+    "userId": "{{userId}}"
+  }
+}
+
+tests {
+  test("Should provide personalized quarterly obligations", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should contain user-specific financial guidance", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.toLowerCase();
+    
+    // Should mention user by name
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('carlos') || text.includes('garcía');
+    });
+    
+    // Should reference actual amounts or business data
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('€') || text.includes('madrid') || text.includes('consultoría') || text.includes('según sus ingresos');
+    });
+  });
+  
+  test("Should mention modelo 347 obligation", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.toLowerCase();
+    // With €17,900 revenue, should mention modelo 347 (threshold €3,005.06)
+    expect(answer).to.include('347');
+  });
+  
+  test("Should provide specific deadlines", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.toLowerCase();
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('enero') || text.includes('abril') || text.includes('julio') || text.includes('octubre') || text.includes('plazo');
+    });
+  });
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.body;
+    console.log("📅 AI Quarterly Obligations:");
+    console.log("✅ Mentions user name: " + (response.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Mentions modelo 347: " + (response.toLowerCase().includes('347') ? 'YES' : 'NO'));
+    console.log("✅ Contains financial amounts: " + (response.includes('€') ? 'YES' : 'NO'));
+  }
+}

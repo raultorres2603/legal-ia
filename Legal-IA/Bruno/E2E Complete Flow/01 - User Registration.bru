@@ -1,0 +1,63 @@
+meta {
+  name: 01 - User Registration
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{testEmail}}",
+    "password": "{{testPassword}}",
+    "firstName": "{{testUserFirstName}}",
+    "lastName": "{{testUserLastName}}",
+    "dni": "{{testUserDNI}}",
+    "cif": "{{testUserCIF}}",
+    "businessName": "{{testBusinessName}}",
+    "address": "{{testAddress}}",
+    "postalCode": "{{testPostalCode}}",
+    "city": "{{testCity}}",
+    "province": "{{testProvince}}",
+    "activityCode": "{{testActivityCode}}",
+    "taxRegime": "{{testTaxRegime}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("userId", responseData.user.id);
+    bru.setVar("jwtToken", responseData.token);
+    bru.setVar("sessionId", "e2e-session-" + Date.now());
+    
+    console.log("✅ User registered successfully:", responseData.user.email);
+    console.log("📄 User ID:", responseData.user.id);
+    console.log("🏢 Business:", responseData.user.businessName);
+  }
+}
+
+tests {
+  test("Registration should be successful", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should return user data with business information", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.user).to.be.an('object');
+    expect(responseJson.user.email).to.equal(bru.getEnvVar("testEmail"));
+    expect(responseJson.user.businessName).to.equal(bru.getEnvVar("testBusinessName"));
+    expect(responseJson.user.cif).to.equal(bru.getEnvVar("testUserCIF"));
+    expect(responseJson.user.activityCode).to.equal(bru.getEnvVar("testActivityCode"));
+  });
+  
+  test("Should return JWT token", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.token).to.be.a('string');
+    expect(responseJson.token).to.not.be.empty;
+  });
+}

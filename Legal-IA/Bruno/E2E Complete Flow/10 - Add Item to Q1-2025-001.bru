@@ -1,0 +1,48 @@
+meta {
+  name: 10 - Add Item to Q1-2025-001
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/invoices/{{invoice4Id}}/items
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "description": "Consultoría inicial y plan estratégico",
+    "quantity": 2,
+    "unitPrice": 1250.00,
+    "vatRate": 21.0,
+    "irpfRate": 15.0
+  }
+}
+
+tests {
+  test("Should add Q1 invoice item", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should complete year-to-date financial data", function() {
+    const responseJson = res.getBody();
+    const totalBase = 2 * 1250.00; // €2,500
+    expect(responseJson.vatAmount).to.equal(525.00);
+    expect(responseJson.irpfAmount).to.equal(375.00);
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    console.log("💰 Added final item: €2,500");
+    console.log("📊 TOTAL YEAR-TO-DATE REVENUE: €17,900");
+    console.log("🧾 VAT collected: ~€3,759");
+    console.log("📋 IRPF retained: ~€2,685");
+    console.log("🎯 Ready to test AI personalized guidance!");
+  }
+}

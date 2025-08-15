@@ -1,0 +1,44 @@
+meta {
+  name: 02 - User Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/users/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{testEmail}}",
+    "password": "{{testPassword}}"
+  }
+}
+
+tests {
+  test("Login should be successful", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should return valid JWT token", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.token).to.be.a('string');
+    expect(responseJson.token).to.not.be.empty;
+  });
+  
+  test("Should return user with business data", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.user.businessName).to.equal(bru.getEnvVar("testBusinessName"));
+    expect(responseJson.user.taxRegime).to.equal(bru.getEnvVar("testTaxRegime"));
+  });
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("jwtToken", responseData.token);
+    console.log("✅ User logged in successfully");
+  }
+}

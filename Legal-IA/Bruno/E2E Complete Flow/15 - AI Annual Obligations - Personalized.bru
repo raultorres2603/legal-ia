@@ -1,0 +1,70 @@
+meta {
+  name: 15 - AI Annual Obligations - Personalized
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/ai/annual-obligations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "year": {{currentYear}},
+    "userId": "{{userId}}"
+  }
+}
+
+tests {
+  test("Should provide personalized annual obligations", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should contain comprehensive year-end guidance", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.toLowerCase();
+    
+    // Should be personalized with user data
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('carlos') || text.includes('garcía') || text.includes('sus ingresos anuales');
+    });
+    
+    // Should mention key annual forms
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('modelo 100') || text.includes('modelo 390') || text.includes('modelo 347');
+    });
+  });
+  
+  test("Should calculate based on actual revenue", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.toLowerCase();
+    
+    // With €17,900 revenue, should provide specific guidance
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('€') || text.includes('basado en sus') || text.includes('volumen de facturación');
+    });
+  });
+  
+  test("Should mention IRPF and VAT obligations", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.toLowerCase();
+    expect(answer).to.include('irpf');
+    expect(answer).to.include('iva');
+  });
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.body;
+    console.log("📊 AI Annual Obligations:");
+    console.log("✅ Personalized with user data: " + (response.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Mentions modelo 100: " + (response.toLowerCase().includes('100') ? 'YES' : 'NO'));
+    console.log("✅ Mentions modelo 347: " + (response.toLowerCase().includes('347') ? 'YES' : 'NO'));
+  }
+}

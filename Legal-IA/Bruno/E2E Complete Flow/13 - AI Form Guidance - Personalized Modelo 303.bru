@@ -1,0 +1,64 @@
+meta {
+  name: 13 - AI Form Guidance - Personalized Modelo 303
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/ai/form-guidance
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "formType": "303",
+    "quarter": {{currentQuarter}},
+    "year": {{currentYear}},
+    "regimeType": "{{testTaxRegime}}",
+    "activityCode": "{{testActivityCode}}",
+    "userId": "{{userId}}"
+  }
+}
+
+tests {
+  test("Should provide personalized form guidance", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should return structured guidance with user data", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.be.true;
+    expect(responseJson.formType).to.equal("303");
+    expect(responseJson.formName).to.be.a('string');
+    expect(responseJson.instructions).to.be.a('string');
+  });
+  
+  test("Should contain personalized calculations", function() {
+    const responseJson = res.getBody();
+    const instructions = responseJson.instructions.toLowerCase();
+    
+    // Should reference user's actual financial situation
+    expect(instructions).to.satisfy(function(text) {
+      return text.includes('carlos') || text.includes('garcía') || text.includes('sus ingresos') || text.includes('basado en');
+    });
+    
+    // Should mention approximate amounts based on real data
+    expect(instructions).to.satisfy(function(text) {
+      return text.includes('€') || text.includes('aproximadamente') || text.includes('estimado');
+    });
+  });
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.body;
+    console.log("📋 AI Form Guidance for Modelo 303:");
+    console.log("✅ Personalized guidance: " + (response.instructions.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Contains calculations: " + (response.instructions.includes('€') ? 'YES' : 'NO'));
+  }
+}
