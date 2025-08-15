@@ -386,6 +386,7 @@ Organiza la información cronológicamente y destaca las fechas más importantes
         };
         
         // TODO: Get invoices, invoice items and other user context data from the database in order to let AI make a guidance with real data from user
+        // TODO: We need to split all Respositories, Models and Services into a shared project, in order to reference this new project in this Legal-IA and AI-Agent
 
         try
         {
