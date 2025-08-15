@@ -32,7 +32,7 @@ public class InvoiceItemHttpTriggers
     }
 
     /// <summary>
-    /// Creates invoice items for the current user.
+    /// Creates invoice items for the current user (batch, max 50).
     /// </summary>
     [Function("CreateInvoiceItemByCurrentUser")]
     public async Task<IActionResult> CreateInvoiceItemByCurrentUser(
@@ -46,7 +46,11 @@ public class InvoiceItemHttpTriggers
         var items = await req.ReadFromJsonAsync<List<InvoiceItem>>();
         if (items == null || items.Count == 0) return new BadRequestResult();
         // Optionally, link items to invoice owned by user (add validation here if needed)
-        return await RunOrchestrationAndRespond(client, "InvoiceItemCreateOrchestrator", items);
+        var input = new BatchCreateInvoiceItemOrchestratorInput
+        {
+            CreateRequests = items
+        };
+        return await RunOrchestrationAndRespond(client, "InvoiceItemCreateOrchestrator", input);
     }
 
     /// <summary>

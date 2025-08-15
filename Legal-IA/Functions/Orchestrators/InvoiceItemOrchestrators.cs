@@ -31,22 +31,55 @@ public static class InvoiceItemOrchestrators
         return result;
     }
 
+    /// <summary>
+    /// Orchestrates the creation of invoice items in batches to avoid timeouts and resource limits.
+    /// Returns an error if the batch size exceeds the allowed maximum (50).
+    /// </summary>
     [Function(nameof(InvoiceItemCreateOrchestrator))]
     public static async Task<List<InvoiceItem>> InvoiceItemCreateOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemCreateOrchestrator");
-        var items = context.GetInput<List<InvoiceItem>>();
-        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator started for {items?.Count ?? 0} items");
+        var input = context.GetInput<BatchCreateInvoiceItemOrchestratorInput>();
+        const int maxBatchSize = 50;
+        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator started for {input?.CreateRequests?.Count ?? 0} items");
+        var validationError = ValidateBatchInput(input, maxBatchSize);
+        if (validationError != null)
+        {
+            logger.LogError($"InvoiceItemCreateOrchestrator error: {validationError}");
+            throw new InvalidOperationException(validationError);
+        }
+        var results = await ProcessCreateBatch(input?.CreateRequests, maxBatchSize, context);
+        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created {results.Count} items");
+        return results;
+    }
+
+    private static string? ValidateBatchInput(BatchCreateInvoiceItemOrchestratorInput? input, int maxBatchSize)
+    {
+        if (input == null || input.CreateRequests == null)
+            return "Input or create requests are null.";
+        if (input.CreateRequests.Count > maxBatchSize)
+            return $"Batch size {input.CreateRequests.Count} exceeds the maximum allowed ({maxBatchSize}).";
+        return null;
+    }
+
+    /// <summary>
+    /// Processes creation of invoice items in batches.
+    /// </summary>
+    private static async Task<List<InvoiceItem>> ProcessCreateBatch(List<InvoiceItem>? items, int batchSize, TaskOrchestrationContext context)
+    {
         var results = new List<InvoiceItem>();
         if (items != null)
         {
-            foreach (var item in items)
+            for (int i = 0; i < items.Count; i += batchSize)
             {
-                results.Add(await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item));
+                var batch = items.Skip(i).Take(batchSize);
+                foreach (var item in batch)
+                {
+                    results.Add(await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item));
+                }
             }
         }
-        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created {results.Count} items");
         return results;
     }
 

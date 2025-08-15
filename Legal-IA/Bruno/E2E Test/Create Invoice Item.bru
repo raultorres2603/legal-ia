@@ -17,22 +17,26 @@ headers {
 body:json {
   [
     {
-      "invoiceId": "{{invoiceId}}",
-      "description": "LEGAL service",
-      "quantity": 1,
-      "unitPrice": {{$randomPrice}},
-      "VAT": {{randomVat}},
-      "IRPF": {{randomIrpf}},
-      "total": {{randomTotal}}
+      "CreateRequests": {
+        "invoiceId": "{{invoiceId}}",
+        "description": "LEGAL service",
+        "quantity": 1,
+        "unitPrice": {{$randomPrice}},
+        "VAT": {{randomVat}},
+        "IRPF": {{randomIrpf}},
+        "total": {{randomTotal}}
+      }
     },
     {
-      "invoiceId": "{{invoiceId}}",
-      "description": "IT service",
-      "quantity": 4,
-      "unitPrice": {{$randomPrice}},
-      "VAT": {{randomVat}},
-      "IRPF": {{randomIrpf}},
-      "total": {{randomTotal}}
+      "CreateRequests": {
+        "invoiceId": "{{invoiceId}}",
+        "description": "IT service",
+        "quantity": 4,
+        "unitPrice": {{$randomPrice}},
+        "VAT": {{randomVat}},
+        "IRPF": {{randomIrpf}},
+        "total": {{randomTotal}}
+      }
     }
   ]
 }
