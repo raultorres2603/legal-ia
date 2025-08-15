@@ -226,6 +226,67 @@ All endpoints are protected by JWT. 🔒
   - 🔒 **401 Unauthorized**: Invalid or missing token
   - 💥 **500 Internal Server Error**: Unexpected error
 
+### **Invoice Item Management**
+
+| 🛠️ Method | 🔗 Endpoint                        | 📝 Description                                 |
+|-----------|-------------------------------------|-----------------------------------------------|
+| `PATCH`   | `/api/invoice-items/batch-update`   | Batch update multiple invoice items by user    |
+| `POST`    | `/api/invoice-items/batch-create`   | Batch create multiple invoice items by user    |
+
+> **Note:**
+> - The `PATCH /api/invoice-items/batch-update` and `POST /api/invoice-items/batch-create` endpoints require a valid JWT in the `Authorization` header. Only items belonging to the authenticated user can be updated or created.
+> - All validation errors are aggregated and returned in a single response under the `ValidationError` key.
+> **Batch Size Limit:**
+> - The maximum number of invoice items you can update or create in a single batch is **50**. If you submit more than 50 items, the request will be rejected and no items will be processed.
+> - Operations are processed in batches of up to 5 items concurrently for optimal performance and reliability.
+
+#### Example POST Request (Batch Create Invoice Items)
+```http
+POST /api/invoice-items/batch-create
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+[
+  {
+    "InvoiceId": "a1b2c3d4-5678-1234-5678-abcdefabcdef",
+    "Description": "Legal consultation",
+    "Amount": 100.00,
+    "Status": "Pending"
+  },
+  {
+    "InvoiceId": "a1b2c3d4-5678-1234-5678-abcdefabcdef",
+    "Description": "Document drafting",
+    "Amount": 200.00,
+    "Status": "Pending"
+  }
+]
+```
+
+#### Example Error Response (Validation Failed)
+```json
+{
+  "title": "Validation Failed",
+  "status": 400,
+  "detail": "See the errors property for details.",
+  "errors": {
+    "ValidationError": [
+      "InvoiceId must not be empty.",
+      "Description must not be null or empty.",
+      "Amount must be greater than zero."
+    ]
+  }
+}
+```
+
+**Validation Rules:**
+- `InvoiceId` must be a valid, non-empty GUID.
+- `Description` must not be null or empty.
+- `Amount` must be greater than zero.
+- All errors are returned in a single response for easier client-side handling.
+
+**Improved Error Handling:**
+- Validation errors for batch operations (create and update) are now aggregated under a single key, preventing duplicate key exceptions and making error parsing easier for clients.
+
 ## Cache Invalidation Logic
 - Whenever you create, update, or delete an invoice item, the cache for both invoice items and invoices for the specific user is now invalidated:
   - `invoiceitems:user:{userId}` and `invoices:user:{userId}` are both cleared.

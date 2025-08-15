@@ -5,18 +5,22 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/invoice-items/user/{{invoiceItemId}}
+  url: {{baseUrl}}/invoice-items/user
   body: json
   auth: inherit
 }
 
 body:json {
-  {
-    "id": "{{invoiceItemId}}",
-    "invoiceId": "{{invoiceId}}",
-    "quantity": 3,
-    "total": 1110.00
-  }
+  [
+    {
+      "ItemId": "{{invoiceItemId}}",
+      "UpdateRequest": {
+        "invoiceId": "{{invoiceId}}",
+        "quantity": 3,
+        "total": 1110.00
+      }
+    }
+  ]
 }
 
 settings {

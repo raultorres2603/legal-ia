@@ -6,18 +6,23 @@ using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
+/// <summary>
+/// Activity for registering a new user, including email verification notification.
+/// </summary>
 public class RegisterUserActivity(
     IUserService userService,
     ILogger<RegisterUserActivity> logger,
     INotificationService notificationService)
 {
+    /// <summary>
+    /// Registers a new user and sends an email verification notification.
+    /// </summary>
     [Function("RegisterUserActivity")]
     public async Task<AuthResponse> Run([ActivityTrigger] RegisterUserRequest request)
     {
         logger.LogInformation($"[RegisterUserActivity] Activity started for email: {request.Email}");
         try
         {
-            logger.LogInformation("RegisterUserActivity started for email: {Email}", request.Email);
             // Check if user already exists
             var existingUser = await userService.GetUserByEmailAsync(request.Email);
             if (existingUser != null)
@@ -25,13 +30,11 @@ public class RegisterUserActivity(
                 logger.LogWarning("User already exists with email: {Email}", request.Email);
                 return new AuthResponse { Success = false, Message = "User already exists." };
             }
-
             // Hash password
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
             // Generate email verification token and expiration
             var verificationToken = Guid.NewGuid().ToString();
-            var tokenExpiresAt = DateTime.UtcNow.AddHours(24); // Token valid for 24 hours
-
+            var tokenExpiresAt = DateTime.UtcNow.AddHours(24);
             var user = new CreateUserRequest
             {
                 FirstName = request.FirstName,
@@ -53,10 +56,7 @@ public class RegisterUserActivity(
                 EmailVerificationTokenExpiresAt = tokenExpiresAt
             };
             var createdUser = await userService.CreateUserAsync(user);
-
-            // Send email verification
             await notificationService.SendEmailVerificationAsync(user.Email, user.FirstName, verificationToken);
-
             logger.LogInformation("User registered successfully: {Email}", user.Email);
             logger.LogInformation($"[RegisterUserActivity] Activity completed for email: {request.Email}");
             return new AuthResponse { Success = true, Data = new { userId = createdUser.Id } };
@@ -69,29 +69,31 @@ public class RegisterUserActivity(
     }
 }
 
+/// <summary>
+/// Activity for logging in a user and generating a JWT.
+/// </summary>
 public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivity> logger, JwtService jwtService)
 {
+    /// <summary>
+    /// Logs in a user and returns a JWT if successful.
+    /// </summary>
     [Function("LoginUserActivity")]
     public async Task<AuthResponse> Run([ActivityTrigger] LoginUserRequest request)
     {
         logger.LogInformation($"[LoginUserActivity] Activity started for email: {request.Email}");
         try
         {
-            logger.LogInformation("LoginUserActivity started for email: {Email}", request.Email);
             var user = await userService.GetUserEntityByEmailAsync(request.Email);
             if (user == null || string.IsNullOrWhiteSpace(user.Password))
             {
                 logger.LogWarning("User not found or password missing for email: {Email}", request.Email);
                 return new AuthResponse { Success = false, Message = "Invalid credentials." };
             }
-
-            logger.LogInformation("User logged in: {Email} with password: {Password}", user.Email, "********");
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             {
                 logger.LogWarning("Invalid password for email: {Email}", request.Email);
                 return new AuthResponse { Success = false, Message = "Invalid credentials." };
             }
-
             // Generate JWT
             var token = jwtService.GenerateToken(user);
             logger.LogInformation("Login successful for email: {Email}", request.Email);
@@ -106,8 +108,14 @@ public class LoginUserActivity(IUserService userService, ILogger<LoginUserActivi
     }
 }
 
+/// <summary>
+/// Activity for verifying a user's email address.
+/// </summary>
 public class VerifyUserEmailActivity(IUserService userService, ILogger<VerifyUserEmailActivity> logger)
 {
+    /// <summary>
+    /// Verifies the user's email address using the provided token.
+    /// </summary>
     [Function("VerifyUserEmailActivity")]
     public async Task<AuthResponse> Run([ActivityTrigger] string token)
     {
