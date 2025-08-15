@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Legal_IA.DTOs;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
@@ -32,15 +33,22 @@ public static class InvoiceItemOrchestrators
     }
 
     [Function(nameof(InvoiceItemCreateOrchestrator))]
-    public static async Task<InvoiceItem> InvoiceItemCreateOrchestrator(
+    public static async Task<List<InvoiceItem>> InvoiceItemCreateOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemCreateOrchestrator");
-        var item = context.GetInput<InvoiceItem>();
-        logger.LogInformation("[InvoiceItemCreateOrchestrator] Orchestrator started");
-        var result = await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item);
-        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created item: {result.Id}");
-        return result;
+        var items = context.GetInput<List<InvoiceItem>>();
+        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator started for {items?.Count ?? 0} items");
+        var results = new List<InvoiceItem>();
+        if (items != null)
+        {
+            foreach (var item in items)
+            {
+                results.Add(await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item));
+            }
+        }
+        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created {results.Count} items");
+        return results;
     }
 
 
@@ -80,7 +88,7 @@ public static class InvoiceItemOrchestrators
     }
 
     [Function("PatchInvoiceItemOrchestrator")]
-    public static async Task<InvoiceItem?> PatchInvoiceItemOrchestrator(
+    public static async Task<List<InvoiceItem>> PatchInvoiceItemOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("PatchInvoiceItemOrchestrator");
@@ -88,25 +96,41 @@ public static class InvoiceItemOrchestrators
         if (input == null)
         {
             logger.LogError("PatchInvoiceItemOrchestrator received null input");
-            return null;
+            return new List<InvoiceItem>();
         }
-
-        if (input is not JsonElement inputElement || !inputElement.TryGetProperty("ItemId", out var itemIdProp) ||
+        if (input is not JsonElement inputElement ||
             !inputElement.TryGetProperty("UserId", out var userIdProp) ||
-            !inputElement.TryGetProperty("UpdateRequest", out var updateRequestProp))
+            !inputElement.TryGetProperty("UpdateRequests", out var updateRequestsProp))
         {
             logger.LogError("PatchInvoiceItemOrchestrator received invalid input structure");
-            return null;
+            return new List<InvoiceItem>();
         }
-
-        if (!Guid.TryParse(itemIdProp.ToString(), out var itemId) ||
-            !Guid.TryParse(userIdProp.ToString(), out var userId))
+        if (!Guid.TryParse(userIdProp.ToString(), out var userId))
         {
-            logger.LogError("PatchInvoiceItemOrchestrator received invalid ItemId or UserId");
-            return null;
+            logger.LogError("PatchInvoiceItemOrchestrator received invalid UserId");
+            return new List<InvoiceItem>();
         }
-
-        var result = await context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", input);
-        return result;
+        var results = new List<InvoiceItem>();
+        if (updateRequestsProp.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var updateRequest in updateRequestsProp.EnumerateArray())
+            {
+                if (!updateRequest.TryGetProperty("ItemId", out var itemIdProp) ||
+                    !updateRequest.TryGetProperty("UpdateRequest", out var updateDtoProp))
+                    continue;
+                if (!Guid.TryParse(itemIdProp.ToString(), out var itemId))
+                    continue;
+                var updateDto = updateDtoProp.Deserialize<UpdateInvoiceItemRequest>();
+                var inputObj = new {
+                    ItemId = itemId,
+                    UserId = userId,
+                    UpdateRequest = updateDto
+                };
+                var updated = await context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", inputObj);
+                if (updated != null) results.Add(updated);
+            }
+        }
+        logger.LogInformation($"[PatchInvoiceItemOrchestrator] Orchestrator completed, updated {results.Count} items");
+        return results;
     }
 }
