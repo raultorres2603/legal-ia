@@ -1,3 +1,4 @@
+using System.ClientModel;
 using AI_Agent.Interfaces;
 using AI_Agent.Models;
 using OpenAI;
@@ -13,8 +14,15 @@ public class LegalAiAgent : ILegalAiAgent
 
     public LegalAiAgent(string apiKey)
     {
-        _openAiClient = new OpenAIClient(apiKey);
-        _chatClient = _openAiClient.GetChatClient("gpt-5");
+        // Configure OpenAI client to use OpenRouter.ai
+        var openRouterClient = new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions
+        {
+            Endpoint = new Uri("https://openrouter.ai/api/v1")
+        });
+        
+        _openAiClient = openRouterClient;
+        // Use the best free model for Spanish legal content - Llama 3.1 8B has excellent Spanish capabilities
+        _chatClient = _openAiClient.GetChatClient("meta-llama/llama-3.1-8b-instruct:free");
         _systemPrompt = BuildSystemPrompt();
     }
 
@@ -73,7 +81,7 @@ Pregunta: " + question;
                 new SystemChatMessage(classificationPrompt)
             };
 
-            var chatClient = _openAiClient.GetChatClient("gpt-5-nano"); // Use a smaller model for classification
+            var chatClient = _openAiClient.GetChatClient("microsoft/phi-3-mini-4k-instruct:free"); // Use a smaller free model for classification
             var options = new ChatCompletionOptions
             {
                 MaxOutputTokenCount = 10,
