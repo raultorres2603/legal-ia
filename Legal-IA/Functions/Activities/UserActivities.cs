@@ -5,8 +5,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
+/// <summary>
+/// Activity for user-related operations such as get, create, and patch.
+/// </summary>
 public class GetAllUsersActivity(IUserService userService, ILogger<GetAllUsersActivity> logger)
 {
+    /// <summary>
+    /// Gets all users.
+    /// </summary>
     [Function("GetAllUsersActivity")]
     public async Task<List<UserResponse>> Run([ActivityTrigger] object? input)
     {
@@ -25,8 +31,14 @@ public class GetAllUsersActivity(IUserService userService, ILogger<GetAllUsersAc
     }
 }
 
+/// <summary>
+/// Activity for getting a user by ID.
+/// </summary>
 public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdActivity> logger)
 {
+    /// <summary>
+    /// Gets a user by their ID.
+    /// </summary>
     [Function("GetUserByIdActivity")]
     public async Task<UserResponse?> Run([ActivityTrigger] Guid userId)
     {
@@ -39,7 +51,6 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
                 logger.LogWarning("User not found for UserId: {UserId}", userId);
                 return null;
             }
-
             logger.LogInformation($"[GetUserByIdActivity] Activity completed for UserId: {userId}");
             return result;
         }
@@ -51,11 +62,17 @@ public class GetUserByIdActivity(IUserService userService, ILogger<GetUserByIdAc
     }
 }
 
+/// <summary>
+/// Activity for creating a new user.
+/// </summary>
 public class CreateUserActivity(
     IUserService userService,
     ICacheService cacheService,
     ILogger<CreateUserActivity> logger)
 {
+    /// <summary>
+    /// Creates a new user and invalidates user cache.
+    /// </summary>
     [Function("CreateUserActivity")]
     public async Task<UserResponse> Run([ActivityTrigger] CreateUserRequest request)
     {
@@ -75,11 +92,17 @@ public class CreateUserActivity(
     }
 }
 
+/// <summary>
+/// Activity for patching (updating) a user.
+/// </summary>
 public class PatchUserActivity(
     IUserService userService,
     ICacheService cacheService,
     ILogger<PatchUserActivity> logger)
 {
+    /// <summary>
+    /// Updates a user and invalidates user cache.
+    /// </summary>
     [Function("PatchUserActivity")]
     public async Task<UserResponse?> Run([ActivityTrigger] UpdateUserOrchestrationInput updateData)
     {
@@ -92,14 +115,13 @@ public class PatchUserActivity(
                 logger.LogWarning($"User not found for UserId: {updateData.UserId}");
                 return null;
             }
-
             await cacheService.RemoveByPatternAsync("users");
             logger.LogInformation($"User patched successfully for UserId: {updateData.UserId}");
             return result;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Error in PatchUserActivity for UserId: {updateData.UserId}");
+            logger.LogError(ex, "Error in PatchUserActivity for UserId: {UserId}", updateData.UserId);
             throw;
         }
     }

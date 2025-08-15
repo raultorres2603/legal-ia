@@ -7,10 +7,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
+/// <summary>
+/// Activity for validating JWT tokens and extracting claims.
+/// </summary>
 public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtValidationActivity> logger)
 {
     private readonly JwtService _jwtService = new(configuration);
 
+    /// <summary>
+    /// Validates a JWT and extracts claims, userId, and email.
+    /// </summary>
     [Function("JwtValidationActivity")]
     public JwtValidationResult Run([ActivityTrigger] string jwt)
     {
@@ -61,10 +67,11 @@ public class JwtValidationActivity(IConfiguration configuration, ILogger<JwtVali
         }
     }
 
+    /// <summary>
+    /// Attempts to normalize a claim value from a set of possible keys.
+    /// </summary>
     private static string? NormalizeClaim(Dictionary<string, string> claims, params string[] possibleKeys)
     {
-        // Log all claim keys for debugging
-        Console.WriteLine($"Claims available for normalization: {string.Join(", ", claims.Keys)}");
         foreach (var key in possibleKeys)
             if (claims.TryGetValue(key, out var claim))
                 return claim;

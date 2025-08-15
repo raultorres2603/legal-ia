@@ -11,8 +11,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions;
 
+/// <summary>
+/// HTTP-triggered Azure Functions for invoice item operations by the current user.
+/// </summary>
 public class InvoiceItemHttpTriggers
 {
+    /// <summary>
+    /// Gets invoice items for the current user.
+    /// </summary>
     [Function("GetInvoiceItemsByCurrentUser")]
     public async Task<IActionResult> GetInvoiceItemsByCurrentUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "invoice-items/user")]
@@ -20,24 +26,14 @@ public class InvoiceItemHttpTriggers
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
-            return new UnauthorizedResult();
-        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out _))
-            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
-        var instanceId =
-            await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemGetByUserIdOrchestrator", jwtResult.UserId);
-        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-        {
-            var items = response.ReadOutputAs<List<InvoiceItem>>();
-            if (items == null || items.Count == 0) return new NotFoundResult();
-            return new OkObjectResult(items);
-        }
-
-        return new StatusCodeResult(500);
+        var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+        if (errorResult != null) return errorResult;
+        return await RunOrchestrationAndRespond(client, "InvoiceItemGetByUserIdOrchestrator", userId);
     }
 
+    /// <summary>
+    /// Creates invoice items for the current user.
+    /// </summary>
     [Function("CreateInvoiceItemByCurrentUser")]
     public async Task<IActionResult> CreateInvoiceItemByCurrentUser(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "invoice-items/user")]
@@ -45,22 +41,12 @@ public class InvoiceItemHttpTriggers
         FunctionContext context,
         [DurableClient] DurableTaskClient client)
     {
-        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+        if (errorResult != null) return errorResult;
         var items = await req.ReadFromJsonAsync<List<InvoiceItem>>();
         if (items == null || items.Count == 0) return new BadRequestResult();
-        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
-            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
         // Optionally, link items to invoice owned by user (add validation here if needed)
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemCreateOrchestrator", items);
-        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-        {
-            var created = response.ReadOutputAs<List<InvoiceItem>>();
-            if (created == null) return new StatusCodeResult(500);
-            return new OkObjectResult(created);
-        }
-        return new StatusCodeResult(500);
+        return await RunOrchestrationAndRespond(client, "InvoiceItemCreateOrchestrator", items);
     }
 
     /// <summary>
@@ -74,18 +60,13 @@ public class InvoiceItemHttpTriggers
         [DurableClient] DurableTaskClient client)
     {
         var logger = context.GetLogger("UpdateInvoiceItemByUser");
-        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+        if (errorResult != null) return errorResult;
         var dtos = await req.ReadFromJsonAsync<List<BatchUpdateInvoiceItemRequest>>();
         if (dtos == null || dtos.Count == 0)
         {
             logger.LogWarning("Batch update request is empty");
             return ProblemDetailsHelper.ValidationProblem(new[] { "Batch update request is empty" });
-        }
-        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out _))
-        {
-            logger.LogWarning("Invalid or missing UserId in JWT");
-            return ProblemDetailsHelper.ValidationProblem(new[] { "Invalid or missing UserId in JWT" });
         }
         // Validate all items using FluentValidation
         var validator = context.InstanceServices.GetService(typeof(IValidator<BatchUpdateInvoiceItemRequest>)) as IValidator<BatchUpdateInvoiceItemRequest>;
@@ -106,32 +87,31 @@ public class InvoiceItemHttpTriggers
             logger.LogWarning($"Validation failed for batch update: {string.Join("; ", errors)}");
             return ProblemDetailsHelper.ValidationProblem(errors);
         }
-        logger.LogInformation($"User {jwtResult.UserId} batch updating {dtos.Count} invoice items");
+        logger.LogInformation($"User {userId} batch updating {dtos.Count} invoice items");
         var input = new BatchUpdateInvoiceItemOrchestratorInput
         {
-            UserId = new Guid(jwtResult.UserId),
+            UserId = userId,
             UpdateRequests = dtos
         };
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceItemOrchestrator", input);
-        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        var response = await client.ScheduleNewOrchestrationInstanceAsync("PatchInvoiceItemOrchestrator", input);
+        var orchestrationResult = await client.WaitForInstanceCompletionAsync(response, true, CancellationToken.None);
+        if (orchestrationResult.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
-            var updated = response.ReadOutputAs<List<InvoiceItem>>();
-            var updatedIds = updated?.Select(x => x.Id).ToHashSet() ?? new HashSet<Guid>();
-            var failedIds = dtos.Select(x => x.ItemId).Where(id => !updatedIds.Contains(id)).ToList();
-            if (updated == null || updated.Count == 0)
+            var result = orchestrationResult.ReadOutputAs<BatchUpdateInvoiceItemResult>();
+            if (result == null)
             {
-                logger.LogWarning("No invoice items were updated");
-                return new NotFoundObjectResult(new { message = "No invoice items were updated", failedIds });
+                logger.LogError("Orchestrator returned null result");
+                return new StatusCodeResult(500);
             }
-            if (failedIds.Count > 0)
+            if (!result.Success)
             {
-                logger.LogWarning($"Some invoice items failed to update: {string.Join(", ", failedIds)}");
-                return new OkObjectResult(new { updated, failedIds });
+                logger.LogWarning($"Batch update failed: {result.Error}");
+                return ProblemDetailsHelper.ValidationProblem([result.Error ?? "Unknown error"]);
             }
-            return new OkObjectResult(updated);
+            if (result.Items.Count == 0)
+                return new NotFoundResult();
+            return new OkObjectResult(result.Items);
         }
-        logger.LogError("Batch update orchestration failed");
         return new StatusCodeResult(500);
     }
 
@@ -147,17 +127,12 @@ public class InvoiceItemHttpTriggers
         string id)
     {
         var logger = context.GetLogger("DeleteInvoiceItemByUser");
-        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
-        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User))) return new UnauthorizedResult();
+        var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+        if (errorResult != null) return errorResult;
         if (!Guid.TryParse(id, out var itemId))
         {
             logger.LogWarning($"Invalid itemId: {id}");
             return new BadRequestObjectResult($"Invalid itemId: {id}");
-        }
-        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
-        {
-            logger.LogWarning("Invalid or missing UserId in JWT");
-            return new BadRequestObjectResult("Invalid or missing UserId in JWT");
         }
         var input = new DeleteInvoiceItemOrchestratorInput
         {
@@ -165,11 +140,11 @@ public class InvoiceItemHttpTriggers
             UserId = userId
         };
         logger.LogInformation($"User {userId} attempting to delete invoice item {itemId}");
-        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemDeleteOrchestrator", input);
-        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+        var response = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceItemDeleteOrchestrator", input);
+        var orchestrationResult = await client.WaitForInstanceCompletionAsync(response, true, CancellationToken.None);
+        if (orchestrationResult.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
-            var deleted = response.ReadOutputAs<bool>();
+            var deleted = orchestrationResult.ReadOutputAs<bool>();
             if (!deleted)
             {
                 logger.LogWarning($"Invoice item {itemId} not found or not deleted");
@@ -178,6 +153,33 @@ public class InvoiceItemHttpTriggers
             return new OkResult();
         }
         logger.LogError("Delete orchestration failed");
+        return new StatusCodeResult(500);
+    }
+
+    // --- Private helpers ---
+
+    /// <summary>
+    /// Validates JWT and extracts userId. Returns (userId, errorResult).
+    /// </summary>
+    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req, DurableTaskClient client)
+    {
+        var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+        if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
+            return (Guid.Empty, new UnauthorizedResult());
+        if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+            return (Guid.Empty, new BadRequestObjectResult("Invalid or missing UserId in JWT"));
+        return (userId, null);
+    }
+
+    /// <summary>
+    /// Schedules an orchestration and returns the HTTP response.
+    /// </summary>
+    private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client, string orchestratorName, object input)
+    {
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(orchestratorName, input);
+        var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+        if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+            return new OkObjectResult(response.ReadOutputAs<object>());
         return new StatusCodeResult(500);
     }
 }

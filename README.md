@@ -235,6 +235,9 @@ All endpoints are protected by JWT. 🔒
 > **Note:**
 > - The `PATCH /api/invoice-items/batch-update` endpoint requires a valid JWT in the `Authorization` header. Only items belonging to the authenticated user can be updated.
 > - All validation errors are aggregated and returned in a single response under the `ValidationError` key.
+> **Batch Size Limit:**
+> - The maximum number of invoice items you can update in a single batch is **50**. If you submit more than 50 items, the request will be rejected and no items will be updated.
+> - Updates are processed in batches of up to 5 items concurrently for optimal performance and reliability.
 
 #### Example PATCH Request (Batch Update Invoice Items)
 ```http

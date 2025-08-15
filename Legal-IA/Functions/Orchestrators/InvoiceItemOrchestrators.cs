@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Legal_IA.DTOs;
 using Legal_IA.Models;
 using Microsoft.Azure.Functions.Worker;
@@ -92,30 +91,69 @@ public static class InvoiceItemOrchestrators
         return result;
     }
 
-    [Function("PatchInvoiceItemOrchestrator")]
-    public static async Task<List<InvoiceItem>> PatchInvoiceItemOrchestrator(
+    [Function(nameof(PatchInvoiceItemOrchestrator))]
+    public static async Task<BatchUpdateInvoiceItemResult> PatchInvoiceItemOrchestrator(
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("PatchInvoiceItemOrchestrator");
         var input = context.GetInput<BatchUpdateInvoiceItemOrchestratorInput>();
-        if (input == null || input.UpdateRequests == null)
+        const int maxBatchSize = 50;
+        const int maxConcurrency = 5;
+
+        // Validate input
+        var validationError = ValidateBatchInput(input, maxBatchSize);
+        if (validationError != null)
         {
-            logger.LogError("PatchInvoiceItemOrchestrator received null or invalid input");
-            return new List<InvoiceItem>();
+            logger.LogError($"PatchInvoiceItemOrchestrator error for user {input?.UserId}: {validationError}");
+            return new BatchUpdateInvoiceItemResult
+            {
+                Success = false,
+                Error = validationError
+            };
         }
+
+        // Process updates concurrently in batches
+        var items = await ProcessBatchConcurrently(input, maxConcurrency, context);
+        logger.LogInformation($"[PatchInvoiceItemOrchestrator] Orchestrator completed, updated {items.Count} items for user {input.UserId}");
+        return new BatchUpdateInvoiceItemResult
+        {
+            Success = true,
+            Items = items
+        };
+    }
+
+    private static string? ValidateBatchInput(BatchUpdateInvoiceItemOrchestratorInput? input, int maxBatchSize)
+    {
+        if (input == null)
+            return "Input or update requests are null.";
+        if (input.UpdateRequests.Count > maxBatchSize)
+            return $"Batch size {input.UpdateRequests.Count} exceeds the maximum allowed ({maxBatchSize}).";
+        return null;
+    }
+
+    private static async Task<List<InvoiceItem>> ProcessBatchConcurrently(
+        BatchUpdateInvoiceItemOrchestratorInput input,
+        int maxConcurrency,
+        TaskOrchestrationContext context)
+    {
         var results = new List<InvoiceItem>();
+        var tasks = new List<Task<InvoiceItem?>>();
         foreach (var req in input.UpdateRequests)
         {
-            var inputObj = new
+            var inputObj = new { req.ItemId, input.UserId, req.UpdateRequest };
+            tasks.Add(context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", inputObj));
+            if (tasks.Count == maxConcurrency)
             {
-                req.ItemId,
-                input.UserId,
-                req.UpdateRequest
-            };
-            var updated = await context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", inputObj);
-            if (updated != null) results.Add(updated);
+                var completed = await Task.WhenAll(tasks);
+                results.AddRange(completed.Where(x => x != null)!);
+                tasks.Clear();
+            }
         }
-        logger.LogInformation($"[PatchInvoiceItemOrchestrator] Orchestrator completed, updated {results.Count} items");
+        if (tasks.Count > 0)
+        {
+            var completed = await Task.WhenAll(tasks);
+            results.AddRange(completed.Where(x => x != null)!);
+        }
         return results;
     }
 }
