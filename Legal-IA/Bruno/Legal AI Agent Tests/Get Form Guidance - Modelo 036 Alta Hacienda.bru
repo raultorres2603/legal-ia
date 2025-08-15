@@ -1,0 +1,36 @@
+meta {
+  name: Get Form Guidance - Modelo 036 Alta Hacienda
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/api/ai/legal/form-guidance
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "formType": "036",
+    "quarter": "Q1",
+    "year": 2025,
+    "regimeType": "general",
+    "activityCode": "6201",
+    "userId": "{{userId}}"
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should provide Modelo 036 guidance", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.formType).to.equal("036");
+    expect(responseJson.success).to.be.true;
+    expect(responseJson.instructions).to.contain("alta");
+    expect(responseJson.requiredDocuments).to.be.an('array');
+  });
+}

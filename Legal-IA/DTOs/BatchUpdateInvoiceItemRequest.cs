@@ -4,8 +4,7 @@ namespace Legal_IA.DTOs;
 
 public class BatchUpdateInvoiceItemRequest
 {
-    [JsonPropertyName("itemId")]
-    public Guid ItemId { get; set; }
-    [JsonPropertyName("updateRequest")]
-    public UpdateInvoiceItemRequest UpdateRequest { get; set; } = default!;
+    [JsonPropertyName("itemId")] public Guid ItemId { get; set; }
+
+    [JsonPropertyName("updateRequest")] public UpdateInvoiceItemRequest UpdateRequest { get; set; } = default!;
 }

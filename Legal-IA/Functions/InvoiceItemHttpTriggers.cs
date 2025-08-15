@@ -12,12 +12,12 @@ using Microsoft.Extensions.Logging;
 namespace Legal_IA.Functions;
 
 /// <summary>
-/// HTTP-triggered Azure Functions for invoice item operations by the current user.
+///     HTTP-triggered Azure Functions for invoice item operations by the current user.
 /// </summary>
 public class InvoiceItemHttpTriggers
 {
     /// <summary>
-    /// Gets invoice items for the current user.
+    ///     Gets invoice items for the current user.
     /// </summary>
     [Function("GetInvoiceItemsByCurrentUser")]
     public async Task<IActionResult> GetInvoiceItemsByCurrentUser(
@@ -32,7 +32,7 @@ public class InvoiceItemHttpTriggers
     }
 
     /// <summary>
-    /// Creates invoice items for the current user.
+    ///     Creates invoice items for the current user.
     /// </summary>
     [Function("CreateInvoiceItemByCurrentUser")]
     public async Task<IActionResult> CreateInvoiceItemByCurrentUser(
@@ -50,7 +50,7 @@ public class InvoiceItemHttpTriggers
     }
 
     /// <summary>
-    /// Batch update of invoice items for the current user. Returns updated items and failed IDs if any.
+    ///     Batch update of invoice items for the current user. Returns updated items and failed IDs if any.
     /// </summary>
     [Function("UpdateInvoiceItemByUser")]
     public async Task<IActionResult> UpdateInvoiceItemByUser(
@@ -68,13 +68,17 @@ public class InvoiceItemHttpTriggers
             logger.LogWarning("Batch update request is empty");
             return ProblemDetailsHelper.ValidationProblem(new[] { "Batch update request is empty" });
         }
+
         // Validate all items using FluentValidation
-        var validator = context.InstanceServices.GetService(typeof(IValidator<BatchUpdateInvoiceItemRequest>)) as IValidator<BatchUpdateInvoiceItemRequest>;
+        var validator =
+            context.InstanceServices.GetService(typeof(IValidator<BatchUpdateInvoiceItemRequest>)) as
+                IValidator<BatchUpdateInvoiceItemRequest>;
         if (validator == null)
         {
             logger.LogError("BatchUpdateInvoiceItemRequestValidator is not registered in DI container.");
             return new StatusCodeResult(500);
         }
+
         var errors = new List<string>();
         foreach (var dto in dtos)
         {
@@ -82,11 +86,13 @@ public class InvoiceItemHttpTriggers
             if (!result.IsValid)
                 errors.AddRange(result.Errors.Select(e => $"ItemId {dto.ItemId}: {e.ErrorMessage}"));
         }
+
         if (errors.Count > 0)
         {
             logger.LogWarning($"Validation failed for batch update: {string.Join("; ", errors)}");
             return ProblemDetailsHelper.ValidationProblem(errors);
         }
+
         logger.LogInformation($"User {userId} batch updating {dtos.Count} invoice items");
         var input = new BatchUpdateInvoiceItemOrchestratorInput
         {
@@ -103,20 +109,23 @@ public class InvoiceItemHttpTriggers
                 logger.LogError("Orchestrator returned null result");
                 return new StatusCodeResult(500);
             }
+
             if (!result.Success)
             {
                 logger.LogWarning($"Batch update failed: {result.Error}");
                 return ProblemDetailsHelper.ValidationProblem([result.Error ?? "Unknown error"]);
             }
+
             if (result.Items.Count == 0)
                 return new NotFoundResult();
             return new OkObjectResult(result.Items);
         }
+
         return new StatusCodeResult(500);
     }
 
     /// <summary>
-    /// Delete an invoice item for the current user by ID.
+    ///     Delete an invoice item for the current user by ID.
     /// </summary>
     [Function("DeleteInvoiceItemByUser")]
     public async Task<IActionResult> DeleteInvoiceItemByUser(
@@ -134,6 +143,7 @@ public class InvoiceItemHttpTriggers
             logger.LogWarning($"Invalid itemId: {id}");
             return new BadRequestObjectResult($"Invalid itemId: {id}");
         }
+
         var input = new DeleteInvoiceItemOrchestratorInput
         {
             ItemId = itemId,
@@ -150,8 +160,10 @@ public class InvoiceItemHttpTriggers
                 logger.LogWarning($"Invoice item {itemId} not found or not deleted");
                 return new NotFoundObjectResult(new { message = $"Invoice item {itemId} not found or not deleted" });
             }
+
             return new OkResult();
         }
+
         logger.LogError("Delete orchestration failed");
         return new StatusCodeResult(500);
     }
@@ -159,9 +171,10 @@ public class InvoiceItemHttpTriggers
     // --- Private helpers ---
 
     /// <summary>
-    /// Validates JWT and extracts userId. Returns (userId, errorResult).
+    ///     Validates JWT and extracts userId. Returns (userId, errorResult).
     /// </summary>
-    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req, DurableTaskClient client)
+    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req,
+        DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
@@ -172,9 +185,10 @@ public class InvoiceItemHttpTriggers
     }
 
     /// <summary>
-    /// Schedules an orchestration and returns the HTTP response.
+    ///     Schedules an orchestration and returns the HTTP response.
     /// </summary>
-    private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client, string orchestratorName, object input)
+    private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client,
+        string orchestratorName, object input)
     {
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(orchestratorName, input);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);

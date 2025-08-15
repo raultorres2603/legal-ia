@@ -14,4 +14,3 @@ public class BatchUpdateInvoiceItemRequestValidator : AbstractValidator<BatchUpd
             .SetValidator(new UpdateInvoiceItemRequestValidator());
     }
 }
-

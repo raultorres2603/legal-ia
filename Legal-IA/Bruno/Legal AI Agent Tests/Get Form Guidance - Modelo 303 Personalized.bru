@@ -1,0 +1,36 @@
+meta {
+  name: Get Form Guidance - Modelo 303 Personalized
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/ai/legal/form-guidance
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "formType": "303",
+    "quarter": "Q2",
+    "year": 2025,
+    "regimeType": "general",
+    "activityCode": "6201",
+    "userId": "{{userId}}"
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response should contain personalized form guidance", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.formType).to.equal("303");
+    expect(responseJson.success).to.be.true;
+    expect(responseJson.instructions).to.be.a('string');
+    expect(responseJson.calculationGuidance).to.be.a('string');
+  });
+}

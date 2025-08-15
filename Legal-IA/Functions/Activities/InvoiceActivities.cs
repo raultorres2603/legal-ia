@@ -10,12 +10,12 @@ using Microsoft.Extensions.Logging;
 namespace Legal_IA.Functions.Activities;
 
 /// <summary>
-/// Activity functions for invoice operations, including caching and repository access.
+///     Activity functions for invoice operations, including caching and repository access.
 /// </summary>
 public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheService cacheService)
 {
     /// <summary>
-    /// Gets all invoices, using cache if available.
+    ///     Gets all invoices, using cache if available.
     /// </summary>
     [Function(nameof(InvoiceGetAllActivity))]
     public async Task<List<Invoice>> InvoiceGetAllActivity([ActivityTrigger] object input, FunctionContext context)
@@ -37,7 +37,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     /// <summary>
-    /// Gets an invoice by its ID, using cache if available.
+    ///     Gets an invoice by its ID, using cache if available.
     /// </summary>
     [Function(nameof(InvoiceGetByIdActivity))]
     public async Task<Invoice?> InvoiceGetByIdActivity([ActivityTrigger] Guid id, FunctionContext context)
@@ -59,7 +59,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     /// <summary>
-    /// Gets all invoices for a specific user, using cache if available.
+    ///     Gets all invoices for a specific user, using cache if available.
     /// </summary>
     [Function("InvoiceGetByUserIdActivity")]
     public async Task<List<Invoice>> InvoiceGetByUserIdActivity([ActivityTrigger] Guid userId, FunctionContext context)
@@ -80,7 +80,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     /// <summary>
-    /// Creates a new invoice and invalidates related cache.
+    ///     Creates a new invoice and invalidates related cache.
     /// </summary>
     [Function(nameof(InvoiceCreateActivity))]
     public async Task<Invoice> InvoiceCreateActivity([ActivityTrigger] Invoice invoice, FunctionContext context)
@@ -95,7 +95,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     /// <summary>
-    /// Deletes an invoice and invalidates related cache.
+    ///     Deletes an invoice and invalidates related cache.
     /// </summary>
     [Function(nameof(InvoiceDeleteActivity))]
     public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
@@ -109,7 +109,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     /// <summary>
-    /// Gets an invoice by its ID and user ID.
+    ///     Gets an invoice by its ID and user ID.
     /// </summary>
     [Function("InvoiceGetByIdAndUserIdActivity")]
     public async Task<Invoice?> InvoiceGetByIdAndUserIdActivity([ActivityTrigger] object input,
@@ -151,7 +151,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     }
 
     /// <summary>
-    /// Patches an invoice by the current user.
+    ///     Patches an invoice by the current user.
     /// </summary>
     [Function("PatchInvoiceByCurrentUserActivity")]
     public async Task<Invoice> PatchInvoiceByCurrentUserActivity([ActivityTrigger] object input,

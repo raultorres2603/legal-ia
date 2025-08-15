@@ -1,0 +1,26 @@
+meta {
+  name: Get Quarterly Obligations - Personalized
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/ai/legal/quarterly-obligations/2/2025?userId={{userId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response should contain personalized quarterly obligations", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.obligations).to.be.a('string');
+    expect(responseJson.obligations).to.contain("trimestre");
+    expect(responseJson.obligations).to.contain("2025");
+    // Should contain personalized amounts or user-specific information
+    expect(responseJson.obligations.length).to.be.greaterThan(100);
+  });
+}

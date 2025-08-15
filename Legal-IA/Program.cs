@@ -9,9 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Formatters;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 

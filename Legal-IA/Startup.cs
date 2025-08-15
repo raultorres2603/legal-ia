@@ -1,3 +1,5 @@
+using AI_Agent;
+using AI_Agent.Interfaces;
 using Azure.Storage.Blobs;
 using FluentValidation;
 using Legal_IA.DTOs;
@@ -28,7 +30,17 @@ public static class Startup
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IUserService, UserService>();
         services.AddSingleton<JwtService>();
-        
+
+        // Add AI Agent services
+        services.AddAiAgentServices();
+    }
+
+    private static void AddAiAgentServices(this IServiceCollection services)
+    {
+        var openAiApiKey = Environment.GetEnvironmentVariable("OpenAI:ApiKey")
+                           ?? throw new InvalidOperationException("OpenAI:ApiKey environment variable is required");
+
+        services.AddScoped<ILegalAiAgent>(_ => new LegalAiAgent(openAiApiKey));
     }
 
     public static void AddExternalClients(this IServiceCollection services, string redisConnectionString,
@@ -39,40 +51,43 @@ public static class Startup
             options.Configuration = redisConnectionString;
             options.InstanceName = "LegalIA";
         });
-        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
             ConnectionMultiplexer.Connect(redisConnectionString));
-        services.AddSingleton<BlobServiceClient>(serviceProvider => new BlobServiceClient(azuriteConnectionString));
+        services.AddSingleton<BlobServiceClient>(_ => new BlobServiceClient(azuriteConnectionString));
     }
 
     public static void AddCorsConfiguration(this IServiceCollection services)
     {
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? throw new ArgumentNullException();
-        bool isLocal = environment is "Local" or "Development";
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
+                          throw new ArgumentNullException();
+        var isLocal = environment is "Local" or "Development";
 
         services.AddCors(options =>
         {
             if (isLocal)
             {
                 // Use CORS_ALLOWED_ORIGIN for local
-                var localOrigin = Environment.GetEnvironmentVariable("LOCAL_DOMAIN") ?? throw new ArgumentNullException();
+                var localOrigin = Environment.GetEnvironmentVariable("LOCAL_DOMAIN") ??
+                                  throw new ArgumentNullException();
                 options.AddPolicy("LocalPolicy", policy =>
                 {
                     policy.WithOrigins(localOrigin)
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 });
             }
             else
             {
                 // Only allow https for production domain
-                var prodDomain = Environment.GetEnvironmentVariable("PRODUCTION_DOMAIN") ?? throw new ArgumentNullException();
+                var prodDomain = Environment.GetEnvironmentVariable("PRODUCTION_DOMAIN") ??
+                                 throw new ArgumentNullException();
                 options.AddPolicy("ProductionPolicy", policy =>
                 {
                     policy.WithOrigins(prodDomain)
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 });
             }
 
@@ -81,19 +96,21 @@ public static class Startup
             {
                 if (isLocal)
                 {
-                    var localOrigin = Environment.GetEnvironmentVariable("LOCAL_DOMAIN") ?? throw new ArgumentNullException();
+                    var localOrigin = Environment.GetEnvironmentVariable("LOCAL_DOMAIN") ??
+                                      throw new ArgumentNullException();
                     policy.WithOrigins(localOrigin)
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 }
                 else
                 {
-                    var prodDomain = Environment.GetEnvironmentVariable("PRODUCTION_DOMAIN") ?? throw new ArgumentNullException();
+                    var prodDomain = Environment.GetEnvironmentVariable("PRODUCTION_DOMAIN") ??
+                                     throw new ArgumentNullException();
                     policy.WithOrigins(prodDomain)
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
                 }
             });
         });
@@ -102,7 +119,7 @@ public static class Startup
     public static void AddValidators(this IServiceCollection services)
     {
         // Register validators manually for Azure Functions
-        services.AddTransient<IValidator<BatchUpdateInvoiceItemRequest>, Legal_IA.Validators.BatchUpdateInvoiceItemRequestValidator>();
-        services.AddTransient<IValidator<UpdateInvoiceItemRequest>, Legal_IA.Validators.UpdateInvoiceItemRequestValidator>();
+        services.AddTransient<IValidator<BatchUpdateInvoiceItemRequest>, BatchUpdateInvoiceItemRequestValidator>();
+        services.AddTransient<IValidator<UpdateInvoiceItemRequest>, UpdateInvoiceItemRequestValidator>();
     }
 }

@@ -1,0 +1,31 @@
+meta {
+  name: Process Legal Question - Non-Legal Topic
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/ai/legal/question
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "¿Cuál es la mejor receta para hacer paella?",
+    "sessionId": "{{sessionId}}"
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should reject non-legal question", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.contain("solo puedo responder preguntas relacionadas con temas legales");
+    expect(responseJson.isLegalQuestion).to.be.false;
+    expect(responseJson.success).to.be.true;
+  });
+}

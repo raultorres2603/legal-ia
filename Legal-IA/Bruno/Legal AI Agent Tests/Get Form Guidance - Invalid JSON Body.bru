@@ -1,0 +1,30 @@
+meta {
+  name: Get Form Guidance - Invalid JSON Body
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/ai/legal/form-guidance
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "formType": "303",
+    "invalidField": "should cause error"
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should handle incomplete request gracefully", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.formType).to.equal("303");
+    expect(responseJson.success).to.be.true;
+  });
+}
