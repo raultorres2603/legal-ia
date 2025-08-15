@@ -3,7 +3,6 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using AI_Agent.Models;
 using Microsoft.DurableTask.Client;
-using Microsoft.DurableTask;
 using Legal_IA.Functions.Orchestrators;
 using Microsoft.AspNetCore.Mvc;
 using Legal_IA.Services;
@@ -11,15 +10,8 @@ using Legal_IA.Enums;
 
 namespace Legal_IA.Functions
 {
-    public class LegalAiHttpTriggers
+    public class LegalAiHttpTriggers(ILogger<LegalAiHttpTriggers> logger)
     {
-        private readonly ILogger<LegalAiHttpTriggers> _logger;
-
-        public LegalAiHttpTriggers(ILogger<LegalAiHttpTriggers> logger)
-        {
-            _logger = logger;
-        }
-
         [Function("ProcessLegalQuestion")]
         public async Task<IActionResult> ProcessLegalQuestion(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "ai/legal/question")] HttpRequestData req,
@@ -32,7 +24,7 @@ namespace Legal_IA.Functions
                 var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
                 if (errorResult != null) return errorResult;
 
-                _logger.LogInformation("Processing legal question request for user: {UserId}", userId);
+                logger.LogInformation("Processing legal question request for user: {UserId}", userId);
 
                 var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 var request = System.Text.Json.JsonSerializer.Deserialize<LegalQueryRequest>(requestBody, new System.Text.Json.JsonSerializerOptions
@@ -67,7 +59,7 @@ namespace Legal_IA.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing legal question");
+                logger.LogError(ex, "Error processing legal question");
                 return new StatusCodeResult(500);
             }
         }
@@ -84,7 +76,7 @@ namespace Legal_IA.Functions
                 var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
                 if (errorResult != null) return errorResult;
 
-                _logger.LogInformation("Processing form guidance request for user: {UserId}", userId);
+                logger.LogInformation("Processing form guidance request for user: {UserId}", userId);
 
                 var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 var request = System.Text.Json.JsonSerializer.Deserialize<AutonomoFormRequest>(requestBody, new System.Text.Json.JsonSerializerOptions
@@ -119,7 +111,7 @@ namespace Legal_IA.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing form guidance request");
+                logger.LogError(ex, "Error processing form guidance request");
                 return new StatusCodeResult(500);
             }
         }
@@ -138,7 +130,7 @@ namespace Legal_IA.Functions
                 var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
                 if (errorResult != null) return errorResult;
 
-                _logger.LogInformation("Processing quarterly obligations request for user: {UserId}, Q{Quarter} {Year}", userId, quarter, year);
+                logger.LogInformation("Processing quarterly obligations request for user: {UserId}, Q{Quarter} {Year}", userId, quarter, year);
 
                 var orchestratorInput = new QuarterlyObligationsRequest
                 {
@@ -166,7 +158,7 @@ namespace Legal_IA.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing quarterly obligations request");
+                logger.LogError(ex, "Error processing quarterly obligations request");
                 return new StatusCodeResult(500);
             }
         }
@@ -184,7 +176,7 @@ namespace Legal_IA.Functions
                 var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
                 if (errorResult != null) return errorResult;
 
-                _logger.LogInformation("Processing annual obligations request for user: {UserId}, Year {Year}", userId, year);
+                logger.LogInformation("Processing annual obligations request for user: {UserId}, Year {Year}", userId, year);
 
                 var orchestratorInput = new AnnualObligationsRequest
                 {
@@ -211,7 +203,7 @@ namespace Legal_IA.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing annual obligations request");
+                logger.LogError(ex, "Error processing annual obligations request");
                 return new StatusCodeResult(500);
             }
         }
@@ -228,7 +220,7 @@ namespace Legal_IA.Functions
                 var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
                 if (errorResult != null) return errorResult;
 
-                _logger.LogInformation("Processing legal question classification for user: {UserId}", userId);
+                logger.LogInformation("Processing legal question classification for user: {UserId}", userId);
 
                 var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                 var request = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(requestBody, new System.Text.Json.JsonSerializerOptions
@@ -260,7 +252,7 @@ namespace Legal_IA.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error classifying legal question");
+                logger.LogError(ex, "Error classifying legal question");
                 return new StatusCodeResult(500);
             }
         }
