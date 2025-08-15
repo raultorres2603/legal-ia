@@ -57,9 +57,14 @@ public static class InvoiceItemOrchestrators
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemDeleteOrchestrator");
-        var inputElement = (JsonElement)(context.GetInput<object>() ?? throw new InvalidOperationException());
-        var itemId = inputElement.GetProperty("ItemId").GetGuid();
-        var userId = inputElement.GetProperty("UserId").GetGuid();
+        var input = context.GetInput<DeleteInvoiceItemOrchestratorInput>();
+        if (input == null)
+        {
+            logger.LogError("InvoiceItemDeleteOrchestrator received null input");
+            return false;
+        }
+        var itemId = input.ItemId;
+        var userId = input.UserId;
         logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Started for item {itemId} by user {userId}");
         var isValid = await context.CallActivityAsync<bool>("InvoiceItemValidateOwnershipAndPendingActivity",
             new { ItemId = itemId, UserId = userId });
@@ -92,43 +97,23 @@ public static class InvoiceItemOrchestrators
         [OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var logger = context.CreateReplaySafeLogger("PatchInvoiceItemOrchestrator");
-        var input = context.GetInput<object>();
-        if (input == null)
+        var input = context.GetInput<BatchUpdateInvoiceItemOrchestratorInput>();
+        if (input == null || input.UpdateRequests == null)
         {
-            logger.LogError("PatchInvoiceItemOrchestrator received null input");
-            return new List<InvoiceItem>();
-        }
-        if (input is not JsonElement inputElement ||
-            !inputElement.TryGetProperty("UserId", out var userIdProp) ||
-            !inputElement.TryGetProperty("UpdateRequests", out var updateRequestsProp))
-        {
-            logger.LogError("PatchInvoiceItemOrchestrator received invalid input structure");
-            return new List<InvoiceItem>();
-        }
-        if (!Guid.TryParse(userIdProp.ToString(), out var userId))
-        {
-            logger.LogError("PatchInvoiceItemOrchestrator received invalid UserId");
+            logger.LogError("PatchInvoiceItemOrchestrator received null or invalid input");
             return new List<InvoiceItem>();
         }
         var results = new List<InvoiceItem>();
-        if (updateRequestsProp.ValueKind == JsonValueKind.Array)
+        foreach (var req in input.UpdateRequests)
         {
-            foreach (var updateRequest in updateRequestsProp.EnumerateArray())
+            var inputObj = new
             {
-                if (!updateRequest.TryGetProperty("ItemId", out var itemIdProp) ||
-                    !updateRequest.TryGetProperty("UpdateRequest", out var updateDtoProp))
-                    continue;
-                if (!Guid.TryParse(itemIdProp.ToString(), out var itemId))
-                    continue;
-                var updateDto = updateDtoProp.Deserialize<UpdateInvoiceItemRequest>();
-                var inputObj = new {
-                    ItemId = itemId,
-                    UserId = userId,
-                    UpdateRequest = updateDto
-                };
-                var updated = await context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", inputObj);
-                if (updated != null) results.Add(updated);
-            }
+                req.ItemId,
+                input.UserId,
+                req.UpdateRequest
+            };
+            var updated = await context.CallActivityAsync<InvoiceItem?>("PatchInvoiceItemActivity", inputObj);
+            if (updated != null) results.Add(updated);
         }
         logger.LogInformation($"[PatchInvoiceItemOrchestrator] Orchestrator completed, updated {results.Count} items");
         return results;

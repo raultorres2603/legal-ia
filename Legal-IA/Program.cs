@@ -9,6 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -47,7 +50,6 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 // Register repositories, services, validators, and external clients using Startup extensions
 builder.Services.AddRepositories();
 builder.Services.AddServices();
-builder.Services.AddValidators();
 builder.Services.AddExternalClients(redisConnectionString, azuriteConnectionString);
 
 // Configure logging
@@ -58,6 +60,8 @@ builder.Services.AddSingleton<JwtService>();
 
 // Configure CORS using Startup extension
 builder.Services.AddCorsConfiguration();
+
+builder.Services.AddValidators();
 
 var app = builder.Build();
 

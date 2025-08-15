@@ -28,11 +28,7 @@ public static class Startup
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IUserService, UserService>();
         services.AddSingleton<JwtService>();
-    }
-
-    public static void AddValidators(this IServiceCollection services)
-    {
-        services.AddTransient<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
+        
     }
 
     public static void AddExternalClients(this IServiceCollection services, string redisConnectionString,
@@ -101,5 +97,12 @@ public static class Startup
                 }
             });
         });
+    }
+
+    public static void AddValidators(this IServiceCollection services)
+    {
+        // Register validators manually for Azure Functions
+        services.AddTransient<IValidator<BatchUpdateInvoiceItemRequest>, Legal_IA.Validators.BatchUpdateInvoiceItemRequestValidator>();
+        services.AddTransient<IValidator<UpdateInvoiceItemRequest>, Legal_IA.Validators.UpdateInvoiceItemRequestValidator>();
     }
 }

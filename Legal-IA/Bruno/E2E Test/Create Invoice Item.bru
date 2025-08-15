@@ -15,15 +15,26 @@ headers {
 }
 
 body:json {
-  {
-    "invoiceId": "{{invoiceId}}",
-    "description": "LEGAL service",
-    "quantity": 1,
-    "unitPrice": {{$randomPrice}},
-    "VAT": {{randomVat}},
-    "IRPF": {{randomIrpf}},
-    "total": {{randomTotal}}
-  }
+  [
+    {
+      "invoiceId": "{{invoiceId}}",
+      "description": "LEGAL service",
+      "quantity": 1,
+      "unitPrice": {{$randomPrice}},
+      "VAT": {{randomVat}},
+      "IRPF": {{randomIrpf}},
+      "total": {{randomTotal}}
+    },
+    {
+      "invoiceId": "{{invoiceId}}",
+      "description": "IT service",
+      "quantity": 4,
+      "unitPrice": {{$randomPrice}},
+      "VAT": {{randomVat}},
+      "IRPF": {{randomIrpf}},
+      "total": {{randomTotal}}
+    }
+  ]
 }
 
 script:pre-request {
@@ -37,7 +48,7 @@ script:pre-request {
 
 script:post-response {
   // Set invoiceItemId
-  bru.setEnvVar("invoiceItemId", res.getBody().id);
+  bru.setEnvVar("invoiceItemId", res.getBody()[0].id);
 }
 
 settings {
