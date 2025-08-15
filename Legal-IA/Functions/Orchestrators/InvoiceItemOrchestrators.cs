@@ -37,16 +37,49 @@ public static class InvoiceItemOrchestrators
     {
         var logger = context.CreateReplaySafeLogger("InvoiceItemCreateOrchestrator");
         var items = context.GetInput<List<InvoiceItem>>();
-        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator started for {items?.Count ?? 0} items");
-        var results = new List<InvoiceItem>();
-        if (items != null)
+        const int maxBatchSize = 50;
+        const int maxConcurrency = 5;
+
+        // Validate input
+        if (items == null || items.Count == 0)
         {
-            foreach (var item in items)
+            logger.LogError("InvoiceItemCreateOrchestrator received null or empty input");
+            return new List<InvoiceItem>();
+        }
+        if (items.Count > maxBatchSize)
+        {
+            logger.LogError($"InvoiceItemCreateOrchestrator batch size {items.Count} exceeds the maximum allowed ({maxBatchSize})");
+            return new List<InvoiceItem>();
+        }
+
+        // Process creations concurrently in batches
+        var results = await ProcessCreateBatchConcurrently(items, maxConcurrency, context);
+        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created {results.Count} items");
+        return results;
+    }
+
+    private static async Task<List<InvoiceItem>> ProcessCreateBatchConcurrently(
+        List<InvoiceItem> items,
+        int maxConcurrency,
+        TaskOrchestrationContext context)
+    {
+        var results = new List<InvoiceItem>();
+        var tasks = new List<Task<InvoiceItem>>();
+        foreach (var item in items)
+        {
+            tasks.Add(context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item));
+            if (tasks.Count == maxConcurrency)
             {
-                results.Add(await context.CallActivityAsync<InvoiceItem>("InvoiceItemCreateActivity", item));
+                var completed = await Task.WhenAll(tasks);
+                results.AddRange(completed);
+                tasks.Clear();
             }
         }
-        logger.LogInformation($"[InvoiceItemCreateOrchestrator] Orchestrator completed, created {results.Count} items");
+        if (tasks.Count > 0)
+        {
+            var completed = await Task.WhenAll(tasks);
+            results.AddRange(completed);
+        }
         return results;
     }
 
