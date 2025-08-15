@@ -266,3 +266,4 @@ __pycache__/
 
 # Environment files on Bruno folder
 Bruno/**/environments/**.bru
+/Docker/docker-compose.yml
