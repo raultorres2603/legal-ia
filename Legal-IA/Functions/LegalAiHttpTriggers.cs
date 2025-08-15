@@ -1,284 +1,284 @@
-using System.Net;
-using System.Text.Json;
-using System.Web;
-using AI_Agent.Models;
-using Legal_IA.Functions.Orchestrators;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
+using AI_Agent.Models;
+using Microsoft.DurableTask.Client;
+using Microsoft.DurableTask;
+using Legal_IA.Functions.Orchestrators;
+using Microsoft.AspNetCore.Mvc;
+using Legal_IA.Services;
+using Legal_IA.Enums;
 
-namespace Legal_IA.Functions;
-
-public class LegalAiHttpTriggers
+namespace Legal_IA.Functions
 {
-    private readonly ILogger<LegalAiHttpTriggers> _logger;
-
-    public LegalAiHttpTriggers(ILogger<LegalAiHttpTriggers> logger)
+    public class LegalAiHttpTriggers
     {
-        _logger = logger;
-    }
+        private readonly ILogger<LegalAiHttpTriggers> _logger;
 
-    [Function("ProcessLegalQuestion")]
-    public async Task<HttpResponseData> ProcessLegalQuestion(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/legal/question")]
-        HttpRequestData req,
-        [DurableClient] DurableTaskClient client)
-    {
-        try
+        public LegalAiHttpTriggers(ILogger<LegalAiHttpTriggers> logger)
         {
-            _logger.LogInformation("Processing legal question request");
+            _logger = logger;
+        }
 
-            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var request = JsonSerializer.Deserialize<LegalQueryRequest>(requestBody, new JsonSerializerOptions
+        [Function("ProcessLegalQuestion")]
+        public async Task<IActionResult> ProcessLegalQuestion(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "ai/legal/question")] HttpRequestData req,
+            FunctionContext context,
+            [DurableClient] DurableTaskClient client)
+        {
+            try
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+                // Validate JWT and extract userId
+                var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+                if (errorResult != null) return errorResult;
 
-            if (request == null)
-                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request body");
+                _logger.LogInformation("Processing legal question request for user: {UserId}", userId);
 
-            // Start orchestrator
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                "ProcessLegalQuestionOrchestrator", request);
+                var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                var request = System.Text.Json.JsonSerializer.Deserialize<LegalQueryRequest>(requestBody, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
 
-            // Wait for completion
-            var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                if (request == null)
+                {
+                    return new BadRequestObjectResult("Invalid request body");
+                }
 
-            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            {
-                var result = response.ReadOutputAs<LegalQueryResponse>();
-                return await CreateSuccessResponse(req, result);
+                // Set the userId from JWT (remove any userId from request body)
+                request.UserId = userId.ToString();
+
+                // Start orchestrator
+                var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                    "ProcessLegalQuestionOrchestrator", request);
+
+                // Wait for completion
+                var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                
+                if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+                {
+                    var result = response.ReadOutputAs<LegalQueryResponse>();
+                    return new OkObjectResult(result);
+                }
+                else
+                {
+                    return new StatusCodeResult(500);
+                }
             }
-
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing legal question - orchestration failed");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing legal question");
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing legal question");
-        }
-    }
-
-    [Function("GetFormGuidance")]
-    public async Task<HttpResponseData> GetFormGuidance(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/legal/form-guidance")]
-        HttpRequestData req,
-        [DurableClient] DurableTaskClient client)
-    {
-        try
-        {
-            _logger.LogInformation("Processing form guidance request");
-
-            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var request = JsonSerializer.Deserialize<AutonomoFormRequest>(requestBody, new JsonSerializerOptions
+            catch (Exception ex)
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-
-            if (request == null)
-                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request body");
-
-            // Start orchestrator
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                "GetFormGuidanceOrchestrator", request);
-
-            // Wait for completion
-            var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-
-            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            {
-                var result = response.ReadOutputAs<AutonomoFormResponse>();
-                return await CreateSuccessResponse(req, result);
+                _logger.LogError(ex, "Error processing legal question");
+                return new StatusCodeResult(500);
             }
-
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing form guidance request - orchestration failed");
         }
-        catch (Exception ex)
+
+        [Function("GetFormGuidance")]
+        public async Task<IActionResult> GetFormGuidance(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "ai/legal/form-guidance")] HttpRequestData req,
+            FunctionContext context,
+            [DurableClient] DurableTaskClient client)
         {
-            _logger.LogError(ex, "Error processing form guidance request");
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing form guidance request");
-        }
-    }
-
-    [Function("GetQuarterlyObligations")]
-    public async Task<HttpResponseData> GetQuarterlyObligations(
-        [HttpTrigger(AuthorizationLevel.Function, "get",
-            Route = "ai/legal/quarterly-obligations/{quarter:int}/{year:int}")]
-        HttpRequestData req,
-        [DurableClient] DurableTaskClient client)
-    {
-        try
-        {
-            _logger.LogInformation("Processing quarterly obligations request");
-
-            // Extract route parameters
-            var quarter = int.Parse(req.FunctionContext.BindingContext.BindingData["quarter"]?.ToString() ?? "1");
-            var year = int.Parse(req.FunctionContext.BindingContext.BindingData["year"]?.ToString() ??
-                                 DateTime.Now.Year.ToString());
-
-            // Check for userId in query parameters
-            var query = HttpUtility.ParseQueryString(req.Url.Query);
-            var userIdParam = query["userId"];
-
-            var orchestratorInput = new QuarterlyObligationsRequest
+            try
             {
-                Quarter = quarter,
-                Year = year,
-                UserId = !string.IsNullOrEmpty(userIdParam) && Guid.TryParse(userIdParam, out var userId)
-                    ? userId
-                    : null
-            };
+                // Validate JWT and extract userId
+                var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+                if (errorResult != null) return errorResult;
 
-            // Start orchestrator
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                "GetQuarterlyObligationsOrchestrator", orchestratorInput);
+                _logger.LogInformation("Processing form guidance request for user: {UserId}", userId);
 
-            // Wait for completion
-            var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                var request = System.Text.Json.JsonSerializer.Deserialize<AutonomoFormRequest>(requestBody, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
 
-            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            {
-                var result = response.ReadOutputAs<string>();
-                return await CreateSuccessResponse(req, new { obligations = result });
+                if (request == null)
+                {
+                    return new BadRequestObjectResult("Invalid request body");
+                }
+
+                // Set the userId from JWT (remove any userId from request body)
+                request.UserId = userId.ToString();
+
+                // Start orchestrator
+                var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                    "GetFormGuidanceOrchestrator", request);
+
+                // Wait for completion
+                var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                
+                if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+                {
+                    var result = response.ReadOutputAs<AutonomoFormResponse>();
+                    return new OkObjectResult(result);
+                }
+                else
+                {
+                    return new StatusCodeResult(500);
+                }
             }
-
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing quarterly obligations request - orchestration failed");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing quarterly obligations request");
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing quarterly obligations request");
-        }
-    }
-
-    [Function("GetAnnualObligations")]
-    public async Task<HttpResponseData> GetAnnualObligations(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "ai/legal/annual-obligations/{year:int}")]
-        HttpRequestData req,
-        [DurableClient] DurableTaskClient client)
-    {
-        try
-        {
-            _logger.LogInformation("Processing annual obligations request");
-
-            // Extract route parameters
-            var year = int.Parse(req.FunctionContext.BindingContext.BindingData["year"]?.ToString() ??
-                                 DateTime.Now.Year.ToString());
-
-            // Check for userId in query parameters
-            var query = HttpUtility.ParseQueryString(req.Url.Query);
-            var userIdParam = query["userId"];
-
-            var orchestratorInput = new AnnualObligationsRequest
+            catch (Exception ex)
             {
-                Year = year,
-                UserId = !string.IsNullOrEmpty(userIdParam) && Guid.TryParse(userIdParam, out var userId)
-                    ? userId
-                    : null
-            };
-
-            // Start orchestrator
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                "GetAnnualObligationsOrchestrator", orchestratorInput);
-
-            // Wait for completion
-            var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
-
-            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            {
-                var result = response.ReadOutputAs<string>();
-                return await CreateSuccessResponse(req, new { obligations = result });
+                _logger.LogError(ex, "Error processing form guidance request");
+                return new StatusCodeResult(500);
             }
-
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing annual obligations request - orchestration failed");
         }
-        catch (Exception ex)
+
+        [Function("GetQuarterlyObligations")]
+        public async Task<IActionResult> GetQuarterlyObligations(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ai/legal/quarterly-obligations/{quarter:int}/{year:int}")] HttpRequestData req,
+            FunctionContext context,
+            [DurableClient] DurableTaskClient client,
+            int quarter,
+            int year)
         {
-            _logger.LogError(ex, "Error processing annual obligations request");
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error processing annual obligations request");
-        }
-    }
-
-    [Function("ClassifyLegalQuestion")]
-    public async Task<HttpResponseData> ClassifyLegalQuestion(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "ai/legal/classify")]
-        HttpRequestData req,
-        [DurableClient] DurableTaskClient client)
-    {
-        try
-        {
-            _logger.LogInformation("Processing legal question classification");
-
-            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var request = JsonSerializer.Deserialize<Dictionary<string, string>>(requestBody, new JsonSerializerOptions
+            try
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+                // Validate JWT and extract userId
+                var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+                if (errorResult != null) return errorResult;
 
-            if (request == null || !request.ContainsKey("question"))
-                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Question field is required");
+                _logger.LogInformation("Processing quarterly obligations request for user: {UserId}, Q{Quarter} {Year}", userId, quarter, year);
 
-            // Create and start a simple orchestrator for classification
-            var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                "ClassifyLegalQuestionOrchestrator", request["question"]);
+                var orchestratorInput = new QuarterlyObligationsRequest
+                {
+                    Quarter = quarter,
+                    Year = year,
+                    UserId = userId // Always use authenticated user's ID from JWT
+                };
 
-            // Wait for completion
-            var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                // Start orchestrator
+                var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                    "GetQuarterlyObligationsOrchestrator", orchestratorInput);
 
-            if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            {
-                var isLegalQuestion = response.ReadOutputAs<bool>();
-                return await CreateSuccessResponse(req, new { isLegalQuestion, question = request["question"] });
+                // Wait for completion
+                var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                
+                if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+                {
+                    var result = response.ReadOutputAs<string>();
+                    return new OkObjectResult(new { obligations = result });
+                }
+                else
+                {
+                    return new StatusCodeResult(500);
+                }
             }
-
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error classifying legal question - orchestration failed");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing quarterly obligations request");
+                return new StatusCodeResult(500);
+            }
         }
-        catch (Exception ex)
+
+        [Function("GetAnnualObligations")]
+        public async Task<IActionResult> GetAnnualObligations(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ai/legal/annual-obligations/{year:int}")] HttpRequestData req,
+            FunctionContext context,
+            [DurableClient] DurableTaskClient client,
+            int year)
         {
-            _logger.LogError(ex, "Error classifying legal question");
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError,
-                "Error classifying legal question");
+            try
+            {
+                // Validate JWT and extract userId
+                var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+                if (errorResult != null) return errorResult;
+
+                _logger.LogInformation("Processing annual obligations request for user: {UserId}, Year {Year}", userId, year);
+
+                var orchestratorInput = new AnnualObligationsRequest
+                {
+                    Year = year,
+                    UserId = userId // Always use authenticated user's ID from JWT
+                };
+
+                // Start orchestrator
+                var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                    "GetAnnualObligationsOrchestrator", orchestratorInput);
+
+                // Wait for completion
+                var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                
+                if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+                {
+                    var result = response.ReadOutputAs<string>();
+                    return new OkObjectResult(new { obligations = result });
+                }
+                else
+                {
+                    return new StatusCodeResult(500);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing annual obligations request");
+                return new StatusCodeResult(500);
+            }
         }
-    }
 
-    private async Task<HttpResponseData> CreateSuccessResponse(HttpRequestData req, object data)
-    {
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        response.Headers.Add("Content-Type", "application/json; charset=utf-8");
-
-        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
+        [Function("ClassifyLegalQuestion")]
+        public async Task<IActionResult> ClassifyLegalQuestion(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "ai/legal/classify")] HttpRequestData req,
+            FunctionContext context,
+            [DurableClient] DurableTaskClient client)
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        });
+            try
+            {
+                // Validate JWT and extract userId (for logging and audit purposes)
+                var (userId, errorResult) = await ValidateAndExtractUserId(req, client);
+                if (errorResult != null) return errorResult;
 
-        await response.WriteStringAsync(json);
-        return response;
-    }
+                _logger.LogInformation("Processing legal question classification for user: {UserId}", userId);
 
-    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode statusCode,
-        string message)
-    {
-        var response = req.CreateResponse(statusCode);
-        response.Headers.Add("Content-Type", "application/json; charset=utf-8");
+                var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                var request = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(requestBody, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
 
-        var errorResponse = new { error = message, timestamp = DateTime.UtcNow };
-        var json = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
+                if (request == null || !request.ContainsKey("question"))
+                {
+                    return new BadRequestObjectResult("Question field is required");
+                }
+
+                // Start orchestrator
+                var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
+                    "ClassifyLegalQuestionOrchestrator", request["question"]);
+
+                // Wait for completion
+                var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
+                
+                if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
+                {
+                    var isLegalQuestion = response.ReadOutputAs<bool>();
+                    return new OkObjectResult(new { isLegalQuestion, question = request["question"] });
+                }
+                else
+                {
+                    return new StatusCodeResult(500);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error classifying legal question");
+                return new StatusCodeResult(500);
+            }
+        }
+
+        // --- Private helpers ---
+
+        /// <summary>
+        ///     Validates JWT and extracts userId. Returns (userId, errorResult).
+        /// </summary>
+        private static async Task<(Guid userId, IActionResult? errorResult)> ValidateAndExtractUserId(HttpRequestData req,
+            DurableTaskClient client)
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        await response.WriteStringAsync(json);
-        return response;
+            var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
+            if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
+                return (Guid.Empty, new UnauthorizedResult());
+            if (jwtResult?.UserId == null || !Guid.TryParse(jwtResult.UserId, out var userId))
+                return (Guid.Empty, new BadRequestObjectResult("Invalid or missing UserId in JWT"));
+            return (userId, null);
+        }
     }
 }
