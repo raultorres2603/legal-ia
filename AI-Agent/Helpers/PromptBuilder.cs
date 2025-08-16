@@ -65,9 +65,9 @@ namespace AI_Agent.Helpers
             // Section: Totals
             sb.AppendLine("--- TOTALES ---");
             var totalAmount = invoices.Sum(i => i.Total);
-            var totalVAT = invoices.Sum(i => i.VAT);
-            var totalIRPF = invoices.Sum(i => i.IRPF);
-            sb.AppendLine($"Importe bruto: {totalAmount:C}, IVA: {totalVAT:C}, IRPF: {totalIRPF:C}");
+            var totalVat = invoices.Sum(i => i.VAT);
+            var totalIrpf = invoices.Sum(i => i.IRPF);
+            sb.AppendLine($"Importe bruto: {totalAmount:C}, IVA: {totalVat:C}, IRPF: {totalIrpf:C}");
             sb.AppendLine();
 
             return sb.ToString();

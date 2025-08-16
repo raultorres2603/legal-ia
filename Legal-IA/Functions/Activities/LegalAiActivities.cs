@@ -81,10 +81,8 @@ namespace Legal_IA.Functions.Activities
                 {
                     return await legalAiAgent.ProcessQuestionAsync(input.Request, input.UserContext, CancellationToken.None);
                 }
-                else
-                {
-                    return await legalAiAgent.ProcessQuestionAsync(input.Request);
-                }
+
+                return await legalAiAgent.ProcessQuestionAsync(input.Request);
             }
             catch (Exception ex)
             {
@@ -110,10 +108,8 @@ namespace Legal_IA.Functions.Activities
                 {
                     return await legalAiAgent.GetFormGuidanceAsync(input.Request, input.UserContext, CancellationToken.None);
                 }
-                else
-                {
-                    return await legalAiAgent.GetFormGuidanceAsync(input.Request);
-                }
+
+                return await legalAiAgent.GetFormGuidanceAsync(input.Request);
             }
             catch (Exception ex)
             {
@@ -138,10 +134,8 @@ namespace Legal_IA.Functions.Activities
                 {
                     return await legalAiAgent.GetQuarterlyObligationsAsync(input.Quarter, input.Year, input.UserContext, CancellationToken.None);
                 }
-                else
-                {
-                    return await legalAiAgent.GetQuarterlyObligationsAsync(input.Quarter, input.Year);
-                }
+
+                return await legalAiAgent.GetQuarterlyObligationsAsync(input.Quarter, input.Year);
             }
             catch (Exception ex)
             {
@@ -161,10 +155,8 @@ namespace Legal_IA.Functions.Activities
                 {
                     return await legalAiAgent.GetAnnualObligationsAsync(input.Year, input.UserContext, CancellationToken.None);
                 }
-                else
-                {
-                    return await legalAiAgent.GetAnnualObligationsAsync(input.Year);
-                }
+
+                return await legalAiAgent.GetAnnualObligationsAsync(input.Year);
             }
             catch (Exception ex)
             {
