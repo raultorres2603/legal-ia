@@ -46,7 +46,7 @@ public class InvoiceItemHttpTriggers
         var items = await req.ReadFromJsonAsync<List<InvoiceItem>>();
         if (items == null || items.Count == 0) return new BadRequestResult();
         // Optionally, link items to invoice owned by user (add validation here if needed)
-        return await RunOrchestrationAndRespond(client, "InvoiceItemCreateOrchestrator", items);
+        return await RunOrchestrationAndRespond(client, "InvoiceItemCreateOrchestrator", items, 201);
     }
 
     /// <summary>
@@ -188,12 +188,12 @@ public class InvoiceItemHttpTriggers
     ///     Schedules an orchestration and returns the HTTP response.
     /// </summary>
     private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client,
-        string orchestratorName, object input)
+        string orchestratorName, object input, int successStatusCode = 200)
     {
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(orchestratorName, input);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            return new OkObjectResult(response.ReadOutputAs<object>());
+            return new ObjectResult(response.ReadOutputAs<object>()) { StatusCode = successStatusCode };
         return new StatusCodeResult(500);
     }
 }

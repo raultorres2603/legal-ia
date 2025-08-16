@@ -11,16 +11,7 @@ namespace AI_Agent.Helpers
         /// <param name="userFullContext"></param>
         public static string BuildSystemPrompt()
         {
-            return @"Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional. Si la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España.";
-        }
-
-        /// <summary>
-        /// Builds a system prompt including the user's name for more personalized responses.
-        /// </summary>
-        /// <param name="userContext">The user's context information.</param>
-        public static string BuildSystemPrompt(UserContext userContext)
-        {
-            return $@"Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional. El usuario se llama {userContext.FirstName} {userContext.LastName}. Si la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España.";
+            return @"Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional. Si la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España. Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.";
         }
 
         /// <summary>
@@ -77,6 +68,7 @@ namespace AI_Agent.Helpers
             // Section: Instructions
             sb.AppendLine("--- INSTRUCCIONES ---");
             sb.AppendLine("Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional.\nSi la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España.");
+            sb.AppendLine("Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.");
 
             return sb.ToString();
         }
@@ -90,6 +82,7 @@ namespace AI_Agent.Helpers
         {
             return $@"
 Como experto en fiscalidad para autónomos en España, proporciona una guía completa para el modelo {request.FormType}.
+Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
 Información del contexto:
 - Trimestre: {request.Quarter}
@@ -136,6 +129,7 @@ Responde de manera profesional y práctica, considerando el régimen fiscal espe
         {
             return $@"
 Como experto en fiscalidad para autónomos en España, proporciona una guía PERSONALIZADA para {userContext.FirstName} {userContext.LastName} sobre el modelo {request.FormType}.
+Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
 Información específica del usuario:
 - Trimestre: {request.Quarter}
@@ -158,6 +152,7 @@ Información específica del usuario:
 
             return $@"
 Como experto en fiscalidad para autónomos en España, proporciona una guía PERSONALIZADA para {user.FirstName} {user.LastName} sobre el modelo {request.FormType}.
+Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
 Información específica del usuario:
 - Trimestre: {request.Quarter}
@@ -183,6 +178,7 @@ Incluye detalles relevantes de sus facturas e ingresos si es útil para la expli
         {
             return $@"
 Como experto fiscal para autónomos en España, proporciona un resumen completo de todas las obligaciones fiscales y de Seguridad Social para el {quarter}º trimestre de {year}.
+Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
 Incluye:
 1. Modelos a presentar (303, 130/131, etc.)
@@ -202,7 +198,9 @@ Estructura la información de manera clara y cronológica, empezando por las fec
         public static string BuildAnnualObligationsPrompt(int year)
         {
             return $@"
-Como experto fiscal para autónomos en España, proporciona un calendario completo de obligaciones anuales para {year}.
+Eres un asesor fiscal experto en obligaciones de autónomos en España. Tu tarea es proporcionar un calendario completo y detallado de todas las obligaciones fiscales anuales para autónomos en el año {year}.
+
+Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
 Incluye:
 1. Declaración anual de IRPF (Modelo 100)

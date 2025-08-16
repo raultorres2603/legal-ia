@@ -37,7 +37,10 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
             logger.LogInformation("[RegisterUser] Registration completed successfully");
-            return new OkObjectResult(response.ReadOutputAs<object>());
+            return new ObjectResult(response.ReadOutputAs<object>())
+            {
+                StatusCode = 201 // Created
+            };;
         }
 
         logger.LogError("[RegisterUser] Registration failed");

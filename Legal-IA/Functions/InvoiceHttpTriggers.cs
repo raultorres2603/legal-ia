@@ -67,7 +67,7 @@ public class InvoiceHttpTriggers
                 Total = i.Total
             })
         };
-        return await RunOrchestrationAndRespond(client, "InvoiceCreateOrchestrator", invoice);
+        return await RunOrchestrationAndRespond(client, "InvoiceCreateOrchestrator", invoice, 201);
     }
 
     /// <summary>
@@ -138,12 +138,12 @@ public class InvoiceHttpTriggers
     ///     Schedules an orchestration and returns the HTTP response.
     /// </summary>
     private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client,
-        string orchestratorName, object input)
+        string orchestratorName, object input, int successStatusCode = 200)
     {
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(orchestratorName, input);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            return new OkObjectResult(response.ReadOutputAs<object>());
+            return new ObjectResult(response.ReadOutputAs<object>()) { StatusCode = successStatusCode };
         return new StatusCodeResult(500);
     }
 }
