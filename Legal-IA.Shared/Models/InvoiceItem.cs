@@ -1,0 +1,17 @@
+using System.Text.Json.Serialization;
+
+namespace Legal_IA.Shared.Models;
+
+public class InvoiceItem
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid InvoiceId { get; set; }
+    public string Description { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal VAT { get; set; } // IVA
+    public decimal IRPF { get; set; } // Retención
+    public decimal Total { get; set; }
+
+    [JsonIgnore] public Invoice Invoice { get; set; }
+}

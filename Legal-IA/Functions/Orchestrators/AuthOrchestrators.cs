@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 namespace Legal_IA.Functions.Orchestrators;
 
 /// <summary>
-/// Orchestrator for user registration.
+///     Orchestrator for user registration.
 /// </summary>
 public static class RegisterUserOrchestrator
 {
     /// <summary>
-    /// Orchestrates the user registration process.
+    ///     Orchestrates the user registration process.
     /// </summary>
     [Function("RegisterUserOrchestrator")]
     public static async Task<object> Run([OrchestrationTrigger] TaskOrchestrationContext context)
@@ -26,12 +26,12 @@ public static class RegisterUserOrchestrator
 }
 
 /// <summary>
-/// Orchestrator for user login.
+///     Orchestrator for user login.
 /// </summary>
 public static class LoginUserOrchestrator
 {
     /// <summary>
-    /// Orchestrates the user login process.
+    ///     Orchestrates the user login process.
     /// </summary>
     [Function("LoginUserOrchestrator")]
     public static async Task<object> Run([OrchestrationTrigger] TaskOrchestrationContext context)

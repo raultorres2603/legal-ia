@@ -1,0 +1,69 @@
+meta {
+  name: 12 - AI Question - Personalized IVA Calculation
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "question": "¿Cuánto IVA debo declarar este trimestre según mis ingresos actuales?",
+    "userId": "{{userId}}",
+    "sessionId": "{{sessionId}}"
+  }
+}
+
+tests {
+  test("Should provide personalized IVA calculation", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should identify as legal question", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.isLegalQuestion).to.be.true;
+    expect(responseJson.success).to.be.true;
+  });
+  
+  test("Should contain personalized financial data", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.answer.toLowerCase();
+    
+    // Should mention user's name
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('carlos') || text.includes('garcía');
+    });
+    
+    // Should reference actual financial amounts or calculations
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('€') || text.includes('euro') || text.includes('6.') || text.includes('7.') || text.includes('trimestre actual');
+    });
+  });
+  
+  test("Should provide specific IVA guidance", function() {
+    const responseJson = res.getBody();
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('iva');
+    expect(answer).to.satisfy(function(text) {
+      return text.includes('modelo 303') || text.includes('declarar') || text.includes('liquidación');
+    });
+  });
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const response = res.body;
+    console.log("🤖 AI Response for IVA calculation:");
+    console.log("✅ Personalized: " + (response.answer.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
+    console.log("✅ Contains financial data: " + (response.answer.includes('€') ? 'YES' : 'NO'));
+    console.log("📝 Answer length: " + response.answer.length + " characters");
+  }
+}

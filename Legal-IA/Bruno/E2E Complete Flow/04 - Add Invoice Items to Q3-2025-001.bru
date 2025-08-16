@@ -1,0 +1,99 @@
+meta {
+  name: 04 - Add Invoice Items to Q3-2025-001
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/invoices/{{invoice1Id}}/items
+  body: json
+  auth: bearer
+}
+meta {
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "description": "Consultoría estratégica empresarial - Julio 2025",
+    "quantity": 1,
+    "unitPrice": 3500.00,
+    "vatRate": 21.0,
+    "irpfRate": 15.0
+  }
+}
+
+tests {
+  test("Should add invoice item successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should calculate totals correctly", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.unitPrice).to.equal(3500.00);
+    expect(responseJson.vatRate).to.equal(21.0);
+    expect(responseJson.irpfRate).to.equal(15.0);
+    // VAT = 3500 * 0.21 = 735
+    // IRPF = 3500 * 0.15 = 525
+    expect(responseJson.vatAmount).to.equal(735.00);
+    expect(responseJson.irpfAmount).to.equal(525.00);
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const responseData = res.body;
+    console.log("📊 Added Invoice Item - Amount: €3,500");
+    console.log("💰 VAT Amount: €" + responseData.vatAmount);
+    console.log("📋 IRPF Amount: €" + responseData.irpfAmount);
+  }
+}
+  name: 03 - Create Invoice Q3-2025-001
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/invoices
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "invoiceNumber": "Q3-2025-001",
+    "clientName": "Cliente Premium SA",
+    "clientCIF": "A12345678",
+    "issueDate": "2025-07-15T00:00:00Z",
+    "dueDate": "2025-08-15T00:00:00Z",
+    "status": "Paid",
+    "notes": "Consultoría estratégica Q3"
+  }
+}
+
+tests {
+  test("Should create invoice successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should return created invoice data", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.invoiceNumber).to.equal("Q3-2025-001");
+    expect(responseJson.clientName).to.equal("Cliente Premium SA");
+    expect(responseJson.status).to.equal("Paid");
+  });
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const responseData = res.body;
+    bru.setVar("invoice1Id", responseData.id);
+    console.log("📄 Created Invoice 1:", responseData.invoiceNumber);
+    console.log("💰 Invoice ID:", responseData.id);
+  }
+}

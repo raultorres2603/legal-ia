@@ -1,6 +1,6 @@
 using Azure.Storage.Blobs;
 using Legal_IA;
-using Legal_IA.Data;
+using Legal_IA.Shared.Data;
 using Legal_IA.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
@@ -9,9 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Formatters;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 

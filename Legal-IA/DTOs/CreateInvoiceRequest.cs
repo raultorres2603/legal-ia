@@ -1,4 +1,4 @@
-using Legal_IA.Enums;
+using InvoiceStatus = Legal_IA.Shared.Enums.InvoiceStatus;
 
 namespace Legal_IA.DTOs;
 

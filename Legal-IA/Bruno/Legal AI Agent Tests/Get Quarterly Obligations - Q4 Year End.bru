@@ -1,0 +1,56 @@
+meta {
+  name: Get Quarterly Obligations - Q4 Year End
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/ai/legal/quarterly-obligations/4/2025?userId={{userId}}
+  body: none
+  auth: none
+}
+meta {
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should handle Q4 year-end obligations", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.obligations).to.be.a('string');
+    expect(responseJson.obligations).to.contain("cuarto trimestre");
+    expect(responseJson.obligations).to.contain("fin de año");
+    expect(responseJson.obligations.length).to.be.greaterThan(300);
+  });
+}
+  name: Process Legal Question - Labor Law
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/ai/legal/question
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "¿Cuáles son los derechos de un trabajador autónomo en caso de despido improcedente por parte de un cliente principal?",
+    "sessionId": "{{sessionId}}"
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should handle labor law questions", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.be.a('string');
+    expect(responseJson.success).to.be.true;
+    expect(responseJson.isLegalQuestion).to.be.true;
+    expect(responseJson.answer).to.contain("autónomo");
+  });
+}

@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "type": "collection",
+  "name": "Legal AI Agent Tests",
+  "uid": "legal-ai-collection-2025",
+  "info": {
+    "name": "Legal AI Agent Tests",
+    "description": "Comprehensive tests for the Spanish Legal AI Agent endpoints",
+    "version": "1.0.0"
+  },
+  "variable": {
+    "baseUrl": "http://localhost:7071",
+    "userId": "550e8400-e29b-41d4-a716-446655440000",
+    "sessionId": "session-123-456"
+  }
+}
+

@@ -1,0 +1,32 @@
+meta {
+  name: Process Legal Question - Civil Law
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "Question": "¿Qué elementos debe contener un contrato de prestación de servicios para autónomos y qué cláusulas son obligatorias según el Código Civil?",
+    "SessionId": "{{sessionId}}"
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Should handle civil law questions", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.be.a('string');
+    expect(responseJson.success).to.be.true;
+    expect(responseJson.isLegalQuestion).to.be.true;
+    expect(responseJson.answer).to.contain("contrato");
+  });
+}

@@ -2,6 +2,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legal-IA", "Legal-IA\Legal-IA.csproj", "{7E5C3A0F-A6BC-420D-ADB5-A6E0B06007EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI-Agent", "AI-Agent\AI-Agent.csproj", "{A1E554F5-96C1-4529-9F54-51C50BB2A247}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Legal-IA.Shared", "Legal-IA.Shared", "{EC9C2BF0-7679-418B-A215-6469F770E07E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Legal-IA.Shared", "Legal-IA.Shared\Legal-IA.Shared.csproj", "{CAAE096D-12F4-4DC5-A06E-51EB0AAD6373}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +18,16 @@ Global
 		{7E5C3A0F-A6BC-420D-ADB5-A6E0B06007EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E5C3A0F-A6BC-420D-ADB5-A6E0B06007EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E5C3A0F-A6BC-420D-ADB5-A6E0B06007EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1E554F5-96C1-4529-9F54-51C50BB2A247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1E554F5-96C1-4529-9F54-51C50BB2A247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1E554F5-96C1-4529-9F54-51C50BB2A247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1E554F5-96C1-4529-9F54-51C50BB2A247}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAAE096D-12F4-4DC5-A06E-51EB0AAD6373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAAE096D-12F4-4DC5-A06E-51EB0AAD6373}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAAE096D-12F4-4DC5-A06E-51EB0AAD6373}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAAE096D-12F4-4DC5-A06E-51EB0AAD6373}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CAAE096D-12F4-4DC5-A06E-51EB0AAD6373} = {EC9C2BF0-7679-418B-A215-6469F770E07E}
 	EndGlobalSection
 EndGlobal
