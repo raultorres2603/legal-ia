@@ -1,6 +1,8 @@
-using Legal_IA.Enums;
+using System;
+using System.Collections.Generic;
+using Legal_IA.Shared.Enums;
 
-namespace Legal_IA.Models;
+namespace Legal_IA.Shared.Models;
 
 public class Invoice
 {

@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Legal_IA.Enums;
-using Legal_IA.Models;
+using Legal_IA.Shared.Enums;
+using Legal_IA.Shared.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;

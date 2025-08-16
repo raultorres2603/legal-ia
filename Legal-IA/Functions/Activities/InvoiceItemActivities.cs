@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Legal_IA.DTOs;
-using Legal_IA.Enums;
-using Legal_IA.Interfaces.Repositories;
+using Legal_IA.Shared.Enums;
 using Legal_IA.Interfaces.Services;
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 

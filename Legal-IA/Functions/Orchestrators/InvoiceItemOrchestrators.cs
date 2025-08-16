@@ -1,5 +1,5 @@
 using Legal_IA.DTOs;
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;

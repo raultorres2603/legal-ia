@@ -1,6 +1,6 @@
 using System.Web;
 using Legal_IA.DTOs;
-using Legal_IA.Enums;
+using Legal_IA.Shared.Enums;
 using Legal_IA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;

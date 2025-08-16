@@ -1,6 +1,6 @@
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
 
-namespace Legal_IA.Interfaces.Repositories;
+namespace Legal_IA.Shared.Repositories.Interfaces;
 
 /// <summary>
 ///     Interface for invoice repository to manage invoice-related database operations
@@ -13,4 +13,7 @@ public interface IInvoiceRepository : IRepository<Invoice>
     /// <param name="userId">The ID of the user.</param>
     /// <returns>A list of invoices belonging to the user.</returns>
     Task<List<Invoice>> GetInvoicesByUserIdAsync(Guid userId);
+
+    Task<bool> DeleteAsync(Guid id);
 }
+

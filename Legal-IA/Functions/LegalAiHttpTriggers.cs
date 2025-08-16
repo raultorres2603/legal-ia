@@ -6,7 +6,7 @@ using Microsoft.DurableTask.Client;
 using Legal_IA.Functions.Orchestrators;
 using Microsoft.AspNetCore.Mvc;
 using Legal_IA.Services;
-using Legal_IA.Enums;
+using Legal_IA.Shared.Enums;
 
 namespace Legal_IA.Functions
 {

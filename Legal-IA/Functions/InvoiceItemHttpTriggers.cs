@@ -1,8 +1,8 @@
 using FluentValidation;
 using Legal_IA.DTOs;
-using Legal_IA.Enums;
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
 using Legal_IA.Services;
+using Legal_IA.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;

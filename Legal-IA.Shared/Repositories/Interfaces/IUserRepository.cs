@@ -1,6 +1,6 @@
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
 
-namespace Legal_IA.Interfaces.Repositories;
+namespace Legal_IA.Shared.Repositories.Interfaces;
 
 /// <summary>
 ///     Interface for user repository to manage user-related database operations
@@ -41,3 +41,4 @@ public interface IUserRepository : IRepository<User>
     /// <returns>The user entity if found, otherwise null.</returns>
     Task<User?> GetByVerificationTokenAsync(string token);
 }
+

@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
-using Legal_IA.Data;
-using Legal_IA.Interfaces.Repositories;
-using Legal_IA.Models;
+using Legal_IA.Shared.Data;
+using Legal_IA.Shared.Models;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Legal_IA.Repositories;
+namespace Legal_IA.Shared.Repositories;
 
 public class InvoiceRepository(LegalIaDbContext context) : IInvoiceRepository
 {

@@ -1,4 +1,4 @@
-namespace Legal_IA.Enums;
+namespace Legal_IA.Shared.Enums;
 
 public enum InvoiceStatus
 {

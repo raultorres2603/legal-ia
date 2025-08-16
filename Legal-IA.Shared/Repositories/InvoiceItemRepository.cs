@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
-using Legal_IA.Data;
-using Legal_IA.Interfaces.Repositories;
-using Legal_IA.Models;
+using Legal_IA.Shared.Data;
+using Legal_IA.Shared.Models;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Legal_IA.Repositories;
+namespace Legal_IA.Shared.Repositories;
 
 public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepository
 {
@@ -48,6 +48,7 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
         var invoice = await context.Invoices.FindAsync(entity.InvoiceId);
         if (invoice == null)
             throw new ArgumentException($"Invoice with ID {entity.InvoiceId} does not exist.");
+        // ...existing code...
         invoice.Total += entity.Total - existingItem.Total; // Adjust total based on the update
         context.Invoices.Update(invoice);
         context.InvoiceItems.Update(entity);
@@ -55,51 +56,34 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public Task<bool> DeleteAsync(Guid id)
     {
-        var item = await context.InvoiceItems.FindAsync(id);
-        if (item == null) return false;
-        var invoice = await context.Invoices.FindAsync(item.InvoiceId);
-        if (invoice == null)
-            throw new ArgumentException($"Invoice with ID {item.InvoiceId} does not exist.");
-        invoice.Total -= item.Total; // Adjust total based on the deleted item
+var invoiceItem =context.InvoiceItems.Find(id);
+        if (invoiceItem == null) return Task.FromResult(false);
+        
+        var invoice = context.Invoices.Find(invoiceItem.InvoiceId);
+        if (invoice == null) return Task.FromResult(false);
+        
+        invoice.Total -= invoiceItem.Total; // Adjust total based on the item being deleted
         context.Invoices.Update(invoice);
-        context.InvoiceItems.Remove(item);
-        await context.SaveChangesAsync();
-        return true;
-    }
+        context.InvoiceItems.Remove(invoiceItem);
+        return context.SaveChangesAsync()
+            .ContinueWith(t => t.Result > 0);  }
 
-    public async Task<bool> ExistsAsync(Expression<Func<InvoiceItem, bool>> predicate)
+    // ...existing code...
+    public Task<List<InvoiceItem>> GetItemsByInvoiceIdAsync(Guid invoiceId)
     {
-        return await context.InvoiceItems.AnyAsync(predicate);
-    }
-
-    public async Task<int> CountAsync(Expression<Func<InvoiceItem, bool>>? predicate = null)
-    {
-        return predicate == null
-            ? await context.InvoiceItems.CountAsync()
-            : await context.InvoiceItems.CountAsync(predicate);
-    }
-
-    public async Task<IEnumerable<InvoiceItem>> GetPagedAsync(int page, int pageSize,
-        Expression<Func<InvoiceItem, bool>>? predicate = null)
-    {
-        var query = context.InvoiceItems.Include(ii => ii.Invoice).AsQueryable();
-        if (predicate != null) query = query.Where(predicate);
-        return await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-    }
-
-    public async Task<IEnumerable<InvoiceItem>> GetItemsByInvoiceIdAsync(int invoiceId)
-    {
-        return await context.InvoiceItems.Where(ii => Equals(ii.InvoiceId, invoiceId)).Include(ii => ii.Invoice)
+        return context.InvoiceItems
+            .Where(ii => ii.InvoiceId == invoiceId)
+            .Include(ii => ii.Invoice)
             .ToListAsync();
     }
 
-    public async Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId)
+    public Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId)
     {
-        return await context.InvoiceItems
-            .Include(ii => ii.Invoice)
+        return context.InvoiceItems
             .Where(ii => ii.Invoice.UserId == userId)
+            .Include(ii => ii.Invoice)
             .ToListAsync();
     }
 }

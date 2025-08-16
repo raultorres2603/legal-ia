@@ -1,4 +1,5 @@
-using Legal_IA.Enums;
+
+using Legal_IA.Shared.Enums;
 
 namespace Legal_IA.DTOs;
 

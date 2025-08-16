@@ -1,6 +1,6 @@
 using AI_Agent.Interfaces;
 using AI_Agent.Models;
-using Legal_IA.Interfaces.Repositories;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 

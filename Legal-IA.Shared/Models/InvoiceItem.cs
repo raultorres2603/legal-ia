@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Legal_IA.Models;
+namespace Legal_IA.Shared.Models;
 
 public class InvoiceItem
 {
