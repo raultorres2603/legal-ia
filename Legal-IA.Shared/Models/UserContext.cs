@@ -1,6 +1,6 @@
 namespace Legal_IA.Shared.Models;
 
-public class UserContext
+public class UserContext : IUserContext
 {
     public Guid UserId { get; set; }
     public string FirstName { get; set; } = string.Empty;

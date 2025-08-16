@@ -43,12 +43,12 @@ public static class Startup
 
         // Register AI-Agent repository interfaces with their implementations
         services.AddScoped<IUserDataAggregatorService, UserDataAggregatorService>();
-
+        
         // Register the agent with all dependencies
         services.AddScoped<ILegalAiAgent>(provider =>
             new LegalAiAgent(
                 openAiApiKey,
-                provider.GetRequiredService<AI_Agent.Services.IUserDataAggregatorService>()
+                provider.GetRequiredService<IUserDataAggregatorService>()
             )
         );
     }
