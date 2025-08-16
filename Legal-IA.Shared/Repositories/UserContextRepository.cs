@@ -1,5 +1,6 @@
 using Legal_IA.Shared.Data;
 using Legal_IA.Shared.Models;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Legal_IA.Shared.Repositories
@@ -7,15 +8,8 @@ namespace Legal_IA.Shared.Repositories
     /// <summary>
     /// Repository for fetching user context data for AI agent personalization.
     /// </summary>
-    public class UserContextRepository : Interfaces.IUserContextRepository
+    public class UserContextRepository(LegalIaDbContext context) : IUserContextRepository
     {
-        private readonly LegalIaDbContext _context;
-
-        public UserContextRepository(LegalIaDbContext context)
-        {
-            _context = context;
-        }
-
         /// <summary>
         /// Fetches user context data for the specified user ID and maps it to a UserContext model.
         /// </summary>
@@ -24,7 +18,7 @@ namespace Legal_IA.Shared.Repositories
         /// <returns>The user's context information for AI personalization.</returns>
         public async Task<UserContext> GetUserContextAsync(Guid userId, CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
             if (user == null)
                 throw new InvalidOperationException($"User with ID {userId} not found.");
 

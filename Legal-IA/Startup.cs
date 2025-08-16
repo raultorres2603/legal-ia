@@ -42,8 +42,8 @@ public static class Startup
                            ?? throw new InvalidOperationException("OpenAI:ApiKey environment variable is required");
 
         // Register AI-Agent repository interfaces with their implementations
+        services.AddScoped<IUserContextRepository, UserContextRepository>();
         services.AddScoped<IUserDataAggregatorService, UserDataAggregatorService>();
-        
         // Register the agent with all dependencies
         services.AddScoped<ILegalAiAgent>(provider =>
             new LegalAiAgent(

@@ -1,4 +1,5 @@
 using AI_Agent.Models;
+using Legal_IA.Shared.Models;
 
 namespace Legal_IA.Functions.Activities
 {
