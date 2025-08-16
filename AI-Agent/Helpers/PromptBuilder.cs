@@ -1,4 +1,5 @@
 using AI_Agent.Models;
+using Legal_IA.Shared.Models;
 
 namespace AI_Agent.Helpers
 {
@@ -7,6 +8,7 @@ namespace AI_Agent.Helpers
         /// <summary>
         /// Builds a generic system prompt for the AI agent, instructing it to answer only legal, tax, or judicial questions for freelancers in Spain.
         /// </summary>
+        /// <param name="userFullContext"></param>
         public static string BuildSystemPrompt()
         {
             return @"Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional. Si la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España.";

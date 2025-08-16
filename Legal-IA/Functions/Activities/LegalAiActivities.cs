@@ -1,5 +1,6 @@
 using AI_Agent.Interfaces;
 using AI_Agent.Models;
+using Legal_IA.Shared.Models;
 using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -78,7 +79,7 @@ namespace Legal_IA.Functions.Activities
 
                 if (input.UserContext != null)
                 {
-                    return await legalAiAgent.ProcessQuestionAsync(input.Request, input.UserContext);
+                    return await legalAiAgent.ProcessQuestionAsync(input.Request, input.UserContext, CancellationToken.None);
                 }
                 else
                 {
@@ -107,7 +108,7 @@ namespace Legal_IA.Functions.Activities
 
                 if (input.UserContext != null)
                 {
-                    return await legalAiAgent.GetFormGuidanceAsync(input.Request, input.UserContext);
+                    return await legalAiAgent.GetFormGuidanceAsync(input.Request, input.UserContext, CancellationToken.None);
                 }
                 else
                 {
@@ -135,7 +136,7 @@ namespace Legal_IA.Functions.Activities
 
                 if (input.UserContext != null)
                 {
-                    return await legalAiAgent.GetQuarterlyObligationsAsync(input.Quarter, input.Year, input.UserContext);
+                    return await legalAiAgent.GetQuarterlyObligationsAsync(input.Quarter, input.Year, input.UserContext, CancellationToken.None);
                 }
                 else
                 {
@@ -158,7 +159,7 @@ namespace Legal_IA.Functions.Activities
 
                 if (input.UserContext != null)
                 {
-                    return await legalAiAgent.GetAnnualObligationsAsync(input.Year, input.UserContext);
+                    return await legalAiAgent.GetAnnualObligationsAsync(input.Year, input.UserContext, CancellationToken.None);
                 }
                 else
                 {

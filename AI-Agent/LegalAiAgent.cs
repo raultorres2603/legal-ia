@@ -3,6 +3,7 @@ using AI_Agent.Helpers;
 using AI_Agent.Interfaces;
 using AI_Agent.Models;
 using AI_Agent.Services;
+using Legal_IA.Shared.Models;
 using OpenAI;
 
 namespace AI_Agent;
@@ -212,6 +213,7 @@ public class LegalAiAgent : ILegalAiAgent
         };
         try
         {
+            // Use the shared UserContext from Legal_IA.Shared.Models
             var userFullContext = await _userDataAggregatorService.GetUserFullContextAsync(userContext.UserId, cancellationToken);
             var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
             var formPrompt = PromptBuilder.BuildPersonalizedFormPrompt(request, userFullContext);
@@ -230,7 +232,9 @@ public class LegalAiAgent : ILegalAiAgent
     {
         try
         {
-            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userContext);
+            // Use the shared UserContext from Legal_IA.Shared.Models
+            var userFullContext = await _userDataAggregatorService.GetUserFullContextAsync(userContext.UserId, cancellationToken);
+            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
             var quarterPrompt = PromptBuilder.BuildQuarterlyObligationsPrompt(quarter, year);
             return await _adviceService.GetQuarterlyObligationsAsync(quarterPrompt, personalizedSystemPrompt, cancellationToken);
         }
@@ -244,7 +248,9 @@ public class LegalAiAgent : ILegalAiAgent
     {
         try
         {
-            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userContext);
+            // Use the shared UserContext from Legal_IA.Shared.Models
+            var userFullContext = await _userDataAggregatorService.GetUserFullContextAsync(userContext.UserId, cancellationToken);
+            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
             var annualPrompt = PromptBuilder.BuildAnnualObligationsPrompt(year);
             return await _adviceService.GetAnnualObligationsAsync(annualPrompt, personalizedSystemPrompt, cancellationToken);
         }

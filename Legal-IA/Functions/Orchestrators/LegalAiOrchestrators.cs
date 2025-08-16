@@ -3,6 +3,7 @@ using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;
 using AI_Agent.Models;
 using Legal_IA.Functions.Activities;
+using Legal_IA.Shared.Models;
 
 namespace Legal_IA.Functions.Orchestrators
 {

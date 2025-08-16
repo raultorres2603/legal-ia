@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using AI_Agent.Interfaces.Repositories;
 using AI_Agent.Models;
 using Legal_IA.Shared.Models;

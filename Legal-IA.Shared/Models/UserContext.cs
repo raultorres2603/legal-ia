@@ -1,4 +1,4 @@
-namespace AI_Agent.Models;
+namespace Legal_IA.Shared.Models;
 
 public class UserContext
 {
@@ -29,3 +29,4 @@ public class UserContext
     public string? ActivityCode { get; set; } // CNAE code
     public string? TaxRegime { get; set; } // "general", "modulos", etc.
 }
+
