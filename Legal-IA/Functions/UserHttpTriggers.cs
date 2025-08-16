@@ -168,7 +168,7 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
     /// <summary>
     ///     Validates JWT and extracts userId. Returns (userId, errorResult).
     /// </summary>
-    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req,
+    private static async Task<(Guid userId, IActionResult? errorResult)> ValidateAndExtractUserId(HttpRequestData req,
         DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);

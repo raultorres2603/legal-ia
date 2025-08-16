@@ -112,7 +112,7 @@ public class InvoiceHttpTriggers
         if (orchestrationResult.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
             var result = orchestrationResult.ReadOutputAs<bool>();
-            return result ? new OkResult() : new ForbidResult();
+            return result ? new NoContentResult() : new ForbidResult();
         }
 
         return new StatusCodeResult(500);
@@ -123,7 +123,7 @@ public class InvoiceHttpTriggers
     /// <summary>
     ///     Validates JWT and extracts userId. Returns (userId, errorResult).
     /// </summary>
-    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req,
+    private static async Task<(Guid userId, IActionResult? errorResult)> ValidateAndExtractUserId(HttpRequestData req,
         DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);

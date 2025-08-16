@@ -161,7 +161,7 @@ public class InvoiceItemHttpTriggers
                 return new NotFoundObjectResult(new { message = $"Invoice item {itemId} not found or not deleted" });
             }
 
-            return new OkResult();
+            return new NoContentResult();
         }
 
         logger.LogError("Delete orchestration failed");
@@ -173,7 +173,7 @@ public class InvoiceItemHttpTriggers
     /// <summary>
     ///     Validates JWT and extracts userId. Returns (userId, errorResult).
     /// </summary>
-    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req,
+    private static async Task<(Guid userId, IActionResult? errorResult)> ValidateAndExtractUserId(HttpRequestData req,
         DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
