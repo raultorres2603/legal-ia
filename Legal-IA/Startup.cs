@@ -1,5 +1,6 @@
 using AI_Agent;
 using AI_Agent.Interfaces;
+using AI_Agent.Services;
 using Azure.Storage.Blobs;
 using FluentValidation;
 using Legal_IA.DTOs;
@@ -40,7 +41,16 @@ public static class Startup
         var openAiApiKey = Environment.GetEnvironmentVariable("OpenAI:ApiKey")
                            ?? throw new InvalidOperationException("OpenAI:ApiKey environment variable is required");
 
-        services.AddScoped<ILegalAiAgent>(_ => new LegalAiAgent(openAiApiKey));
+        // Register AI-Agent repository interfaces with their implementations
+        services.AddScoped<IUserDataAggregatorService, UserDataAggregatorService>();
+
+        // Register the agent with all dependencies
+        services.AddScoped<ILegalAiAgent>(provider =>
+            new LegalAiAgent(
+                openAiApiKey,
+                provider.GetRequiredService<AI_Agent.Services.IUserDataAggregatorService>()
+            )
+        );
     }
 
     public static void AddExternalClients(this IServiceCollection services, string redisConnectionString,

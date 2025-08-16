@@ -12,8 +12,9 @@ public class LegalAiAgent : ILegalAiAgent
     private readonly string _systemPrompt;
     private readonly LegalQuestionClassifier _questionClassifier;
     private readonly LegalAdviceService _adviceService;
+    private readonly IUserDataAggregatorService _userDataAggregatorService;
 
-    public LegalAiAgent(string apiKey)
+    public LegalAiAgent(string apiKey, IUserDataAggregatorService userDataAggregatorService)
     {
         // Configure OpenAI client to use OpenRouter.ai
         var openRouterClient = new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions
@@ -26,6 +27,7 @@ public class LegalAiAgent : ILegalAiAgent
         _systemPrompt = PromptBuilder.BuildSystemPrompt();
         _questionClassifier = new LegalQuestionClassifier(openRouterClient);
         _adviceService = new LegalAdviceService(chatClient);
+        _userDataAggregatorService = userDataAggregatorService;
     }
 
     public async Task<string> GetLegalAdviceAsync(string userQuestion, CancellationToken cancellationToken = default)
@@ -170,7 +172,9 @@ public class LegalAiAgent : ILegalAiAgent
                 return response;
             }
 
-            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userContext);
+            // Fetch full user context (profile, invoices, invoice items)
+            var userFullContext = await _userDataAggregatorService.GetUserFullContextAsync(userContext.UserId, cancellationToken);
+            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
             response.Answer = await _adviceService.GetLegalAdviceAsync(request.Question, personalizedSystemPrompt, cancellationToken);
             response.Success = true;
         }
@@ -189,7 +193,8 @@ public class LegalAiAgent : ILegalAiAgent
     {
         try
         {
-            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userContext);
+            var userFullContext = await _userDataAggregatorService.GetUserFullContextAsync(userContext.UserId, cancellationToken);
+            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
             return await _adviceService.GetLegalAdviceAsync(userQuestion, personalizedSystemPrompt, cancellationToken);
         }
         catch (Exception ex)
@@ -207,8 +212,9 @@ public class LegalAiAgent : ILegalAiAgent
         };
         try
         {
-            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userContext);
-            var formPrompt = PromptBuilder.BuildPersonalizedFormPrompt(request, userContext);
+            var userFullContext = await _userDataAggregatorService.GetUserFullContextAsync(userContext.UserId, cancellationToken);
+            var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
+            var formPrompt = PromptBuilder.BuildPersonalizedFormPrompt(request, userFullContext);
             var content = await _adviceService.GetFormGuidanceAsync(formPrompt, personalizedSystemPrompt, cancellationToken);
             FormGuidanceParser.ParseFormGuidanceResponse(content, response);
             response.Success = true;
