@@ -24,6 +24,11 @@ namespace AI_Agent.Helpers
             var user = userFullContext.UserContext;
             var invoices = userFullContext.Invoices;
             var sb = new System.Text.StringBuilder();
+            
+            // Section: Instructions
+            sb.AppendLine("--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---");
+            sb.AppendLine("Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional.\nSi la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España.");
+            sb.AppendLine("Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.");
 
             // Section: User Info
             sb.AppendLine("--- INFORMACIÓN DEL USUARIO ---");
@@ -65,11 +70,6 @@ namespace AI_Agent.Helpers
             sb.AppendLine($"Importe bruto: {totalAmount:C}, IVA: {totalVAT:C}, IRPF: {totalIRPF:C}");
             sb.AppendLine();
 
-            // Section: Instructions
-            sb.AppendLine("--- INSTRUCCIONES ---");
-            sb.AppendLine("Eres un asistente experto en derecho y fiscalidad para autónomos en España. Responde de manera clara, precisa y profesional.\nSi la pregunta no es legal o fiscal, indica que solo puedes responder sobre temas legales, fiscales o judiciales en España.");
-            sb.AppendLine("Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.");
-
             return sb.ToString();
         }
 
@@ -81,6 +81,7 @@ namespace AI_Agent.Helpers
         public static string BuildFormPrompt(AutonomoFormRequest request)
         {
             return $@"
+--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
 Como experto en fiscalidad para autónomos en España, proporciona una guía completa para el modelo {request.FormType}.
 Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
@@ -128,6 +129,7 @@ Responde de manera profesional y práctica, considerando el régimen fiscal espe
         public static string BuildPersonalizedFormPrompt(AutonomoFormRequest request, UserContext userContext)
         {
             return $@"
+--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
 Como experto en fiscalidad para autónomos en España, proporciona una guía PERSONALIZADA para {userContext.FirstName} {userContext.LastName} sobre el modelo {request.FormType}.
 Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
@@ -151,6 +153,7 @@ Información específica del usuario:
             string incomeSummary = $"Ingresos año actual: {user.TotalIncomeCurrentYear}, IVA año actual: {user.TotalVATCurrentYear}, IRPF año actual: {user.TotalIRPFCurrentYear}";
 
             return $@"
+--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
 Como experto en fiscalidad para autónomos en España, proporciona una guía PERSONALIZADA para {user.FirstName} {user.LastName} sobre el modelo {request.FormType}.
 Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
@@ -177,6 +180,7 @@ Incluye detalles relevantes de sus facturas e ingresos si es útil para la expli
         public static string BuildQuarterlyObligationsPrompt(int quarter, int year)
         {
             return $@"
+--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
 Como experto fiscal para autónomos en España, proporciona un resumen completo de todas las obligaciones fiscales y de Seguridad Social para el {quarter}º trimestre de {year}.
 Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
@@ -198,6 +202,7 @@ Estructura la información de manera clara y cronológica, empezando por las fec
         public static string BuildAnnualObligationsPrompt(int year)
         {
             return $@"
+--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
 Eres un asesor fiscal experto en obligaciones de autónomos en España. Tu tarea es proporcionar un calendario completo y detallado de todas las obligaciones fiscales anuales para autónomos en el año {year}.
 
 Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
