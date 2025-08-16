@@ -1,6 +1,4 @@
-using AI_Agent.Interfaces.Repositories;
 using AI_Agent.Models;
-using Legal_IA.Shared.Models;
 using Legal_IA.Shared.Repositories.Interfaces;
 
 namespace AI_Agent.Services
@@ -12,15 +10,15 @@ namespace AI_Agent.Services
 
     public class UserDataAggregatorService(
         IUserContextRepository userContextRepository,
-        Interfaces.Repositories.IInvoiceRepository invoiceRepository,
-        Interfaces.Repositories.IInvoiceItemRepository invoiceItemRepository)
+        IInvoiceRepository invoiceRepository,
+        IInvoiceItemRepository invoiceItemRepository)
         : IUserDataAggregatorService
     {
         public async Task<UserFullContext> GetUserFullContextAsync(Guid userId, CancellationToken cancellationToken = default)
         {
             var userContext = await userContextRepository.GetUserContextAsync(userId, cancellationToken);
-            var invoices = await invoiceRepository.GetInvoicesByUserIdAsync(userId, cancellationToken);
-            var invoiceItems = await invoiceItemRepository.GetInvoiceItemsByUserIdAsync(userId, cancellationToken);
+            var invoices = await invoiceRepository.GetInvoicesByUserIdAsync(userId);
+            var invoiceItems = await invoiceItemRepository.GetByUserIdAsync(userId);
 
             return new UserFullContext
             {
