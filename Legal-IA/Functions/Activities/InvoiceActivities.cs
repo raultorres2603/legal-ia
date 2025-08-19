@@ -89,8 +89,8 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         if (invoice.UserId == Guid.Empty)
             throw new ArgumentException("UserId must be set on Invoice");
         var created = await invoiceRepository.AddAsync(invoice);
-        await cacheService.RemoveByPatternAsync("invoices");
-        log.LogInformation("Invoice created and cache invalidated for pattern 'invoices'");
+        await InvalidateCache(userId: invoice.UserId, invalidateAll: true, log: log);
+        log.LogInformation("Invoice created and cache invalidated for user and all invoices");
         return created;
     }
 
@@ -101,9 +101,12 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
     public async Task<bool> InvoiceDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
     {
         var log = context.GetLogger("InvoiceDeleteActivity");
-        await invoiceRepository.GetByIdAsync(id);
+        var invoice = await invoiceRepository.GetByIdAsync(id);
         var deleted = await invoiceRepository.DeleteAsync(id);
-        await cacheService.RemoveByPatternAsync("invoices");
+        if (invoice != null)
+        {
+            await InvalidateCache(invoiceId: invoice.Id, userId: invoice.UserId, invalidateAll: true, log: log);
+        }
         log.LogInformation("Invoice deleted and related cache keys invalidated");
         return deleted;
     }
@@ -172,11 +175,21 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         PatchInvoice(existing, updateRequest);
 
         var updated = await invoiceRepository.UpdateAsync(existing);
-        await cacheService.RemoveAsync($"invoices:user:{userId}");
-        await cacheService.RemoveByPatternAsync($"invoices:user:{userId}");
-        await cacheService.RemoveByPatternAsync($"invoices:{existing.Id}");
+
+        await InvalidateCache(invoiceId: existing.Id, userId: userId, invalidateAll: true, log: log);
         log.LogInformation("Invoice patched by current user and related cache keys invalidated");
         return updated;
+    }
+
+    private async Task InvalidateCache(ILogger log, Guid? invoiceId = null, Guid? userId = null, bool invalidateAll = false)
+    {
+        if (userId.HasValue)
+            await cacheService.RemoveByPatternAsync($"invoices:user:{userId.Value}");
+        if (invoiceId.HasValue)
+            await cacheService.RemoveByPatternAsync($"invoices:{invoiceId.Value}");
+        if (invalidateAll)
+            await cacheService.RemoveByPatternAsync($"invoices:all");
+        log.LogInformation($"Cache invalidated for invoice {invoiceId}, user {userId}, all: {invalidateAll}");
     }
 
     private void PatchInvoice(Invoice existing, UpdateInvoiceRequest? updateRequest)
