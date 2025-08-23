@@ -2,8 +2,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;
 using AI_Agent.Models;
-using Legal_IA.Functions.Activities;
 using Legal_IA.Shared.Models;
+using Legal_IA.Functions.Orchestrators.Models;
 
 namespace Legal_IA.Functions.Orchestrators
 {
@@ -36,15 +36,9 @@ namespace Legal_IA.Functions.Orchestrators
                 }
 
                 // Step 2: Process based on query type
-                var response = new LegalQueryResponse
-                {
-                    QueryType = input?.QueryType ?? "general",
-                    Timestamp = DateTime.UtcNow,
-                    SessionId = input?.SessionId,
-                    UserContextIncluded = userFullContext != null
-                };
+                LegalQueryResponse response;
 
-                switch (input?.QueryType?.ToLower())
+                switch (input?.QueryType.ToLower())
                 {
                     case "form-guidance":
                         response = await ProcessFormGuidanceQuery(context, input, userFullContext);
@@ -58,9 +52,8 @@ namespace Legal_IA.Functions.Orchestrators
                     case "classify":
                         response = await ProcessClassificationQuery(context, input);
                         break;
-                    case "general":
                     default:
-                        response = await ProcessGeneralLegalQuery(context, input, userFullContext);
+                        response = await ProcessGeneralLegalQuery(context, input!, userFullContext);
                         break;
                 }
 
@@ -199,45 +192,5 @@ namespace Legal_IA.Functions.Orchestrators
                 Success = true
             };
         }
-    }
-
-    // Supporting classes for orchestrator inputs with full context
-    public class BuildUserFullContextInput
-    {
-        public Guid UserId { get; set; }
-        public bool IncludeUserData { get; set; } = true;
-        public bool IncludeInvoiceData { get; set; } = true;
-    }
-
-    public class ProcessLegalQuestionInput
-    {
-        public LegalQueryRequest? Request { get; set; }
-        public UserContext? UserContext { get; set; }
-        public UserFullContext? UserFullContext { get; set; }
-    }
-
-    public class FormGuidanceInput
-    {
-        public string Question { get; set; } = string.Empty;
-        public string? FormType { get; set; }
-        public UserContext? UserContext { get; set; }
-        public UserFullContext? UserFullContext { get; set; }
-    }
-
-    public class QuarterlyObligationsInput
-    {
-        public int Quarter { get; set; }
-        public int Year { get; set; }
-        public string Question { get; set; } = string.Empty;
-        public UserContext? UserContext { get; set; }
-        public UserFullContext? UserFullContext { get; set; }
-    }
-
-    public class AnnualObligationsInput
-    {
-        public int Year { get; set; }
-        public string Question { get; set; } = string.Empty;
-        public UserContext? UserContext { get; set; }
-        public UserFullContext? UserFullContext { get; set; }
     }
 }
