@@ -1,24 +1,20 @@
 meta {
-  name: 15 - AI Annual Obligations - Personalized
+  name: Unified API - Annual Obligations with Invoice Data
   type: http
-  seq: 15
+  seq: 22
 }
 
 post {
   url: {{baseUrl}}/ai/legal/question
   body: json
-  auth: bearer
-}
-
-auth:bearer {
-  token: {{jwtToken}}
+  auth: inherit
 }
 
 body:json {
   {
-    "question": "¿Qué obligaciones fiscales anuales tengo que cumplir este año?",
+    "question": "Considerando todos mis ingresos de este año, ¿qué declaraciones anuales debo presentar?",
     "queryType": "annual-obligations",
-    "year": {{currentYear}},
+    "year": 2024,
     "includeUserContext": true,
     "includeInvoiceData": true
   }
@@ -30,17 +26,17 @@ tests {
     const responseJson = res.getBody();
     expect(responseJson.success).to.equal(true);
     expect(responseJson.queryType).to.equal("annual-obligations");
-    expect(responseJson.year).to.equal({{currentYear}});
+    expect(responseJson.year).to.equal(2024);
     expect(responseJson.userContextIncluded).to.equal(true);
   });
   
-  test("Should contain user-specific annual guidance", function() {
+  test("Should include comprehensive annual guidance", function() {
     const responseJson = res.getBody();
-    expect(responseJson.answer).to.be.a('string');
     expect(responseJson.obligations).to.be.a('string');
+    expect(responseJson.answer).to.be.a('string');
     
-    const answer = responseJson.answer.toLowerCase();
-    expect(answer).to.include('hola');
-    expect(answer).to.include('año');
+    // Should mention key annual obligations
+    const obligations = responseJson.obligations.toLowerCase();
+    expect(obligations).to.match(/modelo 100|declaración de la renta|modelo 390/);
   });
 }

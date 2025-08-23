@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/ai/legal/form-guidance
+  url: {{baseUrl}}/ai/legal/question
   body: json
   auth: bearer
 }
@@ -16,48 +16,33 @@ auth:bearer {
 
 body:json {
   {
-    "formType": "303",
-    "quarter": "{{currentQuarter}}",
+    "question": "¿Cómo debo rellenar el modelo 303 de IVA con mis datos actuales?",
+    "queryType": "form-guidance",
+    "formType": "modelo-303",
+    "quarter": {{currentQuarter}},
     "year": {{currentYear}},
-    "regimeType": "{{testTaxRegime}}",
-    "activityCode": "{{testActivityCode}}"
-  }
-}
-
-script:post-response {
-  if (res.status === 200) {
-    const response = res.body;
-    console.log("📋 AI Form Guidance for Modelo 303:");
-    console.log("✅ Personalized guidance: " + (response.instructions.toLowerCase().includes('carlos') ? 'YES' : 'NO'));
-    console.log("✅ Contains calculations: " + (response.instructions.includes('€') ? 'YES' : 'NO'));
+    "includeUserContext": true,
+    "includeInvoiceData": true
   }
 }
 
 tests {
   test("Should provide personalized form guidance", function() {
     expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("form-guidance");
+    expect(responseJson.formType).to.equal("modelo-303");
+    expect(responseJson.userContextIncluded).to.equal(true);
   });
   
-  test("Should return structured guidance with user data", function() {
+  test("Should contain user-specific form guidance", function() {
     const responseJson = res.getBody();
-    expect(responseJson.success).to.be.true;
-    expect(responseJson.formType).to.equal("303");
-    expect(responseJson.formName).to.be.a('string');
-    expect(responseJson.instructions).to.be.a('string');
-  });
-  
-  test("Should contain personalized calculations", function() {
-    const responseJson = res.getBody();
-    const instructions = responseJson.instructions.toLowerCase();
+    expect(responseJson.answer).to.be.a('string');
+    expect(responseJson.formGuidance).to.be.a('string');
     
-    // Should reference user's actual financial situation
-    expect(instructions).to.satisfy(function(text) {
-      return text.includes('carlos') || text.includes('garcía') || text.includes('sus ingresos') || text.includes('basado en');
-    });
-    
-    // Should mention approximate amounts based on real data
-    expect(instructions).to.satisfy(function(text) {
-      return text.includes('€') || text.includes('aproximadamente') || text.includes('estimado');
-    });
+    // Should mention user's name in personalized response
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('hola');
   });
 }

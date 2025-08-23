@@ -1,7 +1,7 @@
 meta {
-  name: Get Form Guidance - Modelo 303 Personalized
+  name: Unified API - Form Guidance Multiple Types
   type: http
-  seq: 8
+  seq: 23
 }
 
 post {
@@ -12,9 +12,9 @@ post {
 
 body:json {
   {
-    "question": "¿Cómo debo completar el modelo 303 con mis datos fiscales actuales?",
+    "question": "¿Qué diferencias hay entre el modelo 130 y 303 para mi situación fiscal actual?",
     "queryType": "form-guidance",
-    "formType": "modelo-303",
+    "formType": "modelo-130-vs-303",
     "quarter": 3,
     "year": 2024,
     "includeUserContext": true,
@@ -23,22 +23,19 @@ body:json {
 }
 
 tests {
-  test("Status should be 200", function() {
+  test("Should provide comparative form guidance", function() {
     expect(res.getStatus()).to.equal(200);
-  });
-  
-  test("Should provide form guidance with user context", function() {
     const responseJson = res.getBody();
     expect(responseJson.success).to.equal(true);
     expect(responseJson.queryType).to.equal("form-guidance");
-    expect(responseJson.formType).to.equal("modelo-303");
     expect(responseJson.userContextIncluded).to.equal(true);
   });
   
-  test("Response should include form guidance", function() {
+  test("Should explain differences with user context", function() {
     const responseJson = res.getBody();
     expect(responseJson.formGuidance).to.be.a('string');
-    expect(responseJson.answer).to.be.a('string');
-    expect(responseJson.formGuidance.length).to.be.greaterThan(100);
+    
+    const guidance = responseJson.formGuidance.toLowerCase();
+    expect(guidance).to.match(/modelo 130|modelo 303|irpf|iva/);
   });
 }

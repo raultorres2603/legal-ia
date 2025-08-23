@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/ai/legal/classify
+  url: {{baseUrl}}/ai/legal/question
   body: json
   auth: bearer
 }
@@ -16,33 +16,19 @@ auth:bearer {
 
 body:json {
   {
-    "question": "¿Cuáles son los plazos para presentar el modelo 303 de IVA?"
+    "question": "¿Cuáles son los plazos para presentar el modelo 303 de IVA?",
+    "queryType": "classify",
+    "includeUserContext": false,
+    "includeInvoiceData": false
   }
 }
 
 tests {
-  test("Should classify legal question successfully", function() {
+  test("Should classify legal question correctly", function() {
     expect(res.getStatus()).to.equal(200);
-  });
-  
-  test("Should identify as legal question", function() {
     const responseJson = res.getBody();
-    expect(responseJson.isLegalQuestion).to.be.true;
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.isLegalQuestion).to.equal(true);
+    expect(responseJson.queryType).to.equal("classify");
   });
-  
-  test("Should return classification result", function() {
-    const responseJson = res.getBody();
-    expect(responseJson).to.have.property('isLegalQuestion');
-    expect(responseJson).to.have.property('question');
-    expect(responseJson.question).to.equal("¿Cuáles son los plazos para presentar el modelo 303 de IVA?");
-  });
-}
-
-script:post-response {
-  // Generate a unique session ID for this E2E test session
-  if (res.status === 200) {
-    const sessionId = "e2e-session-" + Date.now();
-    bru.setVar("sessionId", sessionId);
-    console.log("✅ Legal question classified successfully");
-  }
 }

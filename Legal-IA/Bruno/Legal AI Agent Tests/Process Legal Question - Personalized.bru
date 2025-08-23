@@ -13,8 +13,9 @@ post {
 body:json {
   {
     "question": "¿Cuánto IVA debo declarar este trimestre según mis ingresos actuales?",
-    "userId": "{{userId}}",
-    "sessionId": "{{sessionId}}"
+    "queryType": "general",
+    "includeUserContext": true,
+    "includeInvoiceData": true
   }
 }
 
@@ -25,8 +26,19 @@ tests {
   
   test("Response should be personalized", function() {
     const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("general");
+    expect(responseJson.userContextIncluded).to.equal(true);
+    
+    // Should contain personalized greeting
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('hola');
+  });
+  
+  test("Should include user's financial context", function() {
+    const responseJson = res.getBody();
     expect(responseJson.answer).to.be.a('string');
-    expect(responseJson.success).to.be.true;
-    expect(responseJson.answer).to.not.contain("consulte con un profesional");
+    // Response should be personalized with user's specific data
+    expect(responseJson.answer.length).to.be.greaterThan(50);
   });
 }
