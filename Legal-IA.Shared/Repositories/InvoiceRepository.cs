@@ -51,6 +51,11 @@ public class InvoiceRepository(LegalIaDbContext context) : IInvoiceRepository
         return true;
     }
 
+    public async Task<List<Invoice>> GetInvoicesByUserIdAsync(Guid userId)
+    {
+        return await context.Invoices.Where(i => i.UserId == userId).Include(i => i.Items).ToListAsync();
+    }
+
     public async Task<bool> ExistsAsync(Expression<Func<Invoice, bool>> predicate)
     {
         return await context.Invoices.AnyAsync(predicate);
@@ -67,11 +72,6 @@ public class InvoiceRepository(LegalIaDbContext context) : IInvoiceRepository
         var query = context.Invoices.Include(i => i.Items).AsQueryable();
         if (predicate != null) query = query.Where(predicate);
         return await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-    }
-
-    public async Task<List<Invoice>> GetInvoicesByUserIdAsync(Guid userId)
-    {
-        return await context.Invoices.Where(i => i.UserId == userId).Include(i => i.Items).ToListAsync();
     }
 
     public async Task<IEnumerable<Invoice>> GetInvoicesByClientNifAsync(string clientNIF)

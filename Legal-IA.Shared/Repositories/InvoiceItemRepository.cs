@@ -72,14 +72,6 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
         return true;
     }
 
-    public async Task<List<InvoiceItem>> GetItemsByInvoiceIdAsync(Guid invoiceId)
-    {
-        return await context.InvoiceItems
-            .Where(ii => ii.InvoiceId == invoiceId)
-            .Include(ii => ii.Invoice)
-            .ToListAsync();
-    }
-
     public async Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId)
     {
         return await context.InvoiceItems
@@ -91,5 +83,13 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
     public async Task<List<InvoiceItem>> GetInvoiceItemsByUserIdAsync(Guid userId)
     {
         return await GetByUserIdAsync(userId);
+    }
+
+    public async Task<List<InvoiceItem>> GetItemsByInvoiceIdAsync(Guid invoiceId)
+    {
+        return await context.InvoiceItems
+            .Where(ii => ii.InvoiceId == invoiceId)
+            .Include(ii => ii.Invoice)
+            .ToListAsync();
     }
 }

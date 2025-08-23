@@ -1,7 +1,7 @@
 using Azure.Storage.Blobs;
 using Legal_IA;
-using Legal_IA.Shared.Data;
 using Legal_IA.Services;
+using Legal_IA.Shared.Data;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.EntityFrameworkCore;

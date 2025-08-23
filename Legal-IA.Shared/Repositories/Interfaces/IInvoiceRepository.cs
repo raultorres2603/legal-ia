@@ -16,4 +16,3 @@ public interface IInvoiceRepository : IRepository<Invoice>
 
     Task<bool> DeleteAsync(Guid id);
 }
-

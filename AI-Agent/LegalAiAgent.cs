@@ -3,16 +3,15 @@ using AI_Agent.Helpers;
 using AI_Agent.Interfaces;
 using AI_Agent.Models;
 using AI_Agent.Services;
-using Legal_IA.Shared.Models;
 using OpenAI;
 
 namespace AI_Agent;
 
 public class LegalAiAgent : ILegalAiAgent
 {
-    private readonly string _systemPrompt;
-    private readonly LegalQuestionClassifier _questionClassifier;
     private readonly LegalAdviceService _adviceService;
+    private readonly LegalQuestionClassifier _questionClassifier;
+    private readonly string _systemPrompt;
     private readonly IUserDataAggregatorService _userDataAggregatorService;
 
     public LegalAiAgent(string apiKey, IUserDataAggregatorService userDataAggregatorService)
@@ -144,7 +143,8 @@ public class LegalAiAgent : ILegalAiAgent
     }
 
     // Enhanced methods with UserFullContext (complete user data including invoices)
-    public async Task<LegalQueryResponse> ProcessQuestionWithFullContextAsync(LegalQueryRequest request, UserFullContext userFullContext,
+    public async Task<LegalQueryResponse> ProcessQuestionWithFullContextAsync(LegalQueryRequest request,
+        UserFullContext userFullContext,
         CancellationToken cancellationToken = default)
     {
         var response = new LegalQueryResponse
@@ -156,7 +156,7 @@ public class LegalAiAgent : ILegalAiAgent
         try
         {
             var userName = userFullContext?.UserContext?.FirstName ?? "Usuario";
-            
+
             if (string.IsNullOrWhiteSpace(request.Question))
             {
                 response.Answer = $"Hola {userName}, por favor formule su consulta legal.";
@@ -177,7 +177,8 @@ public class LegalAiAgent : ILegalAiAgent
             }
 
             var personalizedSystemPrompt = PromptBuilder.BuildSystemPrompt(userFullContext);
-            response.Answer = await _adviceService.GetLegalAdviceAsync(request.Question, personalizedSystemPrompt, cancellationToken);
+            response.Answer =
+                await _adviceService.GetLegalAdviceAsync(request.Question, personalizedSystemPrompt, cancellationToken);
             response.Success = true;
         }
         catch (Exception ex)
@@ -190,17 +191,20 @@ public class LegalAiAgent : ILegalAiAgent
         return response;
     }
 
-    public async Task<string> GetFormGuidanceWithFullContextAsync(string question, string formType, UserFullContext userFullContext,
+    public async Task<string> GetFormGuidanceWithFullContextAsync(string question, string formType,
+        UserFullContext userFullContext,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var personalizedFormPrompt = PromptBuilder.BuildFormPromptWithFullContext(question, formType, userFullContext);
+            var personalizedFormPrompt =
+                PromptBuilder.BuildFormPromptWithFullContext(question, formType, userFullContext);
             return await _adviceService.GetFormGuidanceAsync(personalizedFormPrompt, _systemPrompt, cancellationToken);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error al obtener guía del formulario con contexto completo: {ex.Message}", ex);
+            throw new InvalidOperationException(
+                $"Error al obtener guía del formulario con contexto completo: {ex.Message}", ex);
         }
     }
 
@@ -217,31 +221,39 @@ public class LegalAiAgent : ILegalAiAgent
         }
     }
 
-    public async Task<string> GetQuarterlyObligationsWithFullContextAsync(string question, int quarter, int year, UserFullContext userFullContext,
+    public async Task<string> GetQuarterlyObligationsWithFullContextAsync(string question, int quarter, int year,
+        UserFullContext userFullContext,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var personalizedQuarterPrompt = PromptBuilder.BuildQuarterlyObligationsPromptWithFullContext(question, quarter, year, userFullContext);
-            return await _adviceService.GetQuarterlyObligationsAsync(personalizedQuarterPrompt, _systemPrompt, cancellationToken);
+            var personalizedQuarterPrompt =
+                PromptBuilder.BuildQuarterlyObligationsPromptWithFullContext(question, quarter, year, userFullContext);
+            return await _adviceService.GetQuarterlyObligationsAsync(personalizedQuarterPrompt, _systemPrompt,
+                cancellationToken);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error al obtener obligaciones trimestrales con contexto completo: {ex.Message}", ex);
+            throw new InvalidOperationException(
+                $"Error al obtener obligaciones trimestrales con contexto completo: {ex.Message}", ex);
         }
     }
 
-    public async Task<string> GetAnnualObligationsWithFullContextAsync(string question, int year, UserFullContext userFullContext,
+    public async Task<string> GetAnnualObligationsWithFullContextAsync(string question, int year,
+        UserFullContext userFullContext,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var personalizedAnnualPrompt = PromptBuilder.BuildAnnualObligationsPromptWithFullContext(question, year, userFullContext);
-            return await _adviceService.GetAnnualObligationsAsync(personalizedAnnualPrompt, _systemPrompt, cancellationToken);
+            var personalizedAnnualPrompt =
+                PromptBuilder.BuildAnnualObligationsPromptWithFullContext(question, year, userFullContext);
+            return await _adviceService.GetAnnualObligationsAsync(personalizedAnnualPrompt, _systemPrompt,
+                cancellationToken);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error al obtener obligaciones anuales con contexto completo: {ex.Message}", ex);
+            throw new InvalidOperationException(
+                $"Error al obtener obligaciones anuales con contexto completo: {ex.Message}", ex);
         }
     }
 

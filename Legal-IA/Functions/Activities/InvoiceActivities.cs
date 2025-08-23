@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Legal_IA.DTOs;
-using Legal_IA.Shared.Enums;
 using Legal_IA.Interfaces.Services;
+using Legal_IA.Shared.Enums;
 using Legal_IA.Shared.Models;
 using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.Azure.Functions.Worker;
@@ -104,9 +104,7 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         var invoice = await invoiceRepository.GetByIdAsync(id);
         var deleted = await invoiceRepository.DeleteAsync(id);
         if (invoice != null)
-        {
             await InvalidateCache(invoiceId: invoice.Id, userId: invoice.UserId, invalidateAll: true, log: log);
-        }
         log.LogInformation("Invoice deleted and related cache keys invalidated");
         return deleted;
     }
@@ -181,14 +179,15 @@ public class InvoiceActivities(IInvoiceRepository invoiceRepository, ICacheServi
         return updated;
     }
 
-    private async Task InvalidateCache(ILogger log, Guid? invoiceId = null, Guid? userId = null, bool invalidateAll = false)
+    private async Task InvalidateCache(ILogger log, Guid? invoiceId = null, Guid? userId = null,
+        bool invalidateAll = false)
     {
         if (userId.HasValue)
             await cacheService.RemoveByPatternAsync($"invoices:user:{userId.Value}");
         if (invoiceId.HasValue)
             await cacheService.RemoveByPatternAsync($"invoices:{invoiceId.Value}");
         if (invalidateAll)
-            await cacheService.RemoveByPatternAsync($"invoices:all");
+            await cacheService.RemoveByPatternAsync("invoices:all");
         log.LogInformation($"Cache invalidated for invoice {invoiceId}, user {userId}, all: {invalidateAll}");
     }
 

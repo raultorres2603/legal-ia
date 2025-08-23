@@ -1,8 +1,7 @@
-namespace Legal_IA.Shared.Enums
+namespace Legal_IA.Shared.Enums;
+
+public enum UserRole
 {
-    public enum UserRole
-    {
-        User = 0,
-        Admin = 1
-    }
+    User = 0,
+    Admin = 1
 }

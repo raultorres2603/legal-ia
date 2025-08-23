@@ -29,4 +29,3 @@ public class UserContext : IUserContext
     public string? ActivityCode { get; set; } // CNAE code
     public string? TaxRegime { get; set; } // "general", "modulos", etc.
 }
-

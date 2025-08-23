@@ -41,4 +41,3 @@ public interface IUserRepository : IRepository<User>
     /// <returns>The user entity if found, otherwise null.</returns>
     Task<User?> GetByVerificationTokenAsync(string token);
 }
-

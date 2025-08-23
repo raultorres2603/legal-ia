@@ -1,7 +1,7 @@
 using System.Web;
 using Legal_IA.DTOs;
-using Legal_IA.Shared.Enums;
 using Legal_IA.Services;
+using Legal_IA.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -40,7 +40,8 @@ public class UserHttpTriggers(ILogger<UserHttpTriggers> logger)
             return new ObjectResult(response.ReadOutputAs<object>())
             {
                 StatusCode = 201 // Created
-            };;
+            };
+            ;
         }
 
         logger.LogError("[RegisterUser] Registration failed");

@@ -15,4 +15,3 @@ public class LegalIaDbContext(DbContextOptions<LegalIaDbContext> options) : DbCo
         // ...existing code...
     }
 }
-

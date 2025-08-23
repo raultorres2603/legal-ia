@@ -1,8 +1,8 @@
 using FluentValidation;
 using Legal_IA.DTOs;
-using Legal_IA.Shared.Repositories.Interfaces;
 using Legal_IA.Interfaces.Services;
 using Legal_IA.Shared.Models;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Legal_IA.Validators;
 using Microsoft.Extensions.Logging;
 

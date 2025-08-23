@@ -48,4 +48,3 @@ public interface IRepository<T> where T : class
     /// <returns>The updated entity.</returns>
     Task<T> UpdateAsync(T entity);
 }
-

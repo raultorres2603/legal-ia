@@ -1,5 +1,4 @@
 using AI_Agent.Models;
-using Legal_IA.Shared.Models;
 
 namespace AI_Agent.Interfaces;
 
@@ -19,7 +18,8 @@ public interface ILegalAiAgent
     Task<string> GetAnnualObligationsAsync(int year, CancellationToken cancellationToken = default);
 
     // Enhanced methods with UserFullContext (complete user data including invoices)
-    Task<LegalQueryResponse> ProcessQuestionWithFullContextAsync(LegalQueryRequest request, UserFullContext userFullContext,
+    Task<LegalQueryResponse> ProcessQuestionWithFullContextAsync(LegalQueryRequest request,
+        UserFullContext userFullContext,
         CancellationToken cancellationToken = default);
 
     Task<string> GetFormGuidanceWithFullContextAsync(string question, string formType, UserFullContext userFullContext,
@@ -28,7 +28,8 @@ public interface ILegalAiAgent
     Task<string> GetFormGuidanceAsync(string formType,
         CancellationToken cancellationToken = default);
 
-    Task<string> GetQuarterlyObligationsWithFullContextAsync(string question, int quarter, int year, UserFullContext userFullContext,
+    Task<string> GetQuarterlyObligationsWithFullContextAsync(string question, int quarter, int year,
+        UserFullContext userFullContext,
         CancellationToken cancellationToken = default);
 
     Task<string> GetAnnualObligationsWithFullContextAsync(string question, int year, UserFullContext userFullContext,
