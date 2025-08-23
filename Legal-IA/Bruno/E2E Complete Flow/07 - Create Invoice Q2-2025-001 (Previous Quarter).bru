@@ -1,0 +1,45 @@
+meta {
+  name: 07 - Create Invoice Q2-2025-001 (Previous Quarter)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/invoices/user
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "invoiceNumber": "INV-2025-002",
+    "issueDate": "2025-04-05T00:00:00Z",
+    "clientName": "Ana López",
+    "clientNIF": "87654321X",
+    "clientAddress": "Calle Nueva 2, Barcelona",
+    "subtotal": 121.00,
+    "VAT": 105.00,
+    "IRPF": 75.00,
+    "total": 121.00,
+    "notes": "Consulting",
+    "items": []
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("invoice3Id", responseData.Id);
+    console.log("📄 Created Q2 Invoice:", responseData.invoiceNumber);
+  }
+}
+
+tests {
+  test("Should create Q2 invoice successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

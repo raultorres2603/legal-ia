@@ -1,0 +1,46 @@
+meta {
+  name: 15 - AI Annual Obligations - Personalized
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "question": "¿Qué obligaciones fiscales anuales tengo que cumplir este año?",
+    "queryType": "annual-obligations",
+    "year": {{currentYear}},
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Should provide personalized annual obligations", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("annual-obligations");
+    expect(responseJson.year).to.equal({{currentYear}});
+    expect(responseJson.userContextIncluded).to.equal(true);
+  });
+  
+  test("Should contain user-specific annual guidance", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.be.a('string');
+    expect(responseJson.obligations).to.be.a('string');
+    
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('hola');
+    expect(answer).to.include('año');
+  });
+}

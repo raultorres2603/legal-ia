@@ -1,0 +1,48 @@
+meta {
+  name: 13 - AI Form Guidance - Personalized Modelo 303
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "question": "¿Cómo debo rellenar el modelo 303 de IVA con mis datos actuales?",
+    "queryType": "form-guidance",
+    "formType": "modelo-303",
+    "quarter": {{currentQuarter}},
+    "year": {{currentYear}},
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Should provide personalized form guidance", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("form-guidance");
+    expect(responseJson.formType).to.equal("modelo-303");
+    expect(responseJson.userContextIncluded).to.equal(true);
+  });
+  
+  test("Should contain user-specific form guidance", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.be.a('string');
+    expect(responseJson.formGuidance).to.be.a('string');
+    
+    // Should mention user's name in personalized response
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('hola');
+  });
+}

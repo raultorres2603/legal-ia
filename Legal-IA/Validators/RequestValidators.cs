@@ -1,6 +1,6 @@
 using FluentValidation;
 using Legal_IA.DTOs;
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
 
 namespace Legal_IA.Validators;
 

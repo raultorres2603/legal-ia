@@ -1,5 +1,5 @@
 using Legal_IA.DTOs;
-using Legal_IA.Models;
+using Legal_IA.Shared.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -46,9 +46,11 @@ public static class InvoiceItemOrchestrators
             logger.LogError("InvoiceItemCreateOrchestrator received null or empty input");
             return new List<InvoiceItem>();
         }
+
         if (items.Count > maxBatchSize)
         {
-            logger.LogError($"InvoiceItemCreateOrchestrator batch size {items.Count} exceeds the maximum allowed ({maxBatchSize})");
+            logger.LogError(
+                $"InvoiceItemCreateOrchestrator batch size {items.Count} exceeds the maximum allowed ({maxBatchSize})");
             return new List<InvoiceItem>();
         }
 
@@ -75,11 +77,13 @@ public static class InvoiceItemOrchestrators
                 tasks.Clear();
             }
         }
+
         if (tasks.Count > 0)
         {
             var completed = await Task.WhenAll(tasks);
             results.AddRange(completed);
         }
+
         return results;
     }
 
@@ -95,6 +99,7 @@ public static class InvoiceItemOrchestrators
             logger.LogError("InvoiceItemDeleteOrchestrator received null input");
             return false;
         }
+
         var itemId = input.ItemId;
         var userId = input.UserId;
         logger.LogInformation($"[InvoiceItemDeleteOrchestrator] Started for item {itemId} by user {userId}");
@@ -147,7 +152,8 @@ public static class InvoiceItemOrchestrators
 
         // Process updates concurrently in batches
         var items = await ProcessBatchConcurrently(input, maxConcurrency, context);
-        logger.LogInformation($"[PatchInvoiceItemOrchestrator] Orchestrator completed, updated {items.Count} items for user {input.UserId}");
+        logger.LogInformation(
+            $"[PatchInvoiceItemOrchestrator] Orchestrator completed, updated {items.Count} items for user {input.UserId}");
         return new BatchUpdateInvoiceItemResult
         {
             Success = true,
@@ -182,11 +188,13 @@ public static class InvoiceItemOrchestrators
                 tasks.Clear();
             }
         }
+
         if (tasks.Count > 0)
         {
             var completed = await Task.WhenAll(tasks);
             results.AddRange(completed.Where(x => x != null)!);
         }
+
         return results;
     }
 }

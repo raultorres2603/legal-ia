@@ -1,0 +1,43 @@
+meta {
+  name: Unified API - Performance Test with Full Context
+  type: http
+  seq: 25
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question": "Tengo una consulta compleja sobre mi situación fiscal como autónomo. He facturado más de 50.000€ este año, tengo clientes en diferentes comunidades autónomas, algunos son empresas y otros particulares. Necesito saber qué obligaciones fiscales específicas tengo, si debo cambiar de régimen fiscal, qué deducciones puedo aplicar considerando mis gastos de oficina en casa, vehículo, material informático, y formación profesional. También quiero entender las implicaciones del IRPF y el IVA en mi situación particular, y si hay alguna optimización fiscal que pueda aplicar para el próximo año.",
+    "queryType": "general",
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Should handle complex queries efficiently", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.userContextIncluded).to.equal(true);
+  });
+  
+  test("Should provide comprehensive personalized advice", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.be.a('string');
+    expect(responseJson.answer.length).to.be.greaterThan(200);
+    
+    // Should address multiple aspects of the query
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.match(/régimen|deduc|irpf|iva/);
+  });
+  
+  test("Response time should be reasonable", function() {
+    expect(res.getResponseTime()).to.be.lessThan(30000); // 30 seconds max
+  });
+}

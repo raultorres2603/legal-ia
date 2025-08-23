@@ -1,0 +1,10 @@
+{
+  "version": "1",
+  "name": "Legal-IA Complete E2E Flow",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
+

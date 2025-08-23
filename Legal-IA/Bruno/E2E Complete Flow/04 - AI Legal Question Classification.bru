@@ -1,0 +1,34 @@
+meta {
+  name: 04 - AI Legal Question Classification
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "question": "¿Cuáles son los plazos para presentar el modelo 303 de IVA?",
+    "queryType": "classify",
+    "includeUserContext": false,
+    "includeInvoiceData": false
+  }
+}
+
+tests {
+  test("Should classify legal question correctly", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.isLegalQuestion).to.equal(true);
+    expect(responseJson.queryType).to.equal("classify");
+  });
+}

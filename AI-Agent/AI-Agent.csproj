@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>AI_Agent</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="OpenAI" Version="2.0.0"/>
+        <PackageReference Include="Azure.AI.OpenAI" Version="2.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Legal-IA.Shared\Legal-IA.Shared.csproj"/>
+    </ItemGroup>
+
+</Project>

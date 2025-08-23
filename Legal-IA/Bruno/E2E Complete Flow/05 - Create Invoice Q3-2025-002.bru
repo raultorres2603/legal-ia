@@ -1,0 +1,51 @@
+meta {
+  name: 05 - Create Invoice Q3-2025-002
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/invoices/user
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  {
+    "invoiceNumber": "INV-2025-002",
+    "issueDate": "2025-08-05T00:00:00Z",
+    "clientName": "Ana López",
+    "clientNIF": "87654321X",
+    "clientAddress": "Calle Nueva 2, Barcelona",
+    "subtotal": 500.00,
+    "VAT": 105.00,
+    "IRPF": 75.00,
+    "total": 530.00,
+    "notes": "Consulting",
+    "items": []
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const responseData = res.body;
+    bru.setVar("invoice2Id", responseData.Id);
+    console.log("📄 Created Invoice 2:", responseData.invoiceNumber);
+  }
+}
+
+tests {
+  test("Should create second invoice successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should return created invoice data", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.invoiceNumber).to.equal("Q3-2025-002");
+    expect(responseJson.clientName).to.equal("Empresa Digital SL");
+  });
+}

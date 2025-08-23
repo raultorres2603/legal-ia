@@ -1,0 +1,41 @@
+meta {
+  name: Unified API - Form Guidance Multiple Types
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question": "¿Qué diferencias hay entre el modelo 130 y 303 para mi situación fiscal actual?",
+    "queryType": "form-guidance",
+    "formType": "modelo-130-vs-303",
+    "quarter": 3,
+    "year": 2024,
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Should provide comparative form guidance", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("form-guidance");
+    expect(responseJson.userContextIncluded).to.equal(true);
+  });
+  
+  test("Should explain differences with user context", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.formGuidance).to.be.a('string');
+    
+    const guidance = responseJson.formGuidance.toLowerCase();
+    expect(guidance).to.match(/modelo 130|modelo 303|irpf|iva/);
+  });
+}

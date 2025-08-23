@@ -1,0 +1,28 @@
+meta {
+  name: Unified API - Error Handling Missing Required Fields
+  type: http
+  seq: 24
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question": "¿Cómo relleno el modelo 303?",
+    "queryType": "form-guidance",
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Should return validation error for missing formType", function() {
+    expect(res.getStatus()).to.equal(400);
+    const responseText = res.getBody();
+    expect(responseText).to.include("FormType is required for form-guidance queries");
+  });
+}

@@ -1,0 +1,39 @@
+meta {
+  name: Unified API - Classification Only
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question": "¿Es legal vender productos sin factura en España?",
+    "queryType": "classify",
+    "includeUserContext": false,
+    "includeInvoiceData": false
+  }
+}
+
+tests {
+  test("Should classify as legal question", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("classify");
+    expect(responseJson.isLegalQuestion).to.equal(true);
+    expect(responseJson.userContextIncluded).to.equal(false);
+  });
+  
+  test("Should not include user context when not requested", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.userContextIncluded).to.equal(false);
+    // Response should be generic, not personalized
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.not.include('hola');
+  });
+}

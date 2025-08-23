@@ -1,0 +1,29 @@
+meta {
+  name: Legal-IA Complete E2E Flow
+  type: collection
+  version: 1
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+vars {
+  baseUrl: {{process.env.BASE_URL || "http://localhost:7071/api"}}
+  testEmail: legal-ia-e2e-{{Date.now()}}@example.com
+  testPassword: TestPass123!
+  testUserFirstName: Carlos
+  testUserLastName: García
+  testUserDNI: 87654321B
+  testUserCIF: B87654321
+  testBusinessName: García Consulting SL
+  testAddress: Calle Serrano 45
+  testPostalCode: 28001
+  testCity: Madrid
+  testProvince: Madrid
+  testActivityCode: 702010
+  testTaxRegime: General
+  currentYear: 2025
+  currentQuarter: 3
+}

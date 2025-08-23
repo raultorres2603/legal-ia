@@ -1,16 +1,16 @@
 using System.Text.Json;
 using Legal_IA.DTOs;
-using Legal_IA.Enums;
-using Legal_IA.Interfaces.Repositories;
 using Legal_IA.Interfaces.Services;
-using Legal_IA.Models;
+using Legal_IA.Shared.Enums;
+using Legal_IA.Shared.Models;
+using Legal_IA.Shared.Repositories.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
 namespace Legal_IA.Functions.Activities;
 
 /// <summary>
-/// Activity functions for invoice item operations, including caching and repository access.
+///     Activity functions for invoice item operations, including caching and repository access.
 /// </summary>
 public class InvoiceItemActivities(
     IInvoiceItemRepository invoiceItemRepository,
@@ -18,7 +18,7 @@ public class InvoiceItemActivities(
     ICacheService cacheService)
 {
     /// <summary>
-    /// Gets all invoice items, using cache if available.
+    ///     Gets all invoice items, using cache if available.
     /// </summary>
     [Function(nameof(InvoiceItemGetAllActivity))]
     public async Task<List<InvoiceItem>> InvoiceItemGetAllActivity([ActivityTrigger] object input,
@@ -33,6 +33,7 @@ public class InvoiceItemActivities(
             log.LogInformation("[InvoiceItemGetAllActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         var items = (await invoiceItemRepository.GetAllAsync()).ToList();
         await cacheService.SetAsync(cacheKey, items);
         log.LogInformation($"[InvoiceItemGetAllActivity] Activity completed with {items.Count} items");
@@ -40,7 +41,7 @@ public class InvoiceItemActivities(
     }
 
     /// <summary>
-    /// Gets an invoice item by its ID, using cache if available.
+    ///     Gets an invoice item by its ID, using cache if available.
     /// </summary>
     [Function(nameof(InvoiceItemGetByIdActivity))]
     public async Task<InvoiceItem?> InvoiceItemGetByIdActivity([ActivityTrigger] Guid id, FunctionContext context)
@@ -54,6 +55,7 @@ public class InvoiceItemActivities(
             log.LogInformation("[InvoiceItemGetByIdActivity] Cache hit for key: {CacheKey}", cacheKey);
             return cached;
         }
+
         var item = await invoiceItemRepository.GetByIdAsync(id);
         if (item != null) await cacheService.SetAsync(cacheKey, item);
         log.LogInformation($"[InvoiceItemGetByIdActivity] Activity completed for id {id}");
@@ -61,7 +63,7 @@ public class InvoiceItemActivities(
     }
 
     /// <summary>
-    /// Creates a new invoice item and invalidates related cache.
+    ///     Creates a new invoice item and invalidates related cache.
     /// </summary>
     [Function(nameof(InvoiceItemCreateActivity))]
     public async Task<InvoiceItem> InvoiceItemCreateActivity([ActivityTrigger] InvoiceItem item,
@@ -76,7 +78,7 @@ public class InvoiceItemActivities(
     }
 
     /// <summary>
-    /// Deletes an invoice item and invalidates related cache.
+    ///     Deletes an invoice item and invalidates related cache.
     /// </summary>
     [Function(nameof(InvoiceItemDeleteActivity))]
     public async Task<bool> InvoiceItemDeleteActivity([ActivityTrigger] Guid id, FunctionContext context)
@@ -91,7 +93,7 @@ public class InvoiceItemActivities(
     }
 
     /// <summary>
-    /// Gets all invoice items for a specific user, using cache if available.
+    ///     Gets all invoice items for a specific user, using cache if available.
     /// </summary>
     [Function(nameof(InvoiceItemGetByUserIdActivity))]
     public async Task<List<InvoiceItem>> InvoiceItemGetByUserIdActivity([ActivityTrigger] Guid userId)
@@ -105,7 +107,7 @@ public class InvoiceItemActivities(
     }
 
     /// <summary>
-    /// Validates ownership and pending status of an invoice item.
+    ///     Validates ownership and pending status of an invoice item.
     /// </summary>
     [Function("InvoiceItemValidateOwnershipAndPendingActivity")]
     public async Task<bool> InvoiceItemValidateOwnershipAndPendingActivity([ActivityTrigger] object input,

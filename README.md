@@ -1,443 +1,210 @@
-# Legal-IA 🏛️⚖️
+# Legal-IA: Unified Legal AI Assistant for Spanish Freelancers
 
-**AI-Powered Legal Document Generation System for Spanish Legal Professionals** 🚀🤖
+A comprehensive legal and tax advisory system specifically designed for Spanish freelancers (autónomos), featuring a unified AI endpoint that provides personalized legal advice based on user's complete financial context.
 
-Legal-IA is a sophisticated Azure Functions-based microservice that leverages artificial intelligence to generate, manage, and process legal documents specifically tailored for the Spanish legal system. The platform automates the creation of complex legal documents including invoices, tax returns, contracts, and regulatory forms while ensuring compliance with Spanish legal requirements. 🇪🇸📄
+## 🚀 Features
 
-## 🎯 **Purpose & Vision**
+### Unified Legal AI Endpoint
+- **Single API Endpoint**: All legal AI functionality consolidated into one intelligent endpoint
+- **Personalized Responses**: AI includes user's name, business details, and financial context in responses
+- **Complete Financial Context**: AI has access to user's invoices, income, VAT, and IRPF data
+- **Multi-Query Support**: Handles classification, form guidance, quarterly/annual obligations, and general legal questions
 
-Legal-IA addresses the critical need for automated legal document generation in Spain's complex bureaucratic landscape. The system:
+### Core Functionality
+- **Legal Question Processing**: Intelligent classification and responses to legal, tax, and judicial questions
+- **Form Guidance**: Personalized help with Spanish tax forms (Modelo 303, 130, 100, etc.)
+- **Tax Obligations**: Quarterly and annual tax obligation reminders with personalized calculations
+- **Invoice Management**: Complete invoice and invoice item management system
+- **User Management**: Secure user registration, authentication, and profile management
 
-- ✍️ **Automates Document Creation**: Uses AI to generate legal documents based on user prompts and context
-- 🛡️ **Ensures Compliance**: Templates and validation rules aligned with Spanish legal requirements
-- ⚡ **Streamlines Workflows**: From document creation to submission and archival
-- ❌ **Reduces Manual Errors**: AI-driven content generation with built-in validation
-- 📈 **Scales Efficiently**: Cloud-native architecture supporting high-volume document processing
+## 🏗️ Architecture
 
-## 🏗️ **Architecture Overview**
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Azure Functions  │    │   PostgreSQL DB   │    │   Azure Blob     │
-│   (API Gateway)    │◄──►│   (Metadata)      │    │   (PDF Storage)  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                        │                        │
-         ▼                        ▼                        ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Redis Cache     │    │   AI Service      │    │   Validation     │
-│   (Performance)   │    │   (Content Gen)   │    │   (FluentVal)    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-### **Tech Stack** 🧰
-- 🟦 **.NET 8** - Modern C# runtime
-- ☁️ **Azure Functions V4** - Serverless compute platform
-- 🐘 **PostgreSQL** - Primary database for metadata
-- 🧠 **Redis** - High-performance caching layer
-- 📦 **Azure Blob Storage** - Document file storage
-- 🗃️ **Entity Framework Core** - ORM for data access
-- ✅ **FluentValidation** - Input validation framework
-
-## 📋 **Core Features**
-
-### 🤖 **AI Document Generation**
-- 📝 Generate legal documents using natural language prompts
-- 📚 Support for 13+ Spanish legal document types
-- 🧠 Context-aware content generation
-- 🖨️ PDF output with proper formatting
-
-### 👥 **User Management**
-- 🆔 Spanish citizen identification (DNI/CIF validation)
-- 🏢 Business entity management
-- 🛡️ Role-based access control
-- 📊 User activity tracking
-
-### 📄 **Document Lifecycle Management**
-- 🔄 Draft → In Progress → Generated → Submitted → Approved/Rejected → Archived
-- 🗂️ Version control and document history
-- 🧩 Template management for reusable documents
-- 📦 Batch processing capabilities
-
-### 🔍 **Search & Discovery**
-- 🔎 Full-text search across documents
-- 🗃️ Filter by type, status, date, amount
-- 👤 User-specific document collections
-- 📑 Template library access
-
-## 📚 **Supported Document Types**
-
-| 📄 Document Type | 🇪🇸 Spanish Name | 💼 Use Case |
-|------------------|-----------------|------------|
-| **Invoice** | Factura | Business invoicing |
-| **Expense** | Gasto | Expense reporting |
-| **VAT Return** | Declaración de IVA | Tax compliance |
-| **IRPF Return** | Declaración de IRPF | Income tax filing |
-| **Income Statement** | Declaración de Ingresos | Revenue reporting |
-| **Social Security Form** | Formulario Seguridad Social | Employment compliance |
-| **Expense Report** | Informe de Gastos | Business expense tracking |
-| **Contract** | Contrato | Legal agreements |
-| **Receipt** | Recibo | Payment confirmations |
-| **Tax Form** | Formulario Fiscal | General tax documents |
-| **Business Plan** | Plan de Negocio | Business documentation |
-| **Legal Document** | Documento Legal | General legal papers |
-
-## 🛠️ **Services Architecture**
-
-### **Core Services**
-
-#### 🤖 **AIDocumentGenerationService**
-- **Purpose**: AI-powered document content generation
-- **Key Methods**:
-  - `GenerateDocumentAsync()` - Create new AI documents
-- **Features**: Prompt processing, content generation, PDF conversion
-
-#### 📄 **DocumentService**
-- **Purpose**: Document lifecycle management
-- **Key Methods**:
-  - `CreateDocumentAsync()` - Create new documents
-  - `UpdateDocumentAsync()` - Modify existing documents
-  - `SearchDocumentsAsync()` - Search and filter documents
-  - `UpdateDocumentFileInfoAsync()` - Update file metadata
-- **Features**: CRUD operations, caching, status management
-
-#### 👤 **UserService**
-- **Purpose**: User account and profile management
-- **Key Methods**:
-  - `CreateUserAsync()` - Register new users
-  - `UpdateUserAsync()` - Update user profiles
-  - `GetUserAsync()` - Retrieve user information
-- **Features**: Spanish ID validation, business entity support
-
-#### 📦 **FileStorageService**
-- **Purpose**: Document file storage and retrieval
-- **Key Methods**:
-  - `SaveDocumentBytesAsync()` - Store PDF files
-  - `GetDocumentBytesAsync()` - Retrieve stored files
-  - `GetDocumentMetadataAsync()` - File information
-- **Features**: Azure Blob integration, metadata management
-
-#### 🧠 **CacheService**
-- **Purpose**: Performance optimization through caching
-- **Key Methods**:
-  - `GetAsync<T>()` - Retrieve cached data
-  - `SetAsync<T>()` - Store data in cache
-  - `RemoveAsync()` - Invalidate cache entries
-- **Features**: Redis integration, pattern-based invalidation
-
-#### 📢 **NotificationService**
-- **Purpose**: User communication and alerts
-- **Key Methods**:
-  - `SendDocumentGenerationNotificationAsync()` - Generation alerts
-  - `SendDocumentStatusChangeNotificationAsync()` - Status updates
-- **Features**: Multi-channel notifications, event-driven messaging
-
-## 🌐 **API Endpoints**
-
-### **User Management**
-
-| 🛠️ Method | 🔗 Endpoint      | 📝 Description                                      |
-|-----------|-----------------|----------------------------------------------------|
-| `POST`    | `/api/users`    | Create new user account                            |
-| `GET`     | `/api/users/{id}` | Get user by ID                                   |
-| `PATCH`   | `/user/me`      | Partially update current user's profile (JWT only)  |
-| `DELETE`  | `/api/users/{id}` | Deactivate user account                          |
-| `GET`     | `/api/users`    | List all users (admin)                             |
-
-> **Note:**
-> - The `PATCH /user/me` endpoint requires a valid JWT in the `Authorization` header. The userId is extracted from the token, so users can only update their own profile.
-> - All PATCH endpoints accept only the fields to be updated (partial updates), not the full object.
-
-#### Example PATCH Request (User)
-```http
-PATCH /user/me
-Authorization: Bearer <your-jwt-token>
-Content-Type: application/json
-
-{
-  "FirstName": "Ana",
-  "Phone": "+34 600 123 456"
-}
-```
-This will only update the user's first name and phone number, leaving all other fields unchanged.
-
-# 🧾 Invoices & Invoice Items Module
-
-## Why We Added This
-
-Spanish autonomous professionals ("autónomos") are required by law to issue invoices for their services, including specific details such as VAT (IVA), IRPF (retención), and itemized breakdowns. To support this, Legal-IA now includes:
-- 📄 **Invoice model**: Captures all required fields for Spanish invoices.
-- 🧾 **InvoiceItem model**: Allows itemized details per invoice, supporting legal compliance.
-- 🏗️ **Repository, orchestrators, and activities**: Ensure robust, scalable, and maintainable CRUD operations.
-- 🛡️ **Role-based access**: Only authorized users can manage invoices/items.
-
-## Endpoints
-
-All endpoints are protected by JWT. 🔒
-
-### Invoice Endpoints
-
-- `GET /invoices/user` — Get invoices for current user
-  - ✅ **200 OK**: Returns a list of invoices
-  - 🚫 **404 Not Found**: No invoices found
-  - ❗ **400 Bad Request**: Invalid or missing UserId in JWT
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-- `POST /invoices/user` — Create invoice for current user
-  - ✅ **200 OK**: Returns the created invoice
-  - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-- `PATCH /invoices/user/{id}` — Update invoice for current user
-  - ✅ **200 OK**: Returns the updated invoice
-  - ❗ **400 Bad Request**: Invalid ID, request body, or missing UserId in JWT
-  - 🚫 **404 Not Found**: Invoice not found or does not belong to user
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-- `DELETE /invoices/user/{id}` — Delete invoice for current user
-  - ✅ **200 OK**: Invoice deleted
-  - ❗ **400 Bad Request**: Invalid ID format or missing UserId in JWT
-  - 🚫 **404 Not Found**: Invoice not found or does not belong to user
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-
-### Invoice Item Endpoints
-
-- `GET /invoice-items/user` — Get invoice items for current user
-  - ✅ **200 OK**: Returns a list of invoice items
-  - 🚫 **404 Not Found**: No invoice items found
-  - ❗ **400 Bad Request**: Invalid or missing UserId in JWT
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-- `POST /invoice-items/user` — Create invoice item for current user
-  - ✅ **200 OK**: Returns the created invoice item
-  - ❗ **400 Bad Request**: Invalid request body or missing UserId in JWT
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-- `PATCH /invoice-items/user/{id}` — Update invoice item for current user
-  - ✅ **200 OK**: Returns the updated invoice item
-  - ❗ **400 Bad Request**: Invalid ID, request body, or missing UserId in JWT
-  - 🚫 **404 Not Found**: Invoice item not found or does not belong to user
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-- `DELETE /invoice-items/user/{id}` — Delete invoice item for current user
-  - ✅ **200 OK**: Invoice item deleted
-  - ❗ **400 Bad Request**: Invalid ID format or missing UserId in JWT
-  - 🚫 **404 Not Found**: Invoice item not found or does not belong to user
-  - 🔒 **401 Unauthorized**: Invalid or missing token
-  - 💥 **500 Internal Server Error**: Unexpected error
-
-### **Invoice Item Management**
-
-| 🛠️ Method | 🔗 Endpoint                        | 📝 Description                                 |
-|-----------|-------------------------------------|-----------------------------------------------|
-| `PATCH`   | `/api/invoice-items/batch-update`   | Batch update multiple invoice items by user    |
-| `POST`    | `/api/invoice-items/batch-create`   | Batch create multiple invoice items by user    |
-
-> **Note:**
-> - The `PATCH /api/invoice-items/batch-update` and `POST /api/invoice-items/batch-create` endpoints require a valid JWT in the `Authorization` header. Only items belonging to the authenticated user can be updated or created.
-> - All validation errors are aggregated and returned in a single response under the `ValidationError` key.
-> **Batch Size Limit:**
-> - The maximum number of invoice items you can update or create in a single batch is **50**. If you submit more than 50 items, the request will be rejected and no items will be processed.
-> - Operations are processed in batches of up to 5 items concurrently for optimal performance and reliability.
-
-#### Example POST Request (Batch Create Invoice Items)
-```http
-POST /api/invoice-items/batch-create
-Authorization: Bearer <your-jwt-token>
-Content-Type: application/json
-
-[
-  {
-    "InvoiceId": "a1b2c3d4-5678-1234-5678-abcdefabcdef",
-    "Description": "Legal consultation",
-    "Amount": 100.00,
-    "Status": "Pending"
-  },
-  {
-    "InvoiceId": "a1b2c3d4-5678-1234-5678-abcdefabcdef",
-    "Description": "Document drafting",
-    "Amount": 200.00,
-    "Status": "Pending"
-  }
-]
-```
-
-#### Example Error Response (Validation Failed)
-```json
-{
-  "title": "Validation Failed",
-  "status": 400,
-  "detail": "See the errors property for details.",
-  "errors": {
-    "ValidationError": [
-      "InvoiceId must not be empty.",
-      "Description must not be null or empty.",
-      "Amount must be greater than zero."
-    ]
-  }
-}
-```
-
-**Validation Rules:**
-- `InvoiceId` must be a valid, non-empty GUID.
-- `Description` must not be null or empty.
-- `Amount` must be greater than zero.
-- All errors are returned in a single response for easier client-side handling.
-
-**Improved Error Handling:**
-- Validation errors for batch operations (create and update) are now aggregated under a single key, preventing duplicate key exceptions and making error parsing easier for clients.
-
-## Cache Invalidation Logic
-- Whenever you create, update, or delete an invoice item, the cache for both invoice items and invoices for the specific user is now invalidated:
-  - `invoiceitems:user:{userId}` and `invoices:user:{userId}` are both cleared.
-  - This ensures users always see the latest data after any CRUD operation on invoice items or invoices.
-- The cache is invalidated by fetching the parent invoice to get the correct userId, not by relying on navigation properties.
-
-## Invoice & Invoice Item Caching
-
-- **Per-user cache keys:**  
-  - Invoices: `invoices:user:{userId}`
-  - Invoice items: `invoiceitems:user:{userId}`
-- **Cache invalidation:**  
-  - On any create, update, or delete of an invoice item, both the invoice items and invoices cache for the affected user are cleared.
-  - This guarantees that users always see the latest invoice and item data after any change.
-
-## ⚡ PATCH-Only Update Semantics
-
-- All update operations for User, Invoice, and InvoiceItem now use PATCH (partial update) semantics.
-- PATCH endpoints accept only the fields to be updated (partial updates), not the full object.
-- All orchestrators, activities, and HTTP triggers for update operations are named with the `Patch*` prefix (e.g., PatchUser, PatchInvoice, PatchInvoiceItem).
-- Deprecated update code and PUT endpoints have been removed for clarity and maintainability.
-
-### Example PATCH Request (User)
-```http
-PATCH /api/users/123e4567-e89b-12d3-a456-426614174000
-Content-Type: application/json
-
-{
-  "FirstName": "Ana",
-  "Phone": "+34 600 123 456"
-}
-```
-This will only update the user's first name and phone number, leaving all other fields unchanged.
-
-# Legal-IA
-
-A legal invoice management system built with Azure Functions and .NET 8.
-
-## Overview
-
-Legal-IA is a serverless application designed to manage legal invoices and invoice items. The system provides RESTful APIs for user management, invoice operations, and administrative functions.
-
-## Features
-
-- **User Management**: Registration, authentication, and role-based access control
-- **Invoice Management**: Create, read, update, and delete invoices
-- **Invoice Items**: Manage individual items within invoices
-- **Email Notifications**: Automated email services for various operations
-- **Caching**: Redis-based caching for improved performance
-- **Database**: Entity Framework Core with SQL Server
-
-## Technology Stack
-
-- **.NET 8**: Core framework
+### Technology Stack
+- **.NET 8**: Modern C# application framework
 - **Azure Functions**: Serverless compute platform
+- **Azure Durable Functions**: Workflow orchestration
 - **Entity Framework Core**: Object-relational mapping
-- **SQL Server**: Database
-- **JWT**: Authentication and authorization
-- **FluentValidation**: Input validation
-- **Docker**: Containerization
+- **OpenAI API**: AI-powered legal advice via OpenRouter
+- **JWT Authentication**: Secure user authentication
 
-## Project Structure
-
+### Project Structure
 ```
 Legal-IA/
-├── Data/                   # Database context and configurations
-├── DTOs/                   # Data Transfer Objects
-├── Enums/                  # Enumeration types
-├── Functions/              # Azure Functions (HTTP triggers)
-├── Interfaces/             # Service and repository interfaces
-├── Models/                 # Entity models
-├── Repositories/           # Data access layer
-├── Services/               # Business logic layer
-├── Validators/             # Request validation logic
-├── Migrations/             # Entity Framework migrations
-└── Bruno/                  # API testing collections
+├── AI-Agent/                 # AI logic and prompt management
+│   ├── Models/              # AI request/response models
+│   ├── Services/            # AI service implementations
+│   └── Helpers/             # Prompt builders and parsers
+├── Legal-IA/                # Main Azure Functions project
+│   ├── Functions/           # HTTP triggers and orchestrators
+│   ├── Activities/          # Durable function activities
+│   └── Bruno/              # API test collections
+└── Legal-IA.Shared/        # Shared models and repositories
+    ├── Models/             # Data models
+    ├── Repositories/       # Data access layer
+    └── Data/               # Database context
 ```
 
-## Getting Started
+## 📡 API Endpoints
 
-### Prerequisites
+### Unified Legal AI Endpoint
+```
+POST /ai/legal/question
+```
 
-- .NET 8 SDK
-- SQL Server or SQL Server Express
-- Azure Functions Core Tools
-- Docker (optional)
+**Request Body:**
+```json
+{
+  "question": "Your legal question in Spanish",
+  "queryType": "general|form-guidance|quarterly-obligations|annual-obligations|classify",
+  "formType": "modelo-303",
+  "quarter": 3,
+  "year": 2024,
+  "includeUserContext": true,
+  "includeInvoiceData": true
+}
+```
 
-### Setup
+**Response:**
+```json
+{
+  "success": true,
+  "answer": "Hola Juan, basándome en tus facturas...",
+  "queryType": "form-guidance",
+  "formType": "modelo-303",
+  "formGuidance": "Detailed form instructions...",
+  "obligations": "Tax obligations...",
+  "userContextIncluded": true,
+  "timestamp": "2024-08-23T..."
+}
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Legal-IA
-   ```
+### Other Core Endpoints
+- **User Management**: `/auth/register`, `/auth/login`
+- **Invoice Management**: `/invoices/*`
+- **Invoice Items**: `/invoice-items/*`
 
-2. **Configure local settings**
-   Update `local.settings.json` with your database connection strings and other configuration values.
+## 🤖 AI Capabilities
 
-3. **Run database migrations**
-   ```bash
-   dotnet ef database update
-   ```
+### Personalization Features
+- **User-Aware Responses**: AI addresses users by name
+- **Financial Context Integration**: Responses consider user's actual income, VAT, and IRPF data
+- **Invoice-Based Calculations**: Tax advice based on real invoice data
+- **Business Profile Awareness**: Considers user's business type, location, and tax regime
 
-4. **Start the application**
-   ```bash
-   func start
-   ```
+### Query Types Supported
+1. **General Legal Questions**: Comprehensive legal and tax advice
+2. **Form Guidance**: Step-by-step help with Spanish tax forms
+3. **Quarterly Obligations**: Period-specific tax requirements
+4. **Annual Obligations**: Yearly tax filing requirements
+5. **Classification**: Determines if questions are legal/tax-related
 
-### Using Docker
+### Smart Context Handling
+- **UserFullContext**: Complete user profile including personal and business information
+- **Invoice Integration**: Real-time access to user's invoice history and financial totals
+- **Period-Specific Data**: Quarterly and annual financial calculations
+- **Personalized Prompts**: AI receives detailed context about user's specific situation
 
-You can also run the application using Docker Compose:
+## 🧪 Testing
 
+### Bruno API Collections
+Comprehensive API testing suites included:
+
+- **E2E Complete Flow**: End-to-end user journey testing
+- **Legal AI Agent Tests**: Comprehensive AI functionality testing
+- **Unified API Tests**: New consolidated endpoint testing
+
+### Test Coverage
+- ✅ Legal question classification
+- ✅ Personalized form guidance
+- ✅ Quarterly obligations with financial context
+- ✅ Annual obligations with invoice data
+- ✅ Error handling and validation
+- ✅ Performance testing for complex queries
+- ✅ User context integration
+
+## 🔧 Configuration
+
+### Environment Variables
 ```bash
-docker-compose up
+# Database
+ConnectionStrings__DefaultConnection=your_database_connection
+
+# AI Services
+OpenRouterApiKey=your_openrouter_api_key
+
+# JWT
+JwtSecretKey=your_jwt_secret
+JwtIssuer=your_issuer
+JwtAudience=your_audience
 ```
 
-## API Testing
+### Local Development
+1. Clone the repository
+2. Set up local database connection
+3. Configure environment variables
+4. Run with `dotnet run` or your preferred IDE
 
-The project includes Bruno collections for API testing located in the `Bruno/` directory. Bruno is used instead of Postman for:
+## 📋 Recent Major Updates
 
-- **E2E Testing**: End-to-end test scenarios
-- **Invoice Management**: Testing invoice and invoice item operations
-- **User Logic**: User authentication and management workflows
+### Unified AI Endpoint (v2.0)
+- **Consolidated Architecture**: Multiple AI endpoints merged into single intelligent endpoint
+- **Enhanced Personalization**: AI now includes complete user financial context
+- **Improved Response Structure**: Unified response format for all query types
+- **Full Invoice Integration**: AI has access to user's complete invoice history
 
-### Bruno Collections
+### Key Architectural Changes
+- **Removed Separate Endpoints**: Eliminated `/classify`, `/form-guidance`, `/quarterly-obligations`, `/annual-obligations`
+- **Single Point of Entry**: All AI functionality now accessible via `/ai/legal/question`
+- **Enhanced Data Flow**: UserFullContext model provides complete user and financial data
+- **Improved Testing**: Updated Bruno collections for comprehensive unified API testing
 
-- `E2E Test/`: Complete end-to-end testing scenarios
-- `Legal-IA Invoices & InvoiceItems Updated/`: Updated invoice management tests
-- `User Logic Collection/`: User authentication and management tests
+### Benefits of Consolidation
+- **Simplified Integration**: Single endpoint for all AI functionality
+- **Better User Experience**: More personalized and context-aware responses
+- **Improved Maintainability**: Reduced code duplication and complexity
+- **Enhanced Performance**: More efficient data handling and AI processing
 
-To use the Bruno collections:
-1. Install Bruno from [usebruno.com](https://www.usebruno.com/)
-2. Open the collections from the `Bruno/` directory
-3. Configure environment variables as needed
-4. Run the API tests
+## 🎯 Use Cases
 
-## Database Schema
+### For Spanish Freelancers
+- Get personalized tax advice based on actual income
+- Understand quarterly and annual tax obligations
+- Receive step-by-step form completion guidance
+- Calculate VAT and IRPF based on real invoice data
+- Plan tax optimizations for the upcoming year
 
-The application uses the following main entities:
+### Example Interactions
+```
+User: "¿Cuánto IVA debo declarar este trimestre?"
+AI: "Hola María, basándome en tus 12 facturas de este trimestre por un total de €15,240..."
 
-- **User**: User accounts with role-based permissions
-- **Invoice**: Legal invoices with status tracking
-- **InvoiceItem**: Individual line items within invoices
+User: "¿Cómo relleno el modelo 303?"
+AI: "Hola Carlos, para completar tu modelo 303 con tus datos actuales..."
+```
 
-## Authentication
+## 🔒 Security & Privacy
 
-The application uses JWT-based authentication with role-based authorization:
+- **JWT Authentication**: Secure user authentication and authorization
+- **Data Encryption**: Sensitive data encrypted in transit and at rest
+- **User Isolation**: Each user's data completely isolated
+- **GDPR Compliance**: Built with European privacy regulations in mind
 
-- **Admin**: Full system access
-- **User**: Limited access to own resources
+## 🤝 Contributing
 
-## License
+This project follows standard .NET development practices:
+- Clean Architecture principles
+- SOLID design patterns
+- Comprehensive unit and integration testing
+- API-first design approach
 
-This project is licensed under the terms specified in the LICENSE file.
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For questions about Spanish tax law and regulations, the AI assistant provides general guidance only. Always consult with a qualified tax professional for specific situations.
+
+---
+
+**Built with ❤️ for the Spanish freelancer community**

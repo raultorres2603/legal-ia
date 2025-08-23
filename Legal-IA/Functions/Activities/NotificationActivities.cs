@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 namespace Legal_IA.Functions.Activities;
 
 /// <summary>
-/// Notification-related activity functions for sending user notifications.
+///     Notification-related activity functions for sending user notifications.
 /// </summary>
 public class NotificationActivities(ILogger<NotificationActivities> logger, INotificationService notificationService)
 {
     /// <summary>
-    /// Sends a welcome notification to a user.
+    ///     Sends a welcome notification to a user.
     /// </summary>
     [Function("SendWelcomeNotificationActivity")]
     public async Task SendWelcomeNotificationActivity([ActivityTrigger] UserResponse user)
@@ -31,7 +31,7 @@ public class NotificationActivities(ILogger<NotificationActivities> logger, INot
     }
 
     /// <summary>
-    /// Sends an update notification to a user.
+    ///     Sends an update notification to a user.
     /// </summary>
     [Function("SendUserUpdateNotificationActivity")]
     public async Task SendUserUpdateNotificationActivity([ActivityTrigger] UserResponse user)

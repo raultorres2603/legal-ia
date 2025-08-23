@@ -1,0 +1,46 @@
+meta {
+  name: Unified API - Full Context Quarterly
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question": "Basándome en mis facturas actuales, ¿qué cantidad de IVA debo pagar este trimestre?",
+    "queryType": "quarterly-obligations",
+    "quarter": 3,
+    "year": 2024,
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Should provide personalized quarterly obligations", function() {
+    expect(res.getStatus()).to.equal(200);
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("quarterly-obligations");
+    expect(responseJson.quarter).to.equal(3);
+    expect(responseJson.year).to.equal(2024);
+    expect(responseJson.userContextIncluded).to.equal(true);
+  });
+  
+  test("Should include user-specific financial data", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.obligations).to.be.a('string');
+    
+    // Should be personalized with user's name
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('hola');
+    
+    // Should mention specific financial amounts or invoice data
+    expect(answer).to.match(/€|euro|factura|ingreso/);
+  });
+}

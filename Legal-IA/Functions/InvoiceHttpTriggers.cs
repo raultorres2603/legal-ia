@@ -1,7 +1,7 @@
 using Legal_IA.DTOs;
-using Legal_IA.Enums;
-using Legal_IA.Models;
 using Legal_IA.Services;
+using Legal_IA.Shared.Enums;
+using Legal_IA.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -10,12 +10,12 @@ using Microsoft.DurableTask.Client;
 namespace Legal_IA.Functions;
 
 /// <summary>
-/// HTTP-triggered Azure Functions for invoice operations by the current user.
+///     HTTP-triggered Azure Functions for invoice operations by the current user.
 /// </summary>
 public class InvoiceHttpTriggers
 {
     /// <summary>
-    /// Gets invoices for the current user.
+    ///     Gets invoices for the current user.
     /// </summary>
     [Function("GetInvoicesByCurrentUser")]
     public async Task<IActionResult> GetInvoicesByCurrentUser(
@@ -30,7 +30,7 @@ public class InvoiceHttpTriggers
     }
 
     /// <summary>
-    /// Creates an invoice for the current user.
+    ///     Creates an invoice for the current user.
     /// </summary>
     [Function("CreateInvoiceByCurrentUser")]
     public async Task<IActionResult> CreateInvoiceByCurrentUser(
@@ -67,11 +67,11 @@ public class InvoiceHttpTriggers
                 Total = i.Total
             })
         };
-        return await RunOrchestrationAndRespond(client, "InvoiceCreateOrchestrator", invoice);
+        return await RunOrchestrationAndRespond(client, "InvoiceCreateOrchestrator", invoice, 201);
     }
 
     /// <summary>
-    /// Updates an invoice for the current user.
+    ///     Updates an invoice for the current user.
     /// </summary>
     [Function("PatchInvoiceByCurrentUser")]
     public async Task<IActionResult> PatchInvoiceByCurrentUser(
@@ -91,7 +91,7 @@ public class InvoiceHttpTriggers
     }
 
     /// <summary>
-    /// Deletes an invoice for the current user.
+    ///     Deletes an invoice for the current user.
     /// </summary>
     [Function("DeleteInvoiceByCurrentUser")]
     public async Task<IActionResult> DeleteInvoiceByCurrentUser(
@@ -105,22 +105,26 @@ public class InvoiceHttpTriggers
         if (errorResult != null) return errorResult;
         if (!Guid.TryParse(id, out var invoiceId)) return new BadRequestResult();
         var orchestratorInput = new { InvoiceId = invoiceId, UserId = userId };
-        var response = await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteByCurrentUserOrchestrator", orchestratorInput);
+        var response =
+            await client.ScheduleNewOrchestrationInstanceAsync("InvoiceDeleteByCurrentUserOrchestrator",
+                orchestratorInput);
         var orchestrationResult = await client.WaitForInstanceCompletionAsync(response, true, CancellationToken.None);
         if (orchestrationResult.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
         {
             var result = orchestrationResult.ReadOutputAs<bool>();
-            return result ? new OkResult() : new ForbidResult();
+            return result ? new NoContentResult() : new ForbidResult();
         }
+
         return new StatusCodeResult(500);
     }
 
     // --- Private helpers ---
 
     /// <summary>
-    /// Validates JWT and extracts userId. Returns (userId, errorResult).
+    ///     Validates JWT and extracts userId. Returns (userId, errorResult).
     /// </summary>
-    private static async Task<(Guid userId, IActionResult errorResult)> ValidateAndExtractUserId(HttpRequestData req, DurableTaskClient client)
+    private static async Task<(Guid userId, IActionResult? errorResult)> ValidateAndExtractUserId(HttpRequestData req,
+        DurableTaskClient client)
     {
         var jwtResult = await JwtValidationHelper.ValidateJwtAsync(req, client);
         if (!JwtValidationHelper.HasRequiredRole(jwtResult, nameof(UserRole.User)))
@@ -131,14 +135,15 @@ public class InvoiceHttpTriggers
     }
 
     /// <summary>
-    /// Schedules an orchestration and returns the HTTP response.
+    ///     Schedules an orchestration and returns the HTTP response.
     /// </summary>
-    private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client, string orchestratorName, object input)
+    private static async Task<IActionResult> RunOrchestrationAndRespond(DurableTaskClient client,
+        string orchestratorName, object input, int successStatusCode = 200)
     {
         var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(orchestratorName, input);
         var response = await client.WaitForInstanceCompletionAsync(instanceId, true, CancellationToken.None);
         if (response.RuntimeStatus == OrchestrationRuntimeStatus.Completed)
-            return new OkObjectResult(response.ReadOutputAs<object>());
+            return new ObjectResult(response.ReadOutputAs<object>()) { StatusCode = successStatusCode };
         return new StatusCodeResult(500);
     }
 }

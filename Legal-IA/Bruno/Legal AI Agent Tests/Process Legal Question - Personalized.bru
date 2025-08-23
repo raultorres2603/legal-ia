@@ -1,0 +1,44 @@
+meta {
+  name: Process Legal Question - Personalized
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/ai/legal/question
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "question": "¿Cuánto IVA debo declarar este trimestre según mis ingresos actuales?",
+    "queryType": "general",
+    "includeUserContext": true,
+    "includeInvoiceData": true
+  }
+}
+
+tests {
+  test("Status should be 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response should be personalized", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.success).to.equal(true);
+    expect(responseJson.queryType).to.equal("general");
+    expect(responseJson.userContextIncluded).to.equal(true);
+    
+    // Should contain personalized greeting
+    const answer = responseJson.answer.toLowerCase();
+    expect(answer).to.include('hola');
+  });
+  
+  test("Should include user's financial context", function() {
+    const responseJson = res.getBody();
+    expect(responseJson.answer).to.be.a('string');
+    // Response should be personalized with user's specific data
+    expect(responseJson.answer.length).to.be.greaterThan(50);
+  });
+}

@@ -1,0 +1,52 @@
+meta {
+  name: 10 - Add Item to Q1-2025-001
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/invoice-items/user
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{jwtToken}}
+}
+
+body:json {
+  [
+    {
+      "invoiceId": "{{invoice3Id}}",
+      "description": "LEGAL service",
+      "quantity": 1,
+      "unitPrice": 125.00,
+      "VAT": 105.00,
+      "IRPF": 75.00,
+      "total": 125.00
+    }
+  ]
+}
+
+script:post-response {
+  if (res.status === 201) {
+    console.log("💰 Added final item: €2,500");
+    console.log("📊 TOTAL YEAR-TO-DATE REVENUE: €17,900");
+    console.log("🧾 VAT collected: ~€3,759");
+    console.log("📋 IRPF retained: ~€2,685");
+    console.log("🎯 Ready to test AI personalized guidance!");
+  }
+}
+
+tests {
+  test("Should add Q1 invoice item", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Should complete year-to-date financial data", function() {
+    const responseJson = res.getBody();
+    const totalBase = 2 * 1250.00; // €2,500
+    expect(responseJson.vatAmount).to.equal(525.00);
+    expect(responseJson.irpfAmount).to.equal(375.00);
+  });
+}
