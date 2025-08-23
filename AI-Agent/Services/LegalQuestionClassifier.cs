@@ -3,15 +3,8 @@ using OpenAI.Chat;
 
 namespace AI_Agent.Services;
 
-public class LegalQuestionClassifier
+public class LegalQuestionClassifier(OpenAIClient openAiClient)
 {
-    private readonly OpenAIClient _openAiClient;
-
-    public LegalQuestionClassifier(OpenAIClient openAiClient)
-    {
-        _openAiClient = openAiClient;
-    }
-
     public async Task<bool> IsLegalQuestionAsync(string question, CancellationToken cancellationToken = default)
     {
         try
@@ -36,7 +29,7 @@ Pregunta: " + question;
                 new SystemChatMessage(classificationPrompt)
             };
 
-            var chatClient = _openAiClient.GetChatClient("google/gemma-2-9b-it:free");
+            var chatClient = openAiClient.GetChatClient("google/gemma-2-9b-it:free");
             var options = new ChatCompletionOptions
             {
                 MaxOutputTokenCount = 5,

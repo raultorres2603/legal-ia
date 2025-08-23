@@ -1,3 +1,4 @@
+using OpenAI;
 using OpenAI.Chat;
 
 namespace AI_Agent.Services;

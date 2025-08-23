@@ -1,5 +1,6 @@
 using System.Text;
 using AI_Agent.Models;
+using Legal_IA.Shared.Models;
 
 namespace AI_Agent.Helpers;
 
@@ -97,8 +98,8 @@ public static class PromptBuilder
 === CONSULTA SOBRE FORMULARIO FISCAL ===
 Formulario: {request.FormType}
 Período: {request.Quarter}º trimestre {request.Year}
-Régimen fiscal: {request.RegimeType}
-Código de actividad: {request.ActivityCode}
+Régimen fiscal: {request.RegimeType ?? "Régimen general"}
+Código de actividad: {request.ActivityCode ?? "No especificado"}
 
 {ResponseGuidelines}
 
@@ -264,5 +265,81 @@ Pregunta: {question}
 {ResponseGuidelines}
 
 Responde la consulta específica utilizando el contexto fiscal del cliente para proporcionar una solución personalizada y práctica.";
+    }
+
+    /// <summary>
+    /// Builds a quarterly obligations prompt with comprehensive user context
+    /// </summary>
+    public static string BuildQuarterlyObligationsPromptWithFullContext(string question, int quarter, int year, UserFullContext userFullContext)
+    {
+        var user = userFullContext.UserContext;
+        var invoices = userFullContext.Invoices;
+        
+        var quarterlyInvoices = invoices.Count(i => 
+            i.IssueDate.Year == year && 
+            (i.IssueDate.Month - 1) / 3 + 1 == quarter);
+
+        return $@"{ProfessionalIdentity}
+
+=== CONSULTA SOBRE OBLIGACIONES TRIMESTRALES ===
+Cliente: {user.FirstName} {user.LastName}
+Período: {quarter}º trimestre {year}
+Pregunta específica: {question}
+
+=== CONTEXTO FISCAL DEL CLIENTE ===
+• CIF: {user.CIF ?? "Pendiente"}
+• Actividad: {user.ActivityCode ?? "No especificada"}
+• Régimen: {user.TaxRegime ?? "Régimen general"}
+• Ingresos año actual: {user.TotalIncomeCurrentYear:C}
+• IVA repercutido: {user.TotalVATCurrentYear:C}
+• IRPF retenido: {user.TotalIRPFCurrentYear:C}
+• Facturas del trimestre: {quarterlyInvoices}
+
+{ResponseGuidelines}
+
+Proporciona una respuesta específica sobre las obligaciones fiscales del trimestre consultado, utilizando el contexto financiero del cliente para cálculos precisos y recomendaciones personalizadas.
+
+Incluye información sobre:
+1. Modelos fiscales aplicables según su actividad y régimen
+2. Fechas límite específicas para el período
+3. Cálculos estimados basados en sus datos financieros
+4. Recomendaciones de planificación fiscal";
+    }
+
+    /// <summary>
+    /// Builds an annual obligations prompt with comprehensive user context
+    /// </summary>
+    public static string BuildAnnualObligationsPromptWithFullContext(string question, int year, UserFullContext userFullContext)
+    {
+        var user = userFullContext.UserContext;
+        var invoices = userFullContext.Invoices;
+        
+        var yearlyInvoices = invoices.Count(i => i.IssueDate.Year == year);
+
+        return $@"{ProfessionalIdentity}
+
+=== CONSULTA SOBRE OBLIGACIONES ANUALES ===
+Cliente: {user.FirstName} {user.LastName}
+Ejercicio: {year}
+Pregunta específica: {question}
+
+=== CONTEXTO FISCAL DEL CLIENTE ===
+• CIF: {user.CIF ?? "Pendiente"}
+• Actividad: {user.ActivityCode ?? "No especificada"}
+• Régimen: {user.TaxRegime ?? "Régimen general"}
+• Ingresos año consultado: {user.TotalIncomeCurrentYear:C}
+• IVA repercutido: {user.TotalVATCurrentYear:C}
+• IRPF retenido: {user.TotalIRPFCurrentYear:C}
+• Facturas del ejercicio: {yearlyInvoices}
+
+{ResponseGuidelines}
+
+Proporciona una respuesta específica sobre las obligaciones fiscales anuales, utilizando el contexto financiero del cliente para cálculos precisos y recomendaciones personalizadas.
+
+Incluye información sobre:
+1. Declaraciones anuales obligatorias según su actividad
+2. Calendario fiscal anual personalizado
+3. Estimaciones de pagos basadas en sus datos
+4. Estrategias de optimización fiscal para el próximo ejercicio";
     }
 }
