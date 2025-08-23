@@ -6,4 +6,5 @@ public interface IInvoiceItemRepository: IRepository<InvoiceItem>
 {
     Task<bool> DeleteAsync(Guid id);
     Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId);
+    Task<List<InvoiceItem>> GetInvoiceItemsByUserIdAsync(Guid userId);
 }

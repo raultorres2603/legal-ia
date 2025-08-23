@@ -15,4 +15,23 @@ public class LegalQueryRequest
     
     [JsonPropertyName("sessionId")]
     public string? SessionId { get; set; }
+    
+    // Additional properties to support all query types
+    [JsonPropertyName("queryType")]
+    public string QueryType { get; set; } = "general"; // general, form-guidance, quarterly-obligations, annual-obligations, classify
+    
+    [JsonPropertyName("formType")]
+    public string? FormType { get; set; }
+    
+    [JsonPropertyName("quarter")]
+    public int? Quarter { get; set; }
+    
+    [JsonPropertyName("year")]
+    public int? Year { get; set; }
+    
+    [JsonPropertyName("includeUserContext")]
+    public bool IncludeUserContext { get; set; } = true;
+    
+    [JsonPropertyName("includeInvoiceData")]
+    public bool IncludeInvoiceData { get; set; } = true;
 }

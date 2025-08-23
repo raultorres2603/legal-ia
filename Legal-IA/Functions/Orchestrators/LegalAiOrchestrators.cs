@@ -9,194 +9,235 @@ namespace Legal_IA.Functions.Orchestrators
 {
     public class LegalAiOrchestrators(ILogger<LegalAiOrchestrators> logger)
     {
-        [Function("ProcessLegalQuestionOrchestrator")]
-        public async Task<LegalQueryResponse> ProcessLegalQuestionOrchestrator(
+        [Function("ProcessUnifiedLegalQuestionOrchestrator")]
+        public async Task<LegalQueryResponse> ProcessUnifiedLegalQuestionOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
         {
             var input = context.GetInput<LegalQueryRequest>();
             
             try
             {
-                logger.LogInformation("Starting ProcessLegalQuestionOrchestrator for question: {Question}", input?.Question ?? "Unknown");
+                logger.LogInformation("Starting ProcessUnifiedLegalQuestionOrchestrator for question: {Question}, QueryType: {QueryType}", 
+                    input?.Question ?? "Unknown", input?.QueryType ?? "general");
 
-                // Step 1: Build user context if userId is provided
-                UserContext? userContext = null;
+                // Step 1: Build comprehensive user context including invoices if userId is provided
+                UserFullContext? userFullContext = null;
                 if (!string.IsNullOrEmpty(input?.UserId) && Guid.TryParse(input.UserId, out var userId))
                 {
-                    userContext = await context.CallActivityAsync<UserContext?>("BuildUserContextActivity", userId);
+                    if (input.IncludeUserContext || input.IncludeInvoiceData)
+                    {
+                        userFullContext = await context.CallActivityAsync<UserFullContext?>("BuildUserFullContextActivity", new BuildUserFullContextInput
+                        {
+                            UserId = userId,
+                            IncludeUserData = input.IncludeUserContext,
+                            IncludeInvoiceData = input.IncludeInvoiceData
+                        });
+                    }
                 }
 
-                // Step 2: Process the legal question using strongly-typed input
-                var activityInput = new ProcessLegalQuestionInput
+                // Step 2: Process based on query type
+                var response = new LegalQueryResponse
                 {
-                    Request = input,
-                    UserContext = userContext
+                    QueryType = input?.QueryType ?? "general",
+                    Timestamp = DateTime.UtcNow,
+                    SessionId = input?.SessionId,
+                    UserContextIncluded = userFullContext != null
                 };
 
-                var response = await context.CallActivityAsync<LegalQueryResponse>("ProcessLegalQuestionActivity", activityInput);
+                switch (input?.QueryType?.ToLower())
+                {
+                    case "form-guidance":
+                        response = await ProcessFormGuidanceQuery(context, input, userFullContext);
+                        break;
+                    case "quarterly-obligations":
+                        response = await ProcessQuarterlyObligationsQuery(context, input, userFullContext);
+                        break;
+                    case "annual-obligations":
+                        response = await ProcessAnnualObligationsQuery(context, input, userFullContext);
+                        break;
+                    case "classify":
+                        response = await ProcessClassificationQuery(context, input);
+                        break;
+                    case "general":
+                    default:
+                        response = await ProcessGeneralLegalQuery(context, input, userFullContext);
+                        break;
+                }
 
+                response.Success = true;
                 return response;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in ProcessLegalQuestionOrchestrator");
+                logger.LogError(ex, "Error in ProcessUnifiedLegalQuestionOrchestrator");
                 return new LegalQueryResponse
                 {
                     Success = false,
                     ErrorMessage = "Error processing legal question",
                     Answer = "Lo siento, ha ocurrido un error al procesar su consulta. Por favor, inténtelo de nuevo.",
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.UtcNow,
+                    QueryType = input?.QueryType ?? "general",
+                    SessionId = input?.SessionId
                 };
             }
         }
 
-        [Function("GetFormGuidanceOrchestrator")]
-        public async Task<AutonomoFormResponse> GetFormGuidanceOrchestrator(
-            [OrchestrationTrigger] TaskOrchestrationContext context)
+        private async Task<LegalQueryResponse> ProcessGeneralLegalQuery(
+            TaskOrchestrationContext context, 
+            LegalQueryRequest input, 
+            UserFullContext? userFullContext)
         {
-            var input = context.GetInput<AutonomoFormRequest>();
-            
-            try
+            var activityInput = new ProcessLegalQuestionInput
             {
-                logger.LogInformation("Starting GetFormGuidanceOrchestrator for form: {FormType}", input?.FormType ?? "Unknown");
+                Request = input,
+                UserFullContext = userFullContext
+            };
 
-                // Step 1: Build user context if userId is provided
-                UserContext? userContext = null;
-                if (!string.IsNullOrEmpty(input?.UserId) && Guid.TryParse(input.UserId, out var userId))
-                {
-                    userContext = await context.CallActivityAsync<UserContext?>("BuildUserContextActivity", userId);
-                }
-
-                // Step 2: Get form guidance using strongly-typed input
-                var activityInput = new FormGuidanceInput
-                {
-                    Request = input,
-                    UserContext = userContext
-                };
-
-                var response = await context.CallActivityAsync<AutonomoFormResponse>("GetFormGuidanceActivity", activityInput);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error in GetFormGuidanceOrchestrator");
-                return new AutonomoFormResponse
-                {
-                    Success = false,
-                    ErrorMessage = "Error processing form guidance request",
-                    FormType = input?.FormType ?? "Unknown"
-                };
-            }
+            var response = await context.CallActivityAsync<LegalQueryResponse>("ProcessLegalQuestionWithFullContextActivity", activityInput);
+            response.QueryType = "general";
+            response.UserContextIncluded = userFullContext != null;
+            return response;
         }
 
-        [Function("GetQuarterlyObligationsOrchestrator")]
-        public async Task<string> GetQuarterlyObligationsOrchestrator(
-            [OrchestrationTrigger] TaskOrchestrationContext context)
+        private async Task<LegalQueryResponse> ProcessFormGuidanceQuery(
+            TaskOrchestrationContext context, 
+            LegalQueryRequest input, 
+            UserFullContext? userFullContext)
         {
-            var input = context.GetInput<QuarterlyObligationsRequest>();
+            var activityInput = new FormGuidanceInput
+            {
+                Question = input.Question,
+                FormType = input.FormType,
+                UserFullContext = userFullContext
+            };
+
+            var guidance = await context.CallActivityAsync<string>("GetFormGuidanceWithFullContextActivity", activityInput);
             
-            try
+            return new LegalQueryResponse
             {
-                logger.LogInformation("Starting GetQuarterlyObligationsOrchestrator for Q{Quarter} {Year}", 
-                    input?.Quarter ?? 1, input?.Year ?? DateTime.Now.Year);
-
-                // Step 1: Build user context if userId is provided
-                UserContext? userContext = null;
-                if (input?.UserId.HasValue == true)
-                {
-                    userContext = await context.CallActivityAsync<UserContext?>("BuildUserContextActivity", input.UserId.Value);
-                }
-
-                // Step 2: Get quarterly obligations using strongly-typed input
-                var activityInput = new QuarterlyObligationsInput
-                {
-                    Quarter = input.Quarter,
-                    Year = input.Year,
-                    UserContext = userContext
-                };
-
-                var response = await context.CallActivityAsync<string>("GetQuarterlyObligationsActivity", activityInput);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error in GetQuarterlyObligationsOrchestrator");
-                return "Error al obtener obligaciones trimestrales. Por favor, inténtelo de nuevo.";
-            }
+                Answer = guidance,
+                FormGuidance = guidance,
+                FormType = input.FormType,
+                QueryType = "form-guidance",
+                UserContextIncluded = userFullContext != null,
+                Timestamp = DateTime.UtcNow,
+                SessionId = input.SessionId,
+                Success = true
+            };
         }
 
-        [Function("GetAnnualObligationsOrchestrator")]
-        public async Task<string> GetAnnualObligationsOrchestrator(
-            [OrchestrationTrigger] TaskOrchestrationContext context)
+        private async Task<LegalQueryResponse> ProcessQuarterlyObligationsQuery(
+            TaskOrchestrationContext context, 
+            LegalQueryRequest input, 
+            UserFullContext? userFullContext)
         {
-            var input = context.GetInput<AnnualObligationsRequest>();
+            var activityInput = new QuarterlyObligationsInput
+            {
+                Quarter = input.Quarter ?? 1,
+                Year = input.Year ?? DateTime.Now.Year,
+                UserFullContext = userFullContext,
+                Question = input.Question
+            };
+
+            var obligations = await context.CallActivityAsync<string>("GetQuarterlyObligationsWithFullContextActivity", activityInput);
             
-            try
+            return new LegalQueryResponse
             {
-                logger.LogInformation("Starting GetAnnualObligationsOrchestrator for year {Year}", input?.Year ?? DateTime.Now.Year);
-
-                // Step 1: Build user context if userId is provided
-                UserContext? userContext = null;
-                if (input?.UserId.HasValue == true)
-                {
-                    userContext = await context.CallActivityAsync<UserContext?>("BuildUserContextActivity", input.UserId.Value);
-                }
-
-                // Step 2: Get annual obligations using strongly-typed input
-                var activityInput = new AnnualObligationsInput
-                {
-                    Year = input.Year,
-                    UserContext = userContext
-                };
-
-                var response = await context.CallActivityAsync<string>("GetAnnualObligationsActivity", activityInput);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error in GetAnnualObligationsOrchestrator");
-                return "Error al obtener obligaciones anuales. Por favor, inténtelo de nuevo.";
-            }
+                Answer = obligations,
+                Obligations = obligations,
+                Quarter = input.Quarter,
+                Year = input.Year,
+                QueryType = "quarterly-obligations",
+                UserContextIncluded = userFullContext != null,
+                Timestamp = DateTime.UtcNow,
+                SessionId = input.SessionId,
+                Success = true
+            };
         }
 
-        [Function("ClassifyLegalQuestionOrchestrator")]
-        public async Task<bool> ClassifyLegalQuestionOrchestrator(
-            [OrchestrationTrigger] TaskOrchestrationContext context)
+        private async Task<LegalQueryResponse> ProcessAnnualObligationsQuery(
+            TaskOrchestrationContext context, 
+            LegalQueryRequest input, 
+            UserFullContext? userFullContext)
         {
-            var question = context.GetInput<string>();
+            var activityInput = new AnnualObligationsInput
+            {
+                Year = input.Year ?? DateTime.Now.Year,
+                UserFullContext = userFullContext,
+                Question = input.Question
+            };
+
+            var obligations = await context.CallActivityAsync<string>("GetAnnualObligationsWithFullContextActivity", activityInput);
             
-            try
+            return new LegalQueryResponse
             {
-                logger.LogInformation("Starting ClassifyLegalQuestionOrchestrator for question: {Question}", question ?? "Unknown");
+                Answer = obligations,
+                Obligations = obligations,
+                Year = input.Year,
+                QueryType = "annual-obligations",
+                UserContextIncluded = userFullContext != null,
+                Timestamp = DateTime.UtcNow,
+                SessionId = input.SessionId,
+                Success = true
+            };
+        }
 
-                // Call the classification activity
-                var isLegalQuestion = await context.CallActivityAsync<bool>("ClassifyLegalQuestionActivity", question);
-
-                return isLegalQuestion;
-            }
-            catch (Exception ex)
+        private async Task<LegalQueryResponse> ProcessClassificationQuery(
+            TaskOrchestrationContext context, 
+            LegalQueryRequest input)
+        {
+            var isLegalQuestion = await context.CallActivityAsync<bool>("ClassifyLegalQuestionActivity", input.Question);
+            
+            return new LegalQueryResponse
             {
-                logger.LogError(ex, "Error in ClassifyLegalQuestionOrchestrator");
-                // Return true as fallback to avoid rejecting legal questions incorrectly
-                return true;
-            }
+                Answer = isLegalQuestion ? "Esta es una pregunta legal válida." : "Esta no parece ser una pregunta legal.",
+                IsLegalQuestion = isLegalQuestion,
+                QueryType = "classify",
+                UserContextIncluded = false,
+                Timestamp = DateTime.UtcNow,
+                SessionId = input.SessionId,
+                Success = true
+            };
         }
     }
 
-    // Supporting classes for orchestrator inputs
-    public class QuarterlyObligationsRequest
+    // Supporting classes for orchestrator inputs with full context
+    public class BuildUserFullContextInput
+    {
+        public Guid UserId { get; set; }
+        public bool IncludeUserData { get; set; } = true;
+        public bool IncludeInvoiceData { get; set; } = true;
+    }
+
+    public class ProcessLegalQuestionInput
+    {
+        public LegalQueryRequest? Request { get; set; }
+        public UserContext? UserContext { get; set; }
+        public UserFullContext? UserFullContext { get; set; }
+    }
+
+    public class FormGuidanceInput
+    {
+        public string Question { get; set; } = string.Empty;
+        public string? FormType { get; set; }
+        public UserContext? UserContext { get; set; }
+        public UserFullContext? UserFullContext { get; set; }
+    }
+
+    public class QuarterlyObligationsInput
     {
         public int Quarter { get; set; }
         public int Year { get; set; }
-        public Guid? UserId { get; set; }
+        public string Question { get; set; } = string.Empty;
+        public UserContext? UserContext { get; set; }
+        public UserFullContext? UserFullContext { get; set; }
     }
 
-    public class AnnualObligationsRequest
+    public class AnnualObligationsInput
     {
         public int Year { get; set; }
-        public Guid? UserId { get; set; }
+        public string Question { get; set; } = string.Empty;
+        public UserContext? UserContext { get; set; }
+        public UserFullContext? UserFullContext { get; set; }
     }
 }

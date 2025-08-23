@@ -203,20 +203,172 @@ Estructura la información de manera clara y cronológica, empezando por las fec
         {
             return $@"
 --- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
-Eres un asesor fiscal experto en obligaciones de autónomos en España. Tu tarea es proporcionar un calendario completo y detallado de todas las obligaciones fiscales anuales para autónomos en el año {year}.
-
+Como experto fiscal para autónomos en España, proporciona un resumen completo de todas las obligaciones fiscales anuales para el año {year}.
 Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
 
 Incluye:
-1. Declaración anual de IRPF (Modelo 100)
+1. Declaración de la Renta (Modelo 100)
 2. Resumen anual de IVA (Modelo 390)
-3. Declaración de operaciones con terceros (Modelo 347)
-4. Resumen anual de retenciones (Modelo 190)
-5. Otras obligaciones anuales específicas
-6. Fechas límite y plazos de presentación
-7. Documentación necesaria para cada declaración
+3. Otras declaraciones anuales obligatorias
+4. Fechas límite específicas
+5. Recordatorios importantes para el cierre del ejercicio
+6. Consecuencias de incumplimiento
 
-Organiza la información cronológicamente y destaca las fechas más importantes.";
+Estructura la información cronológicamente desde enero hasta diciembre.";
+        }
+
+        // New methods needed by LegalAiAgent.cs
+
+        /// <summary>
+        /// Builds a basic form guidance prompt for a specific form type.
+        /// </summary>
+        /// <param name="formType">The form type (e.g., modelo-303, modelo-130).</param>
+        /// <returns>A structured prompt string for the AI agent.</returns>
+        public static string BuildBasicFormPrompt(string formType)
+        {
+            return $@"
+--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---
+Como experto en fiscalidad para autónomos en España, proporciona una guía completa para el {formType}.
+Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.
+
+Proporciona información sobre:
+1. Qué es este formulario y para qué sirve
+2. Quién debe presentarlo
+3. Cuándo se presenta
+4. Datos necesarios para completarlo
+5. Documentos requeridos
+6. Cálculos principales
+7. Fechas límite y plazos de pago
+8. Consecuencias del incumplimiento
+
+Responde de manera profesional y práctica.";
+        }
+
+        /// <summary>
+        /// Builds a form guidance prompt with full user context including invoices.
+        /// </summary>
+        /// <param name="question">The user's specific question about the form.</param>
+        /// <param name="formType">The form type (e.g., modelo-303, modelo-130).</param>
+        /// <param name="userFullContext">The full user context including invoices and summary data.</param>
+        /// <returns>A structured prompt string for the AI agent.</returns>
+        public static string BuildFormPromptWithFullContext(string question, string formType, UserFullContext userFullContext)
+        {
+            var user = userFullContext.UserContext;
+            var invoices = userFullContext.Invoices;
+            
+            var sb = new System.Text.StringBuilder();
+            
+            sb.AppendLine("--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---");
+            sb.AppendLine($"Como experto en fiscalidad para autónomos en España, responde la pregunta específica de {user.FirstName} {user.LastName} sobre el {formType}.");
+            sb.AppendLine("Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.");
+            sb.AppendLine();
+            
+            sb.AppendLine("--- PREGUNTA DEL USUARIO ---");
+            sb.AppendLine(question);
+            sb.AppendLine();
+            
+            sb.AppendLine("--- INFORMACIÓN DEL USUARIO ---");
+            sb.AppendLine($"Nombre: {user.FirstName} {user.LastName}");
+            sb.AppendLine($"CIF: {user.CIF ?? "N/A"}");
+            sb.AppendLine($"Actividad: {user.ActivityCode ?? "N/A"}");
+            sb.AppendLine($"Régimen fiscal: {user.TaxRegime ?? "N/A"}");
+            sb.AppendLine($"Ingresos año actual: {user.TotalIncomeCurrentYear:C}");
+            sb.AppendLine($"IVA año actual: {user.TotalVATCurrentYear:C}");
+            sb.AppendLine($"IRPF año actual: {user.TotalIRPFCurrentYear:C}");
+            sb.AppendLine($"Total facturas este año: {invoices.Count}");
+            sb.AppendLine();
+            
+            sb.AppendLine("Usa esta información para proporcionar una respuesta personalizada y específica para su situación.");
+            
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Builds a quarterly obligations prompt with full user context including invoices.
+        /// </summary>
+        /// <param name="question">The user's specific question about quarterly obligations.</param>
+        /// <param name="quarter">The quarter (1-4).</param>
+        /// <param name="year">The year.</param>
+        /// <param name="userFullContext">The full user context including invoices and summary data.</param>
+        /// <returns>A structured prompt string for the AI agent.</returns>
+        public static string BuildQuarterlyObligationsPromptWithFullContext(string question, int quarter, int year, UserFullContext userFullContext)
+        {
+            var user = userFullContext.UserContext;
+            var invoices = userFullContext.Invoices;
+            
+            var sb = new System.Text.StringBuilder();
+            
+            sb.AppendLine("--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---");
+            sb.AppendLine($"Como experto fiscal para autónomos en España, responde la pregunta específica de {user.FirstName} {user.LastName} sobre las obligaciones del {quarter}º trimestre de {year}.");
+            sb.AppendLine("Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.");
+            sb.AppendLine();
+            
+            sb.AppendLine("--- PREGUNTA DEL USUARIO ---");
+            sb.AppendLine(question);
+            sb.AppendLine();
+            
+            sb.AppendLine("--- INFORMACIÓN DEL USUARIO ---");
+            sb.AppendLine($"Nombre: {user.FirstName} {user.LastName}");
+            sb.AppendLine($"CIF: {user.CIF ?? "N/A"}");
+            sb.AppendLine($"Actividad: {user.ActivityCode ?? "N/A"}");
+            sb.AppendLine($"Régimen fiscal: {user.TaxRegime ?? "N/A"}");
+            
+            // Calculate quarterly data
+            var quarterlyInvoices = invoices.Where(i => i.IssueDate.Year == year && 
+                ((i.IssueDate.Month - 1) / 3 + 1) == quarter).ToList();
+            
+            sb.AppendLine($"Ingresos trimestre actual: {quarterlyInvoices.Sum(i => i.Subtotal):C}");
+            sb.AppendLine($"IVA trimestre actual: {quarterlyInvoices.Sum(i => i.VAT):C}");
+            sb.AppendLine($"IRPF trimestre actual: {quarterlyInvoices.Sum(i => i.IRPF):C}");
+            sb.AppendLine($"Facturas en el trimestre: {quarterlyInvoices.Count}");
+            sb.AppendLine();
+            
+            sb.AppendLine("Usa esta información para proporcionar una respuesta personalizada considerando su situación fiscal específica.");
+            
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Builds an annual obligations prompt with full user context including invoices.
+        /// </summary>
+        /// <param name="question">The user's specific question about annual obligations.</param>
+        /// <param name="year">The year.</param>
+        /// <param name="userFullContext">The full user context including invoices and summary data.</param>
+        /// <returns>A structured prompt string for the AI agent.</returns>
+        public static string BuildAnnualObligationsPromptWithFullContext(string question, int year, UserFullContext userFullContext)
+        {
+            var user = userFullContext.UserContext;
+            var invoices = userFullContext.Invoices;
+            
+            var sb = new System.Text.StringBuilder();
+            
+            sb.AppendLine("--- INSTRUCCIONES IMPORTANTES Y ESTRICTAMENTE NECESARIAS ---");
+            sb.AppendLine($"Como experto fiscal para autónomos en España, responde la pregunta específica de {user.FirstName} {user.LastName} sobre las obligaciones anuales del año {year}.");
+            sb.AppendLine("Responde de manera clara, precisa y profesional, como lo haría un asesor fiscal humano. No incluyas advertencias, disclaimers ni referencias a ser un modelo de lenguaje. Limítate a proporcionar la información solicitada.");
+            sb.AppendLine();
+            
+            sb.AppendLine("--- PREGUNTA DEL USUARIO ---");
+            sb.AppendLine(question);
+            sb.AppendLine();
+            
+            sb.AppendLine("--- INFORMACIÓN DEL USUARIO ---");
+            sb.AppendLine($"Nombre: {user.FirstName} {user.LastName}");
+            sb.AppendLine($"CIF: {user.CIF ?? "N/A"}");
+            sb.AppendLine($"Actividad: {user.ActivityCode ?? "N/A"}");
+            sb.AppendLine($"Régimen fiscal: {user.TaxRegime ?? "N/A"}");
+            
+            // Calculate annual data
+            var annualInvoices = invoices.Where(i => i.IssueDate.Year == year).ToList();
+            
+            sb.AppendLine($"Ingresos año {year}: {annualInvoices.Sum(i => i.Subtotal):C}");
+            sb.AppendLine($"IVA año {year}: {annualInvoices.Sum(i => i.VAT):C}");
+            sb.AppendLine($"IRPF año {year}: {annualInvoices.Sum(i => i.IRPF):C}");
+            sb.AppendLine($"Total facturas año {year}: {annualInvoices.Count}");
+            sb.AppendLine();
+            
+            sb.AppendLine("Usa esta información para proporcionar una respuesta personalizada considerando su situación fiscal específica del año completo.");
+            
+            return sb.ToString();
         }
     }
 }

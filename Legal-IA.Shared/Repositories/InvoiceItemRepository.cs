@@ -48,7 +48,6 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
         var invoice = await context.Invoices.FindAsync(entity.InvoiceId);
         if (invoice == null)
             throw new ArgumentException($"Invoice with ID {entity.InvoiceId} does not exist.");
-        // ...existing code...
         invoice.Total += entity.Total - existingItem.Total; // Adjust total based on the update
         context.Invoices.Update(invoice);
         context.InvoiceItems.Update(entity);
@@ -56,34 +55,41 @@ public class InvoiceItemRepository(LegalIaDbContext context) : IInvoiceItemRepos
         return entity;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-var invoiceItem =context.InvoiceItems.Find(id);
-        if (invoiceItem == null) return Task.FromResult(false);
-        
-        var invoice = context.Invoices.Find(invoiceItem.InvoiceId);
-        if (invoice == null) return Task.FromResult(false);
-        
-        invoice.Total -= invoiceItem.Total; // Adjust total based on the item being deleted
-        context.Invoices.Update(invoice);
-        context.InvoiceItems.Remove(invoiceItem);
-        return context.SaveChangesAsync()
-            .ContinueWith(t => t.Result > 0);  }
+        var item = await context.InvoiceItems.FindAsync(id);
+        if (item == null) return false;
 
-    // ...existing code...
-    public Task<List<InvoiceItem>> GetItemsByInvoiceIdAsync(Guid invoiceId)
+        var invoice = await context.Invoices.FindAsync(item.InvoiceId);
+        if (invoice != null)
+        {
+            invoice.Total -= item.Total; // Adjust total when deleting item
+            context.Invoices.Update(invoice);
+        }
+
+        context.InvoiceItems.Remove(item);
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<InvoiceItem>> GetItemsByInvoiceIdAsync(Guid invoiceId)
     {
-        return context.InvoiceItems
+        return await context.InvoiceItems
             .Where(ii => ii.InvoiceId == invoiceId)
             .Include(ii => ii.Invoice)
             .ToListAsync();
     }
 
-    public Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId)
+    public async Task<List<InvoiceItem>> GetByUserIdAsync(Guid userId)
     {
-        return context.InvoiceItems
-            .Where(ii => ii.Invoice.UserId == userId)
+        return await context.InvoiceItems
             .Include(ii => ii.Invoice)
+            .Where(ii => ii.Invoice.UserId == userId)
             .ToListAsync();
+    }
+
+    public async Task<List<InvoiceItem>> GetInvoiceItemsByUserIdAsync(Guid userId)
+    {
+        return await GetByUserIdAsync(userId);
     }
 }

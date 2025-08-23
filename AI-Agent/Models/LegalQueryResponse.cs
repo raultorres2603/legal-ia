@@ -24,4 +24,26 @@ public class LegalQueryResponse
 
     [JsonPropertyName("tokensUsed")]
     public int TokensUsed { get; set; }
+    
+    // Additional properties to support all response types
+    [JsonPropertyName("queryType")]
+    public string QueryType { get; set; } = "general";
+    
+    [JsonPropertyName("formType")]
+    public string? FormType { get; set; }
+    
+    [JsonPropertyName("formGuidance")]
+    public string? FormGuidance { get; set; }
+    
+    [JsonPropertyName("obligations")]
+    public string? Obligations { get; set; }
+    
+    [JsonPropertyName("quarter")]
+    public int? Quarter { get; set; }
+    
+    [JsonPropertyName("year")]
+    public int? Year { get; set; }
+    
+    [JsonPropertyName("userContextIncluded")]
+    public bool UserContextIncluded { get; set; }
 }
